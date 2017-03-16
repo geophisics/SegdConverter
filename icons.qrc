@@ -1,0 +1,23 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>imgs/sine-waves-analysis.png</file>
+        <file>imgs/file.png</file>
+        <file>imgs/funneling-data.png</file>
+        <file>imgs/key.png</file>
+        <file>imgs/tool.png</file>
+        <file>imgs/3d.png</file>
+        <file>imgs/calculator.png</file>
+        <file>imgs/settings-1.png</file>
+        <file>imgs/black.png</file>
+        <file>imgs/circle.png</file>
+        <file>imgs/delete.png</file>
+        <file>imgs/play.png</file>
+        <file>imgs/square-1.png</file>
+        <file>imgs/document-with-table.png</file>
+        <file>imgs/x_letter.png</file>
+        <file>imgs/wave.png</file>
+    </qresource>
+    <qresource prefix="/sound">
+        <file>whistle8.wav</file>
+    </qresource>
+</RCC>

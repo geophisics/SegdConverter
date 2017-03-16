@@ -1,0 +1,617 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ConvertParametersDialog</class>
+ <widget class="QDialog" name="ConvertParametersDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>653</width>
+    <height>589</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>653</width>
+    <height>589</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>653</width>
+    <height>589</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Параметры конвертации</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="icons.qrc">
+    <normaloff>:/icons/imgs/settings-1.png</normaloff>:/icons/imgs/settings-1.png</iconset>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_12">
+   <item row="0" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QGroupBox" name="formatGroupBox">
+       <property name="title">
+        <string>Формат файла</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_3">
+        <item row="0" column="0">
+         <widget class="QRadioButton" name="formatCstRadioButton">
+          <property name="text">
+           <string>CST</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QRadioButton" name="formatSegyRadioButton">
+          <property name="text">
+           <string>SEGY</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="readModeGroupBox">
+       <property name="title">
+        <string>Режим чтения</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_6">
+        <item row="0" column="0">
+         <widget class="QRadioButton" name="allFolderRadioButton">
+          <property name="text">
+           <string>Всю папку</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QRadioButton" name="fromFileRadioButton">
+          <property name="text">
+           <string>С файла</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="muteChannelsGroupBox">
+       <property name="title">
+        <string>Отключенные каналы</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_11">
+        <item row="0" column="0">
+         <widget class="QRadioButton" name="useMuteChannelsRadioButton">
+          <property name="text">
+           <string>Записывать</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QRadioButton" name="noUseMuteChannelsRadioButton">
+          <property name="text">
+           <string>Отбрасывать</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="missedChannelGroupBox">
+       <property name="title">
+        <string>Пропущенные каналы</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_9">
+        <item row="0" column="0">
+         <widget class="QRadioButton" name="writeMissedRadioButton">
+          <property name="text">
+           <string>Записывать</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QRadioButton" name="noWriteMissedRadioButton">
+          <property name="text">
+           <string>Отбрасывать</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="groupBox">
+       <property name="title">
+        <string>Полевые тесты</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_10">
+        <item row="0" column="0" colspan="2">
+         <widget class="QCheckBox" name="testsCheckBox">
+          <property name="text">
+           <string>Анализировать</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>Допуск
+неисправных, %</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QSpinBox" name="testsSpinBox"/>
+        </item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QGroupBox" name="auxesGroupBox">
+       <property name="title">
+        <string>Cлужебные каналы</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="1" column="0">
+         <widget class="QRadioButton" name="noWriteAuxRadioButton">
+          <property name="text">
+           <string>Не записывать</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QRadioButton" name="writeAuxRadioButton">
+          <property name="text">
+           <string>Записывать</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QRadioButton" name="writeAuxInNewFileRadioButton">
+          <property name="text">
+           <string>В отдельный файл</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QCheckBox" name="analisysAuxesCheckBox">
+          <property name="text">
+           <string>Анализировать</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="onlineGroupBox">
+       <property name="title">
+        <string>Режим Он-Лайн</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="1" column="0" colspan="2">
+         <widget class="QRadioButton" name="onlineYesRadioButton">
+          <property name="text">
+           <string>Включен</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>Интервал 
+ожидания, сек</string>
+          </property>
+          <property name="buddy">
+           <cstring>waitingTimeSpinBox</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QSpinBox" name="waitingTimeSpinBox">
+          <property name="minimum">
+           <number>1</number>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0" colspan="2">
+         <widget class="QRadioButton" name="onlineNoRadioButton">
+          <property name="text">
+           <string>Выключен</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="mpFactorGroupBox">
+       <property name="title">
+        <string>MP фактор</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_4">
+        <item row="0" column="0">
+         <widget class="QRadioButton" name="notUseMpFactorRadioButton">
+          <property name="text">
+           <string>Не использовать</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QRadioButton" name="headersMpFactorRadioButton">
+          <property name="text">
+           <string>Из заголовков</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QRadioButton" name="userMpFactorRadioButton">
+          <property name="text">
+           <string>Пользовательский</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLineEdit" name="userMpFactorLineEdit"/>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>37</width>
+         <height>17</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="0">
+    <widget class="QGroupBox" name="exclusionGroupBox">
+     <property name="title">
+      <string>Эксклюзивные зоны</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_7">
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="exclusionCheckBox">
+        <property name="text">
+         <string>Использовать эксклюзивные зоны</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <layout class="QVBoxLayout" name="xclVerticalLayout">
+        <item>
+         <widget class="QRadioButton" name="xclRadioButton">
+          <property name="text">
+           <string>Файл эксклюзивных зон</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="txtRadioButton">
+          <property name="text">
+           <string>Список пикетов</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="2" column="0" colspan="2">
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QLineEdit" name="exclusionLineEdit"/>
+        </item>
+        <item>
+         <widget class="QPushButton" name="exclusionPushButton">
+          <property name="text">
+           <string>Выбрать путь</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QGroupBox" name="backupGroupBox">
+     <property name="title">
+      <string>Резервная копия</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_8">
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="backupCheckBox">
+        <property name="text">
+         <string>Сохранять резервную копию</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLineEdit" name="backupLineEdit"/>
+      </item>
+      <item row="1" column="1">
+       <widget class="QPushButton" name="backupPushButton">
+        <property name="text">
+         <string>Выбрать путь</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QGroupBox" name="maxFileGroupBox">
+     <property name="title">
+      <string>Максимальное количество файлов</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_5">
+      <item row="1" column="1">
+       <widget class="QSpinBox" name="maxFileSpinBox">
+        <property name="minimum">
+         <number>100</number>
+        </property>
+        <property name="maximum">
+         <number>10000</number>
+        </property>
+        <property name="singleStep">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>100</number>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QSlider" name="maxFileHorizontalSlider">
+        <property name="minimum">
+         <number>100</number>
+        </property>
+        <property name="maximum">
+         <number>10000</number>
+        </property>
+        <property name="singleStep">
+         <number>100</number>
+        </property>
+        <property name="pageStep">
+         <number>1000</number>
+        </property>
+        <property name="value">
+         <number>100</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="tickPosition">
+         <enum>QSlider::TicksBelow</enum>
+        </property>
+        <property name="tickInterval">
+         <number>1000</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="maxFileCheckBox">
+        <property name="text">
+         <string>Ограничивать максимальное количество файлов</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+  <zorder>exclusionGroupBox</zorder>
+  <zorder>maxFileGroupBox</zorder>
+  <zorder>buttonBox</zorder>
+  <zorder>backupGroupBox</zorder>
+  <zorder>groupBox</zorder>
+  <zorder>horizontalSpacer</zorder>
+  <zorder>horizontalSpacer</zorder>
+ </widget>
+ <resources>
+  <include location="icons.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>backupPushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>ConvertParametersDialog</receiver>
+   <slot>selectBackupFolderSlot()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>436</x>
+     <y>365</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>197</x>
+     <y>83</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>backupCheckBox</sender>
+   <signal>stateChanged(int)</signal>
+   <receiver>ConvertParametersDialog</receiver>
+   <slot>backupCheckBoxStateChangedSlot(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>80</x>
+     <y>336</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>345</x>
+     <y>82</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>maxFileCheckBox</sender>
+   <signal>stateChanged(int)</signal>
+   <receiver>ConvertParametersDialog</receiver>
+   <slot>maxFilesCheckBoxStateChangedSlot(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>140</x>
+     <y>421</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>10</x>
+     <y>85</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>maxFileSpinBox</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>maxFileHorizontalSlider</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>436</x>
+     <y>449</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>298</x>
+     <y>451</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>maxFileHorizontalSlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>maxFileSpinBox</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>187</x>
+     <y>451</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>436</x>
+     <y>449</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>ConvertParametersDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>490</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>230</x>
+     <y>157</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>ConvertParametersDialog</receiver>
+   <slot>saveSettings()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>362</x>
+     <y>490</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>452</x>
+     <y>205</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>userMpFactorRadioButton</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>ConvertParametersDialog</receiver>
+   <slot>userMpFactorRadioButtonToogled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>256</x>
+     <y>167</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>211</x>
+     <y>205</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>exclusionPushButton</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>ConvertParametersDialog</receiver>
+   <slot>selectExclusionFileSlot()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>390</x>
+     <y>267</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>448</x>
+     <y>305</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>exclusionCheckBox</sender>
+   <signal>stateChanged(int)</signal>
+   <receiver>ConvertParametersDialog</receiver>
+   <slot>exclusionCheckBoxStateChangedSlot(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>31</x>
+     <y>244</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>452</x>
+     <y>167</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>selectBackupFolderSlot()</slot>
+  <slot>backupCheckBoxStateChangedSlot(int)</slot>
+  <slot>maxFilesCheckBoxStateChangedSlot(int)</slot>
+  <slot>saveSettings()</slot>
+  <slot>userMpFactorRadioButtonToogled(bool)</slot>
+  <slot>exclusionCheckBoxStateChangedSlot(int)</slot>
+  <slot>selectExclusionFileSlot()</slot>
+ </slots>
+</ui>
