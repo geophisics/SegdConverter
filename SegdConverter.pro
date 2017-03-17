@@ -48,6 +48,7 @@ SOURCES += main.cpp\
     Workers/cstworkeronline.cpp \
     auxesdialog.cpp \
     auxviewdialog.cpp \
+    Models/attributesmodel.cpp
 
 HEADERS  += segdconverterwindow.h \
     convertparametersdialog.h \
@@ -84,6 +85,7 @@ HEADERS  += segdconverterwindow.h \
     Workers/cstworkeronline.h \
     auxesdialog.h \
     auxviewdialog.h \
+    Models/attributesmodel.h
 
 
 
