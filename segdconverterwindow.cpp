@@ -31,7 +31,10 @@ SegdConverterWindow::SegdConverterWindow(QWidget *parent) :
     readConvertParamsSettings();
     qRegisterMetaType<FfidData>();
     qRegisterMetaType<SeisAttributes>();
-    ui->attributesTableWidget->horizontalHeader()->setSectionsMovable(true);
+    attr_model=new AttributesModel(this);
+    attr_model->setHeaders();
+    ui->attributesTableView->setModel(attr_model);
+    ui->attributesTableView->horizontalHeader()->setSectionsMovable(true);
     connect(ui->actionOpenSegd,SIGNAL(triggered(bool)),this,SLOT(openDataSlot()));
     connect(ui->actionSaveSeisData,SIGNAL(triggered(bool)),this,SLOT(saveDataSlot()));
     connect(ui->actionSaveAttributes,SIGNAL(triggered(bool)),this,SLOT(saveAttributesFileSlot()));
@@ -92,7 +95,7 @@ void SegdConverterWindow::readSettings()
     settings->endGroup();
     settings->beginGroup("/ViewSettings");
     int size = settings->beginReadArray("/ColumnForView");
-    ui->attributesTableWidget->setColumnCount(size);
+    //ui->attributesTableView->setColumnCount(size);
     int i=0;
     for ( ;i<size;i++)
     {
@@ -106,9 +109,9 @@ void SegdConverterWindow::readSettings()
     settings->beginGroup("/ConvertSettings");
     online = settings->value("/OnLine",false).toBool();
     settings->endGroup();
-    ui->attributesTableWidget->setHorizontalHeaderLabels(AttributeColumns);
-    ui->attributesTableWidget->horizontalHeader()->restoreState(MyArray);
-    //ui->attributesTableWidget->setHorizontalHeader();
+    //ui->attributesTableView->setHorizontalHeaderLabels(AttributeColumns);
+    ui->attributesTableView->horizontalHeader()->restoreState(MyArray);
+    //ui->attributesTableView->setHorizontalHeader();
 }
 
 //void SegdConverterWindow::slot1()
@@ -125,19 +128,19 @@ void SegdConverterWindow::readSettings()
 //        settings->setArrayIndex(i);
 //        columnsOrder.append(settings->value("/columnNb",i).toInt());
 //        //visColumn = settings->value("/columnNb",i).toInt();
-//        //visColumn1 = ui->attributesTableWidget->visualColumn(i);
-//        //ui->attributesTableWidget->horizontalHeader()->moveSection(ui->attributesTableWidget->visualColumn(i),visColumn);
-//        //a = ui->attributesTableWidget->visualColumn(i);
-//        //ui->attributesTableWidget->horizontalHeader()->swapSections(i,settings->value("/columnNb",i).toInt());
+//        //visColumn1 = ui->attributesTableView->visualColumn(i);
+//        //ui->attributesTableView->horizontalHeader()->moveSection(ui->attributesTableView->visualColumn(i),visColumn);
+//        //a = ui->attributesTableView->visualColumn(i);
+//        //ui->attributesTableView->horizontalHeader()->swapSections(i,settings->value("/columnNb",i).toInt());
 //        this->repaint();
 //    }
 //    int a;
 //    for (int i = 0; i<columnsOrder.count();++i)
 //    {
 //        a = columnsOrder.indexOf(i);
-//        ui->attributesTableWidget->horizontalHeader()->moveSection(i,a+1);
+//        ui->attributesTableView->horizontalHeader()->moveSection(i,a+1);
 //    }
-//    //ui->attributesTableWidget->horizontalHeader()->moveSection(0,2);
+//    //ui->attributesTableView->horizontalHeader()->moveSection(0,2);
 //    settings->endArray();
 //    settings->endGroup();
 //}
@@ -150,15 +153,15 @@ void SegdConverterWindow::saveSettings()
     settings->setValue("/AttrPath",ui->attrFileLineEdit->text());
     settings->setValue("/WorkDir",WorkDir);
     /*settings->beginWriteArray("/columns");
-    for (int i=0; i< ui->attributesTableWidget->columnCount();++i)
+    for (int i=0; i< ui->attributesTableView->columnCount();++i)
     {
         settings->setArrayIndex(i);
-        settings->setValue("/columnNb",ui->attributesTableWidget->visualColumn(i));
+        settings->setValue("/columnNb",ui->attributesTableView->visualColumn(i));
     }
     settings->endArray();*/
-    QByteArray MyArray = ui->attributesTableWidget->horizontalHeader()->saveState();
+    QByteArray MyArray = ui->attributesTableView->horizontalHeader()->saveState();
     settings->setValue("/TableState",MyArray);
-    //ui->attributesTableWidget->columnViewportPosition()
+    //ui->attributesTableView->columnViewportPosition()
     settings->endGroup();
 
 }
@@ -402,17 +405,17 @@ void SegdConverterWindow::recieveInfoMessage(const QString &message, const QColo
     ui->logTextEdit->append(message);
     ui->logTextEdit->setTextColor(Qt::black);
 }
-void SegdConverterWindow::setColumnsForView(const QStringList &columns)
+/*void SegdConverterWindow::setColumnsForView(const QStringList &columns)
 {
-    for (int i=0; i< ui->attributesTableWidget->columnCount();++i)
+    for (int i=0; i< ui->attributesTableView->columnCount();++i)
     {
-        ui->attributesTableWidget->horizontalHeader()->moveSection(ui->attributesTableWidget->visualColumn(i),i);
+        ui->attributesTableView->horizontalHeader()->moveSection(ui->attributesTableView->visualColumn(i),i);
     }
-    for (int i=0; i< ui->attributesTableWidget->columnCount();++i)
+    for (int i=0; i< ui->attributesTableView->columnCount();++i)
     {
-        if (columns.indexOf(ui->attributesTableWidget->horizontalHeaderItem(i)->text())==-1)
+        if (columns.indexOf(ui->attributesTableView->horizontalHeaderItem(i)->text())==-1)
         {
-            ui->attributesTableWidget->removeColumn(i);
+            ui->attributesTableView->removeColumn(i);
             i--;
         }
     }
@@ -420,14 +423,14 @@ void SegdConverterWindow::setColumnsForView(const QStringList &columns)
     {
         if (AttributeColumns.indexOf(columns.value(i))==-1)
         {
-            ui->attributesTableWidget->insertColumn(i);
+            ui->attributesTableView->insertColumn(i);
         }
     }
 
-    ui->attributesTableWidget->setHorizontalHeaderLabels(columns);
+    ui->attributesTableView->setHorizontalHeaderLabels(columns);
     AttributeColumns.clear();
     AttributeColumns = columns;
-}
+}*/
 
 
 //конвертация в файл segy
@@ -680,54 +683,54 @@ void SegdConverterWindow::setViewAuxesDialog(BaseWorker *worker)
 
 }
 
-void SegdConverterWindow::receiveFfidDataSlot(const FfidData &data)
+/*void SegdConverterWindow::receiveFfidDataSlot(const FfidData &data)
 {
-     ui->attributesTableWidget->setRowCount(ui->attributesTableWidget->rowCount()+1);
-     ui->attributesTableWidget->scrollToBottom();
-     //ui->attributesTableWidget->setCurrentIndex(QModelIndex());
+     ui->attributesTableView->setRowCount(ui->attributesTableView->rowCount()+1);
+     ui->attributesTableView->scrollToBottom();
+     //ui->attributesTableView->setCurrentIndex(QModelIndex());
      int columnNb;
      columnNb = AttributeColumns.indexOf("FFID");
      QTableWidgetItem *pItem;
      if (columnNb!=-1)
      {
          pItem = new QTableWidgetItem(QString::number(data.ffid));
-         ui->attributesTableWidget->setItem(ui->attributesTableWidget->rowCount()-1,columnNb,pItem);
+         ui->attributesTableView->setItem(ui->attributesTableView->rowCount()-1,columnNb,pItem);
      }
      columnNb = AttributeColumns.indexOf("Source Line");
      if (columnNb!=-1)
      {
          pItem = new QTableWidgetItem(QString::number(data.line));
-         ui->attributesTableWidget->setItem(ui->attributesTableWidget->rowCount()-1,columnNb,pItem);
+         ui->attributesTableView->setItem(ui->attributesTableView->rowCount()-1,columnNb,pItem);
      }
      columnNb = AttributeColumns.indexOf("Source Point");
      if (columnNb!=-1)
      {
          pItem = new QTableWidgetItem(QString::number(data.source));
-         ui->attributesTableWidget->setItem(ui->attributesTableWidget->rowCount()-1,columnNb,pItem);
+         ui->attributesTableView->setItem(ui->attributesTableView->rowCount()-1,columnNb,pItem);
      }
      columnNb = AttributeColumns.indexOf("Source X");
      if (columnNb!=-1)
      {
          pItem = new QTableWidgetItem(QString::number(data.X));
-         ui->attributesTableWidget->setItem(ui->attributesTableWidget->rowCount()-1,columnNb,pItem);
+         ui->attributesTableView->setItem(ui->attributesTableView->rowCount()-1,columnNb,pItem);
      }
      columnNb = AttributeColumns.indexOf("Source Y");
      if (columnNb!=-1)
      {
          pItem = new QTableWidgetItem(QString::number(data.Y));
-         ui->attributesTableWidget->setItem(ui->attributesTableWidget->rowCount()-1,columnNb,pItem);
+         ui->attributesTableView->setItem(ui->attributesTableView->rowCount()-1,columnNb,pItem);
      }
      columnNb = AttributeColumns.indexOf("Source Z");
      if (columnNb!=-1)
      {
          pItem = new QTableWidgetItem(QString::number(data.Z));
-         ui->attributesTableWidget->setItem(ui->attributesTableWidget->rowCount()-1,columnNb,pItem);
+         ui->attributesTableView->setItem(ui->attributesTableView->rowCount()-1,columnNb,pItem);
      }
-}
+}*/
 
 //получаем атрибуты сейсмической записи
 
-void SegdConverterWindow::receiveSeisAttributes(SeisAttributes *attr, const int &winNb)
+/*void SegdConverterWindow::receiveSeisAttributes(SeisAttributes *attr, const int &winNb)
 {
     int columnNb;
     QTableWidgetItem *pItem;
@@ -739,7 +742,7 @@ void SegdConverterWindow::receiveSeisAttributes(SeisAttributes *attr, const int 
         {
             pItem->setBackgroundColor(Qt::red);
         }
-        ui->attributesTableWidget->setItem(ui->attributesTableWidget->rowCount()-1,columnNb,pItem);
+        ui->attributesTableView->setItem(ui->attributesTableView->rowCount()-1,columnNb,pItem);
     }
     columnNb = AttributeColumns.indexOf(QString("RMS #%1").arg(winNb));
     if (columnNb!=-1)
@@ -749,7 +752,7 @@ void SegdConverterWindow::receiveSeisAttributes(SeisAttributes *attr, const int 
         {
             pItem->setBackgroundColor(Qt::red);
         }
-        ui->attributesTableWidget->setItem(ui->attributesTableWidget->rowCount()-1,columnNb,pItem);
+        ui->attributesTableView->setItem(ui->attributesTableView->rowCount()-1,columnNb,pItem);
     }
     columnNb = AttributeColumns.indexOf(QString("Frq #%1").arg(winNb));
     if (columnNb!=-1)
@@ -759,7 +762,7 @@ void SegdConverterWindow::receiveSeisAttributes(SeisAttributes *attr, const int 
         {
             pItem->setBackgroundColor(Qt::red);
         }
-        ui->attributesTableWidget->setItem(ui->attributesTableWidget->rowCount()-1,columnNb,pItem);
+        ui->attributesTableView->setItem(ui->attributesTableView->rowCount()-1,columnNb,pItem);
     }
     columnNb = AttributeColumns.indexOf(QString("Energy #%1").arg(winNb));
     if (columnNb!=-1)
@@ -769,7 +772,7 @@ void SegdConverterWindow::receiveSeisAttributes(SeisAttributes *attr, const int 
         {
             pItem->setBackgroundColor(Qt::red);
         }
-        ui->attributesTableWidget->setItem(ui->attributesTableWidget->rowCount()-1,columnNb,pItem);
+        ui->attributesTableView->setItem(ui->attributesTableView->rowCount()-1,columnNb,pItem);
     }
     columnNb = AttributeColumns.indexOf(QString("DFR #%1").arg(winNb));
     if (columnNb!=-1)
@@ -779,11 +782,11 @@ void SegdConverterWindow::receiveSeisAttributes(SeisAttributes *attr, const int 
         {
             pItem->setBackgroundColor(Qt::red);
         }
-        ui->attributesTableWidget->setItem(ui->attributesTableWidget->rowCount()-1,columnNb,pItem);
+        ui->attributesTableView->setItem(ui->attributesTableView->rowCount()-1,columnNb,pItem);
     }
-}
+}*/
 
-void SegdConverterWindow::receiveRelation(QString name, float value, bool correct)
+/*void SegdConverterWindow::receiveRelation(QString name, float value, bool correct)
 {
     int columnNb = AttributeColumns.indexOf(name);
     if (columnNb!=-1)
@@ -793,11 +796,11 @@ void SegdConverterWindow::receiveRelation(QString name, float value, bool correc
         {
             pItem->setBackgroundColor(Qt::red);
         }
-        ui->attributesTableWidget->setItem(ui->attributesTableWidget->rowCount()-1,columnNb,pItem);
+        ui->attributesTableView->setItem(ui->attributesTableView->rowCount()-1,columnNb,pItem);
     }
-}
+}*/
 
-void SegdConverterWindow::receiveAuxStatus(const bool &status)
+/*void SegdConverterWindow::receiveAuxStatus(const bool &status)
 {
     int columnNb = AttributeColumns.indexOf("Check Aux");
     if (columnNb!=-1)
@@ -813,22 +816,22 @@ void SegdConverterWindow::receiveAuxStatus(const bool &status)
             pItem->setBackgroundColor(Qt::red);
             pItem->setText("bad");
         }
-        ui->attributesTableWidget->setItem(ui->attributesTableWidget->rowCount()-1,columnNb,pItem);
+        ui->attributesTableView->setItem(ui->attributesTableView->rowCount()-1,columnNb,pItem);
     }
 
-}
+}*/
 
-void SegdConverterWindow::receiveTestStatus(const float &percent, const QColor &color)
+/*void SegdConverterWindow::receiveTestStatus(const float &percent, const QColor &color)
 {
     int columnNb = AttributeColumns.indexOf("Check Tests");
     if (columnNb!=-1)
     {
         QTableWidgetItem *pItem = new QTableWidgetItem(QString::number(percent));
         pItem->setBackgroundColor(color);
-        ui->attributesTableWidget->setItem(ui->attributesTableWidget->rowCount()-1,columnNb,pItem);
+        ui->attributesTableView->setItem(ui->attributesTableView->rowCount()-1,columnNb,pItem);
     }
 
-}
+}*/
 void SegdConverterWindow::closeEvent(QCloseEvent *event)
 {
     if (ui->actionStop->isEnabled())

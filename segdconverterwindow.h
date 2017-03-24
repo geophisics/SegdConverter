@@ -6,6 +6,7 @@
 #include <QThread>
 #include <Workers/segyworker.h>
 #include <auxviewdialog.h>
+#include <Models/attributesmodel.h>
 namespace Ui {
 class SegdConverterWindow;
 }
@@ -32,6 +33,7 @@ private:
     //SegyWorker *p_segyWorker;
     QString spsFile, rpsFile, xpsFile;
     QPointer<AuxViewDialog> viewDialog;
+    AttributesModel *attr_model;
 signals:
     void stopSignal();
 protected:
@@ -53,12 +55,12 @@ private slots:
     void convertingEnded();
     void openAuxParametersDialog();
     void recieveInfoMessage(const QString &message,const QColor &color);
-    void setColumnsForView (const QStringList &columns);
-    void receiveFfidDataSlot (const FfidData &data);
-    void receiveSeisAttributes(SeisAttributes *attr, const int &winNb);
-    void receiveRelation(QString name, float value, bool correct);
-    void receiveAuxStatus (const bool &status);
-    void receiveTestStatus(const float &percent, const QColor &color);
+   // void setColumnsForView (const QStringList &columns);
+   // void receiveFfidDataSlot (const FfidData &data);
+   // void receiveSeisAttributes(SeisAttributes *attr, const int &winNb);
+   // void receiveRelation(QString name, float value, bool correct);
+   //  void receiveAuxStatus (const bool &status);
+   //  void receiveTestStatus(const float &percent, const QColor &color);
     void receiveSomeError(const QString &err);
     void aboutQtSlot();
     void aboutSlot();

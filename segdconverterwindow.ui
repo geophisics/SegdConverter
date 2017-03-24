@@ -146,7 +146,7 @@
         <bool>true</bool>
        </property>
       </widget>
-      <widget class="QTableWidget" name="attributesTableWidget"/>
+      <widget class="QTableView" name="attributesTableView"/>
      </widget>
     </item>
    </layout>
