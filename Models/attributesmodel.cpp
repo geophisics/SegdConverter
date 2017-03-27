@@ -2,6 +2,7 @@
 #include <QSettings>
 #include <QCoreApplication>
 #include <QDir>
+#include <QDebug>
 
 AttributesModel::AttributesModel(QObject *parent):QAbstractTableModel(parent)
 {
@@ -27,6 +28,18 @@ void AttributesModel::setHeaders()
     headers =headers.mid(0,6);
     columns =6;
     QSettings *settings = new QSettings(QCoreApplication::applicationDirPath()+QDir::separator()+"config.ini",QSettings::IniFormat,this);
+    settings->beginGroup("/ConvertSettings");
+    if (settings->value("/AnalisysAuxes",false).toBool())
+    {
+        headers<<"Check Aux";
+        columns++;
+    }
+    if (settings->value("/CheckTests",false).toBool())
+    {
+        headers<<"Check Tests";
+        columns++;
+    }
+    settings->endGroup();
     settings->beginGroup("/WindowsSettings");
     int size = settings->beginReadArray("/Windows");
     for (int i =0; i<size; ++i)
@@ -58,6 +71,7 @@ void AttributesModel::setHeaders()
             columns++;
         }
     }
+    settings->endArray();
     size = settings->beginReadArray("/Relations");
     for (int i =0; i<size; ++i)
     {
@@ -67,26 +81,56 @@ void AttributesModel::setHeaders()
     }
     settings->endArray();
     settings->endGroup();
-    settings->beginGroup("/ConvertSettings");
-    if (settings->value("/AnalisysAuxes",false).toBool())
-    {
-        headers<<"Check Aux";
-        columns++;
-    }
-    if (settings->value("/CheckTests",false).toBool())
-    {
-        headers<<"Check Tests";
-        columns++;
-    }
-    settings->endGroup();
+
+    emit headerDataChanged(Qt::Horizontal,0,headers.count());
 }
+
 
 QVariant AttributesModel::data(const QModelIndex &index, int role) const
 {
-    return 1;
+    if (role == Qt::DisplayRole)
+    {
+        return QString("%1.%2").arg(index.row()).arg(index.column());//attributes.at(index.row()).at(index.column());
+    }
+    else return QVariant();
 }
+
 
 QVariant AttributesModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-   return headers.at(section);
+   if (role == Qt::DisplayRole)
+   {
+       if (orientation == Qt::Horizontal)
+       {
+           return headers[section];
+       }
+       else
+       {
+           return section+1;
+       }
+   }
+}
+
+void AttributesModel::receiveFfidData(/*QVector<QVariant> *data*/)
+{
+   // beginInsertRows(QModelIndex(),1,1);
+    //qDebug()<<data->count();
+    beginInsertRows(QModelIndex(),rows,rows);//attributes.count(),attributes.count());
+    //attributes.push_back(*data);
+    rows++;
+    endInsertRows();
+    //qDebug()<<attributes.count();
+
+    QModelIndex top = createIndex(attributes.count()-1,0);
+    QModelIndex bottom = createIndex(attributes.count()-1,headers.count());
+    emit dataChanged(top,bottom);
+    //this->resetInternalData();
+    //emit layoutChanged();
+    //qDebug()<<rows;
+    //endInsertRows();
+    //
+    //emit dataChanged(createIndex(0,0),createIndex(rows,columns));
+   // this->resetInternalData();
+    qDebug()<<rows;
+    //emit dataChanged(createIndex(rowCount(),0),createIndex(rowCount(),columnCount()));
 }

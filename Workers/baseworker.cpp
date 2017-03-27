@@ -802,6 +802,7 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
         }
         if (checkSpectrum && checkAkfTrace)
         {
+
             xlsxFormat.setPatternBackgroundColor(Qt::red);
             xlsx.write(currentRow,currentColumn,"bad",xlsxFormat);
         }
@@ -812,6 +813,9 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
         }
         xlsxFormat.setPatternBackgroundColor(Qt::white);
         emit sendAuxStatus(checkSpectrum && checkAkfTrace);
+
+        ffidAttributes->append(checkSpectrum && checkAkfTrace);
+
         emit sendVectors(tracePoints,checkAkfTrace,spectrumPoints,checkSpectrum,segd->getGeneralThree().getExtendedFileNumber());
     }
     else if (segd->getExtendedHeader().getTypeOfSource()==1)
@@ -851,6 +855,7 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
 void BaseWorker::checkingTests(SegdFile *segd)
 {
     float badTestsPercent = segd->checkTests();
+    ffidAttributes->append(badTestsPercent);
     if (badTestsPercent > testsPercent)
     {
         xlsxFormat.setPatternBackgroundColor(Qt::red);

@@ -32,9 +32,12 @@ SegdConverterWindow::SegdConverterWindow(QWidget *parent) :
     qRegisterMetaType<FfidData>();
     qRegisterMetaType<SeisAttributes>();
     attr_model=new AttributesModel(this);
-    attr_model->setHeaders();
+
     ui->attributesTableView->setModel(attr_model);
-    ui->attributesTableView->horizontalHeader()->setSectionsMovable(true);
+   // ui->attributesTableView->horizontalHeader()->setVisible(true);
+   // ui->attributesTableView->verticalHeader()->setVisible(true);
+    attr_model->setHeaders();
+    //ui->attributesTableView->horizontalHeader()->setSectionsMovable(true);
     connect(ui->actionOpenSegd,SIGNAL(triggered(bool)),this,SLOT(openDataSlot()));
     connect(ui->actionSaveSeisData,SIGNAL(triggered(bool)),this,SLOT(saveDataSlot()));
     connect(ui->actionSaveAttributes,SIGNAL(triggered(bool)),this,SLOT(saveAttributesFileSlot()));
@@ -481,16 +484,16 @@ void SegdConverterWindow::runSegy()
     }
     ui->logTextEdit->append("Начало конвертации.");
     connect(p_myThread,SIGNAL(started()),p_segyWorker,SLOT(Converting()));
-    connect(p_segyWorker,SIGNAL(finished()),p_myThread,SLOT(quit()));
+    connect(p_segyWorker,SIGNAL(sendSegdAttributes(QVector<QVariant>*)),attr_model,SLOT(receiveFfidData()));
     connect(p_segyWorker,SIGNAL(finished()),this,SLOT(convertingEnded()));
     connect(p_segyWorker,SIGNAL(finished()),p_segyWorker,SLOT(deleteLater()));
     connect(p_segyWorker,SIGNAL(sendInfoMessage(QString,QColor)),this,SLOT(recieveInfoMessage(QString,QColor)));
 
-    connect(p_segyWorker,SIGNAL(sendSegdData(FfidData)),this,SLOT(receiveFfidDataSlot(FfidData)));
-    connect(p_segyWorker,SIGNAL(sendSeisAttributes(SeisAttributes*,int)),this,SLOT(receiveSeisAttributes(SeisAttributes*,int)));
-    connect(p_segyWorker,SIGNAL(sendRelation(QString,float,bool)),this,SLOT(receiveRelation(QString,float,bool)));
-    connect(p_segyWorker,SIGNAL(sendAuxStatus(bool)),this,SLOT(receiveAuxStatus(bool)));
-    connect(p_segyWorker,SIGNAL(sendTestStatus(float,QColor)),this,SLOT(receiveTestStatus(float,QColor)));
+    //connect(p_segyWorker,SIGNAL(sendSegdData(FfidData)),this,SLOT(receiveFfidDataSlot(FfidData)));
+    //connect(p_segyWorker,SIGNAL(sendSeisAttributes(SeisAttributes*,int)),this,SLOT(receiveSeisAttributes(SeisAttributes*,int)));
+    //connect(p_segyWorker,SIGNAL(sendRelation(QString,float,bool)),this,SLOT(receiveRelation(QString,float,bool)));
+    //connect(p_segyWorker,SIGNAL(sendAuxStatus(bool)),this,SLOT(receiveAuxStatus(bool)));
+    //connect(p_segyWorker,SIGNAL(sendTestStatus(float,QColor)),this,SLOT(receiveTestStatus(float,QColor)));
     connect(p_myThread,SIGNAL(finished()),p_myThread,SLOT(deleteLater()));
     connect(ui->actionStop,SIGNAL(triggered(bool)),p_segyWorker,SLOT(stopRunning()),Qt::DirectConnection);
     connect(ui->actionStop,SIGNAL(triggered(bool)),this,SLOT(disableStop(bool)));

@@ -8,7 +8,7 @@
 #include <exclusion.h>
 #include <attributewindow.h>
 #include <QtCharts/QLineSeries>
-
+#include <QPair>
 
 
 class SegdTrace;
@@ -94,6 +94,8 @@ protected:
     QFile *logFile;
     QTextStream *logStream;
 
+    QVector <QVariant> ffidAttributes;
+
 
     int currentRow; //текущая ячейка в таблице xlsx
     int currentColumn; //текущий столбец в таблице xlsx
@@ -174,6 +176,7 @@ signals:
     void sendExplAuxes(QVector<QPointF>* , bool,QVector<QPointF>* , bool,QVector<QPointF>* , bool );
     void sendAuxStatus(bool);
     void sendTestStatus(float,QColor);
+    void sendSegdAttributes(QVector<QVariant> *data);
 public slots:
     void stopRunning();
 };
