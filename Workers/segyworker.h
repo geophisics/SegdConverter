@@ -5,8 +5,8 @@
 #include <QSettings>
 #include <QtXlsx>
 #include <attributewindow.h>
-#include <point.h>
-#include <exclusion.h>
+#include <SUB/point.h>
+#include <SUB/exclusion.h>
 #include <Workers/baseworker.h>
 
 #include "aquila/global.h"

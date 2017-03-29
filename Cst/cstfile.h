@@ -4,8 +4,8 @@
 #include <QObject>
 #include <Cst/csttrace.h>
 #include <Segd/segdfile.h>
-#include <point.h>
-#include "exclusion.h"
+#include <SUB/point.h>
+#include "SUB/exclusion.h"
 class CstFile : public QObject
 {
     Q_OBJECT

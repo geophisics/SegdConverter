@@ -1,7 +1,7 @@
 #include "segyfile.h"
 #include <QFile>
 #include <QDataStream>
-#include <exclusion.h>
+#include <SUB/exclusion.h>
 SegyFile::SegyFile(QObject *parent) : QObject(parent)
 {
 

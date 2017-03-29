@@ -143,7 +143,7 @@ void SegyWorker::countAttributes(SegyFile *sgy)
         if (attrWin->getCountAmpl() )
         {
             attributes->ampl = getAbsAvg(tracesInWindow);
-            ffidAttributes.append(attributes->ampl);
+            ffidAttributes->append(attributes->ampl);
             if (attributes->ampl < attrWin->getMinAmpl())
             {
                 attributes->correctAmpl = false;
@@ -157,7 +157,7 @@ void SegyWorker::countAttributes(SegyFile *sgy)
         if (attrWin->getCountRms())
         {
             attributes->rms = getRms(tracesInWindow);
-            ffidAttributes.append(attributes->rms);
+            ffidAttributes->append(attributes->rms);
             if (attributes->rms < attrWin->getMinRms())
             {
                 attributes->correctRms = false;
@@ -171,7 +171,7 @@ void SegyWorker::countAttributes(SegyFile *sgy)
         if (attrWin->getCountFreq())
         {
             attributes->freq = countFreq(tracesInWindow,sgy->getSampleInterval());
-            ffidAttributes.append(attributes->freq);
+            ffidAttributes->append(attributes->freq);
             if (attributes->freq < attrWin->getMinFreq())
             {
                 attributes->correctFreq = false;

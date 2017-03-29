@@ -4,8 +4,8 @@
 #include "segytrace.h"
 #include <QObject>
 #include <Segd/segdfile.h>
-#include <point.h>
-#include <exclusion.h>
+#include <SUB/point.h>
+#include <SUB/exclusion.h>
 static const unsigned char e2a[256] = {
           0,  1,  2,  3,156,  9,134,127,151,141,142, 11, 12, 13, 14, 15,
          16, 17, 18, 19,157,133,  8,135, 24, 25,146,143, 28, 29, 30, 31,

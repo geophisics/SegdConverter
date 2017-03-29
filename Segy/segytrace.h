@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QVector>
 #include <Segd/segdfile.h>
-#include <point.h>
+#include <SUB/point.h>
 class QFile;
 class segyTrace : public QObject
 {

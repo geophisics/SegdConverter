@@ -4,8 +4,8 @@
 #include <QObject>
 #include <QtXlsx>
 #include <xlsxformat.h>
-#include <point.h>
-#include <exclusion.h>
+#include <SUB/point.h>
+#include <SUB/exclusion.h>
 #include <attributewindow.h>
 #include <QtCharts/QLineSeries>
 #include <QPair>
@@ -94,7 +94,7 @@ protected:
     QFile *logFile;
     QTextStream *logStream;
 
-    QVector <QVariant> ffidAttributes;
+    QVector <QVariant> *ffidAttributes;
 
 
     int currentRow; //текущая ячейка в таблице xlsx

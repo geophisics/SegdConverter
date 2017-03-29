@@ -19,7 +19,6 @@ SOURCES += main.cpp\
     mydoublevalidator.cpp \
     windowsparametersdialog.cpp \
     attributewindow.cpp \
-    point.cpp \
     Segd/channelsetheader.cpp \
     Segd/extendedheader.cpp \
     Segd/generalone.cpp \
@@ -39,7 +38,6 @@ SOURCES += main.cpp\
     Segy/segytrace.cpp \
     Workers/segyworker.cpp \
     tableviewdialog.cpp \
-    exclusion.cpp \
     Workers/cstworker.cpp \
     Workers/baseworker.cpp \
     Cst/cstfile.cpp \
@@ -48,7 +46,9 @@ SOURCES += main.cpp\
     Workers/cstworkeronline.cpp \
     auxesdialog.cpp \
     auxviewdialog.cpp \
-    Models/attributesmodel.cpp
+    Models/attributesmodel.cpp \
+    SUB/exclusion.cpp \
+    SUB/point.cpp
 
 HEADERS  += segdconverterwindow.h \
     convertparametersdialog.h \
@@ -56,7 +56,6 @@ HEADERS  += segdconverterwindow.h \
     mydoublevalidator.h \
     windowsparametersdialog.h \
     attributewindow.h \
-    point.h \
     Segd/channelsetheader.h \
     Segd/extendedheader.h \
     Segd/generalone.h \
@@ -76,7 +75,6 @@ HEADERS  += segdconverterwindow.h \
     Segy/segytrace.h \
     Workers/segyworker.h \
     tableviewdialog.h \
-    exclusion.h \
     Workers/cstworker.h \
     Workers/baseworker.h \
     Cst/cstfile.h \
@@ -85,7 +83,9 @@ HEADERS  += segdconverterwindow.h \
     Workers/cstworkeronline.h \
     auxesdialog.h \
     auxviewdialog.h \
-    Models/attributesmodel.h
+    Models/attributesmodel.h \
+    SUB/exclusion.h \
+    SUB/point.h
 
 
 
