@@ -85,7 +85,9 @@ HEADERS  += segdconverterwindow.h \
     auxviewdialog.h \
     Models/attributesmodel.h \
     SUB/exclusion.h \
-    SUB/point.h
+    SUB/point.h \
+    SUB/threadsafevector.h \
+    SUB/general.h
 
 
 
