@@ -365,6 +365,7 @@ void SegdConverterWindow::disableStop(bool disable)
 void SegdConverterWindow::convertingEnded()
 {
      ui->logTextEdit->append("Конвертация завершена");
+     attr_model->saveDataInXlsx(ui->attrFileLineEdit->text());
      ui->actionRun->setEnabled(true);
      ui->actionExit->setEnabled(true);
      ui->actionStop->setEnabled(false);

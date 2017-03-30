@@ -4,7 +4,7 @@
 #include <QDir>
 #include <QDebug>
 #include <QBrush>
-
+#include <QtXlsx>
 AttributesModel::AttributesModel(QObject *parent):QAbstractTableModel(parent)
 {
     headers<<"FFID"<<"Line"<<"Point"<<"Source X"<<"Source Y"<<"Source Z";
@@ -125,4 +125,34 @@ CountedAttributes* AttributesModel::getAttributes()
 void AttributesModel::receiveFfidData(/*QVector<QVariant> *data*/)
 {
     emit layoutChanged();
+}
+
+void AttributesModel::saveDataInXlsx(const QString &path)
+{
+    QXlsx::Document xlsx(path);
+    QXlsx::Format xlsxFormat;
+    xlsxFormat.setHorizontalAlignment(QXlsx::Format::AlignHCenter);
+    xlsxFormat.setVerticalAlignment(QXlsx::Format::AlignVCenter);
+    xlsxFormat.setPatternBackgroundColor(Qt::white);
+    xlsxFormat.setBorderStyle(QXlsx::Format::BorderThin);
+    for(int i=0;i<headers.count();++i)
+    {
+        xlsx.write(1,i+1,headers.at(i));
+    }
+    for (int i=0;i<attributes.count();i++)
+    {
+        for(int j=0;j<headers.count();j++)
+        {
+            if (attributes.value(i).value(j).second)
+            {
+                xlsxFormat.setPatternBackgroundColor(Qt::white);
+            }
+            else
+            {
+                xlsxFormat.setPatternBackgroundColor(Qt::red);
+            }
+            xlsx.write(i+2,j+1,attributes.value(i).value(j).first,xlsxFormat);
+        }
+    }
+    xlsx.save();
 }

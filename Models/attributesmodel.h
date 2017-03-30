@@ -30,6 +30,7 @@ private:
     //QVector<segdAttributes> attributes;
 public slots:
     void receiveFfidData();
+    void saveDataInXlsx(const QString &path);
 };
 
 #endif // ATTRIBUTESMODEL_H

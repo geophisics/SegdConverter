@@ -64,7 +64,7 @@ void SegyWorker::Converting()
     }
     int fileCount = 0; // количество ф.н. в сводном файле
     //format.setHorizontalAlignment(Format::AlignHCenter);
-    writeXlsxHeaders();
+    //writeXlsxHeaders();
     currentRow = 11 + windows.count();
     //FfidData segdData;
 
@@ -97,7 +97,7 @@ void SegyWorker::Converting()
         }
         fileForConvertingNum++;
     }
-    saveXlsxFile();
+    //saveXlsxFile();
     *logStream << QString("%1 Завершение конвертации\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss"));
     delete logStream;
     logFile->close();
