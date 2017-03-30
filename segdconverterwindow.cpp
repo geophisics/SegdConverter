@@ -439,7 +439,8 @@ void SegdConverterWindow::recieveInfoMessage(const QString &message, const QColo
 //конвертация в файл segy
 void SegdConverterWindow::runSegy()
 {
-    SegyWorker *p_segyWorker = new SegyWorker();
+    //SegyWorker *p_segyWorker = new SegyWorker();
+    SegyWorker *p_segyWorker = new SegyWorker(attr_model->getAttributes());
     connect(p_segyWorker,SIGNAL(sendSomeError(QString)),this,SLOT(receiveSomeError(QString)));
     p_segyWorker->readSettings();
     p_segyWorker->setSegdPath(ui->segdLineEdit->text());
@@ -488,7 +489,7 @@ void SegdConverterWindow::runSegy()
     connect(p_segyWorker,SIGNAL(finished()),this,SLOT(convertingEnded()));
     connect(p_segyWorker,SIGNAL(finished()),p_segyWorker,SLOT(deleteLater()));
     connect(p_segyWorker,SIGNAL(sendInfoMessage(QString,QColor)),this,SLOT(recieveInfoMessage(QString,QColor)));
-
+    connect(p_segyWorker,SIGNAL(fileConverted()),attr_model,SLOT(receiveFfidData()));
     //connect(p_segyWorker,SIGNAL(sendSegdData(FfidData)),this,SLOT(receiveFfidDataSlot(FfidData)));
     //connect(p_segyWorker,SIGNAL(sendSeisAttributes(SeisAttributes*,int)),this,SLOT(receiveSeisAttributes(SeisAttributes*,int)));
     //connect(p_segyWorker,SIGNAL(sendRelation(QString,float,bool)),this,SLOT(receiveRelation(QString,float,bool)));

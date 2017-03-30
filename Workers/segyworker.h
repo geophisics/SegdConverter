@@ -17,7 +17,7 @@ class SegyWorker : public BaseWorker
     Q_OBJECT
 public:
     explicit SegyWorker(QObject *parent = 0);
-
+    explicit SegyWorker(CountedAttributes *attr,QObject *parent=Q_NULLPTR) : BaseWorker(attr,parent) {}
 
     //void setFirstFile();
 signals:

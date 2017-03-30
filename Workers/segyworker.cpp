@@ -143,7 +143,9 @@ void SegyWorker::countAttributes(SegyFile *sgy)
         if (attrWin->getCountAmpl() )
         {
             attributes->ampl = getAbsAvg(tracesInWindow);
-            ffidAttributes->append(attributes->ampl);
+            fileAttributes.append(qMakePair(attributes->ampl,true));
+
+            //ffidAttributes->append(attributes->ampl);
             if (attributes->ampl < attrWin->getMinAmpl())
             {
                 attributes->correctAmpl = false;
@@ -157,7 +159,8 @@ void SegyWorker::countAttributes(SegyFile *sgy)
         if (attrWin->getCountRms())
         {
             attributes->rms = getRms(tracesInWindow);
-            ffidAttributes->append(attributes->rms);
+            //ffidAttributes->append(attributes->rms);
+            fileAttributes.append(qMakePair(attributes->rms,true));
             if (attributes->rms < attrWin->getMinRms())
             {
                 attributes->correctRms = false;
@@ -171,7 +174,8 @@ void SegyWorker::countAttributes(SegyFile *sgy)
         if (attrWin->getCountFreq())
         {
             attributes->freq = countFreq(tracesInWindow,sgy->getSampleInterval());
-            ffidAttributes->append(attributes->freq);
+            fileAttributes.append(qMakePair(attributes->freq,true));
+            //ffidAttributes->append(attributes->freq);
             if (attributes->freq < attrWin->getMinFreq())
             {
                 attributes->correctFreq = false;
@@ -206,7 +210,8 @@ void SegyWorker::countAttributes(SegyFile *sgy)
                 }
             }
             attributes->energy = getEnergy(spectrum,frqStep);
-            ffidAttributes->append(attributes->energy);
+            fileAttributes.append(qMakePair(attributes->energy,true));
+            //ffidAttributes->append(attributes->energy);
             if (attrWin ->getCountEnergy())
             {
                 if (attributes->energy < attrWin->getMinEnergy())
@@ -229,7 +234,8 @@ void SegyWorker::countAttributes(SegyFile *sgy)
                 {
                     attributes->dfr = getWidth(spectrum)*frqStep;
                 }
-                ffidAttributes->append(attributes->dfr);
+                fileAttributes.append(qMakePair(attributes->dfr,true));
+                //ffidAttributes->append(attributes->dfr);
                 if (attributes->dfr < attrWin->getMinDfr())
                 {
                     attributes->correctDfr = false;
@@ -251,7 +257,8 @@ void SegyWorker::countAttributes(SegyFile *sgy)
         tmp = str.mid(str.indexOf("/")+1,str.indexOf(">")-str.indexOf("/")-1);
         float b = amplitudes.value(tmp);
         relation = a/b;
-        ffidAttributes->append(relation);
+        fileAttributes.append(qMakePair(relation,true));
+        //ffidAttributes->append(relation);
         tmp = str.mid(str.lastIndexOf(">")+1);
         float c = tmp.toFloat();
         if (relation<c)
@@ -276,7 +283,8 @@ bool SegyWorker::convertOneFile(const QString &filePath, const bool &writeHeader
     FfidData segdData;
     SegdFile *segd;
     SegyFile *segy;
-    ffidAttributes = new QVector<QVariant>();
+    fileAttributes.clear();
+    //ffidAttributes = new QVector<QVariant>();
     *logStream << QString("%1 Начало обработки файла %2\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(filePath);
     emit sendInfoMessage(QTime::currentTime().toString(),Qt::black);
     if (backup)
@@ -353,13 +361,18 @@ bool SegyWorker::convertOneFile(const QString &filePath, const bool &writeHeader
         segdData.X = segy->getSourceX(0);
         segdData.Y = segy->getSourceY(0);
         segdData.Z = segy->getSourceZ(0);
-
-        ffidAttributes->append(segy->getFileNumFirstTrace());
+        fileAttributes.append(qMakePair(segy->getFileNumFirstTrace(),true));
+        fileAttributes.append(qMakePair(segy->getSP(),true));
+        fileAttributes.append(qMakePair(segy->getgetShotPointNum(),true));
+        fileAttributes.append(qMakePair(segy->getSourceX(0),true));
+        fileAttributes.append(qMakePair(segy->getSourceY(0),true));
+        fileAttributes.append(qMakePair(segy->getSourceZ(0),true));
+        /*ffidAttributes->append(segy->getFileNumFirstTrace());
         ffidAttributes->append(segy->getSP());
         ffidAttributes->append(segy->getgetShotPointNum());
         ffidAttributes->append(segy->getSourceX(0));
         ffidAttributes->append(segy->getSourceY(0));
-        ffidAttributes->append(segy->getSourceZ(0));
+        ffidAttributes->append(segy->getSourceZ(0));*/
 
         emit sendSegdData(segdData);
         if (checkTests)
@@ -444,7 +457,10 @@ bool SegyWorker::convertOneFile(const QString &filePath, const bool &writeHeader
             }
         }*/
         countAttributes(segy);
-        emit sendSegdAttributes(ffidAttributes);
+        attributes->append(AttributesFromFile(fileAttributes));
+        //emit sendSegdAttributes(ffidAttributes);
+
+        emit fileConverted();
         emit sendInfoMessage(QTime::currentTime().toString(),Qt::black);
         delete segy;
         return true;

@@ -20,6 +20,11 @@ BaseWorker::BaseWorker(QObject *parent) : QObject(parent)
 
 }
 
+BaseWorker::BaseWorker(CountedAttributes *attr, QObject *parent):QObject(parent),attributes(attr)
+{
+    //attributes = attr;
+    settings = new QSettings(QCoreApplication::applicationDirPath()+QDir::separator()+"config.ini",QSettings::IniFormat,this);
+}
 
 
 // устанавливаем путь до файлов segd
@@ -814,8 +819,8 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
         xlsxFormat.setPatternBackgroundColor(Qt::white);
         emit sendAuxStatus(checkSpectrum && checkAkfTrace);
 
-        ffidAttributes->append(checkSpectrum && checkAkfTrace);
-
+        //ffidAttributes->append(checkSpectrum && checkAkfTrace);
+        fileAttributes.append(qMakePair(QString("ok"),true));
         emit sendVectors(tracePoints,checkAkfTrace,spectrumPoints,checkSpectrum,segd->getGeneralThree().getExtendedFileNumber());
     }
     else if (segd->getExtendedHeader().getTypeOfSource()==1)
@@ -855,7 +860,8 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
 void BaseWorker::checkingTests(SegdFile *segd)
 {
     float badTestsPercent = segd->checkTests();
-    ffidAttributes->append(badTestsPercent);
+   // ffidAttributes->append(badTestsPercent);
+    fileAttributes.append(qMakePair(badTestsPercent,true));
     if (badTestsPercent > testsPercent)
     {
         xlsxFormat.setPatternBackgroundColor(Qt::red);

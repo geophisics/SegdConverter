@@ -26,19 +26,19 @@ public:
 
     void clear()
     {
-        QWriteLocker(&lock);
+        QWriteLocker locker(&lock);
         vec.clear();
     }
 
     void append(const T &value)
     {
-        QWriteLocker(&lock);
+        QWriteLocker locker(&lock);
         vec.append(value);
     }
 
     T value(const int &i) const
     {
-        QReadLocker(&lock);
+        QReadLocker locker(&lock);
         return vec.value(i);
     }
 private:

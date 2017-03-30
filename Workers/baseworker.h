@@ -9,7 +9,7 @@
 #include <attributewindow.h>
 #include <QtCharts/QLineSeries>
 #include <QPair>
-
+#include <SUB/general.h>
 
 class SegdTrace;
 class SegdFile;
@@ -30,6 +30,7 @@ class BaseWorker : public QObject
 public:
     enum exclusionType {mesaExcl, txtExcl};
     explicit BaseWorker(QObject *parent = 0);
+    explicit BaseWorker(CountedAttributes *attr,QObject *parent=Q_NULLPTR);
 
 protected:
     QString segdPath;
@@ -94,8 +95,11 @@ protected:
     QFile *logFile;
     QTextStream *logStream;
 
-    QVector <QVariant> *ffidAttributes;
+    //QVector <QVariant> *ffidAttributes;
 
+
+    CountedAttributes* attributes;
+    AttributesFromFile fileAttributes;
 
     int currentRow; //текущая ячейка в таблице xlsx
     int currentColumn; //текущий столбец в таблице xlsx
@@ -177,6 +181,8 @@ signals:
     void sendAuxStatus(bool);
     void sendTestStatus(float,QColor);
     void sendSegdAttributes(QVector<QVariant> *data);
+    void fileConverted();
+
 public slots:
     void stopRunning();
 };
