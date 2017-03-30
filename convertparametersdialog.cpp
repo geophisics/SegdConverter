@@ -10,24 +10,19 @@ ConvertParametersDialog::ConvertParametersDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ConvertParametersDialog)
 {
-    //this->setLocale(QLocale(QLocale::English,QLocale::UnitedStates));
     ui->setupUi(this);
     this->setAttribute(Qt::WA_DeleteOnClose);
     MyDoubleValidator *doubleVal = new MyDoubleValidator(0,1,20,ui->userMpFactorLineEdit);
     doubleVal->setNotation(QDoubleValidator::StandardNotation);
     ui->userMpFactorLineEdit->setValidator(doubleVal);
-    //ui->userMpFactorLineEdit->setValidator();
     settings = new QSettings(QCoreApplication::applicationDirPath()+QDir::separator()+"config.ini",QSettings::IniFormat,this);
     connect(ui->testsCheckBox,SIGNAL(stateChanged(int)),this,SLOT(activateTestSpinBox(int)));
     readSettings();
-
     connect(ui->onlineYesRadioButton,SIGNAL(toggled(bool)),ui->waitingTimeSpinBox,SLOT(setEnabled(bool)));
-    //setAttribute(Qt::WA_DeleteOnClose);
 }
 
 ConvertParametersDialog::~ConvertParametersDialog()
 {
-    //saveSettings();
     delete ui;
 }
 

@@ -26,6 +26,7 @@ int AttributesModel::columnCount(const QModelIndex &parent) const
 
 void AttributesModel::setHeaders()
 {
+    attributes.clear();
     headers =headers.mid(0,6);
     columns =6;
     QSettings *settings = new QSettings(QCoreApplication::applicationDirPath()+QDir::separator()+"config.ini",QSettings::IniFormat,this);

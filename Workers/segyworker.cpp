@@ -299,14 +299,14 @@ bool SegyWorker::convertOneFile(const QString &filePath, const bool &writeHeader
         fileAttributes.append(qMakePair(segy->getSourceX(0),true));
         fileAttributes.append(qMakePair(segy->getSourceY(0),true));
         fileAttributes.append(qMakePair(segy->getSourceZ(0),true));
-        if (checkTests)
-        {
-            checkingTests(segd);
-            currentColumn++;
-        }
         if (analysisAuxes)
         {
             chekingAuxData(segd);
+            currentColumn++;
+        }
+        if (checkTests)
+        {
+            checkingTests(segd);
             currentColumn++;
         }
         delete(segd);

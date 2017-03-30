@@ -8,7 +8,6 @@
 #include <SUB/exclusion.h>
 #include <attributewindow.h>
 #include <QtCharts/QLineSeries>
-#include <QPair>
 #include <SUB/general.h>
 
 class SegdTrace;

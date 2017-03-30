@@ -15,9 +15,9 @@ WindowsParametersDialog::WindowsParametersDialog(QWidget *parent) :
     ui(new Ui::WindowsParametersDialog)
 {
     ui->setupUi(this);
+    this->setAttribute(Qt::WA_DeleteOnClose);
     QStringList columnNames;
     columnNames << "Мин. Удаление"<<"Макс. Удаление"<<"Мин. Время"<<"Макс. Время"<<"Cр. Ампл" << "Ср. кв. Ампл" << "Частота" <<"Спектр"<<"Энергия спектра" << "Ширина Спектра"<<"Мин. Амплитуда"<<"Мин Ср. Кв. Ампл."<<"Мин. Частота"<<"Мин. ширина спектра"<<"Мин. энергия спектра";
-    //mapper = new QSignalMapper(this);
     ui->windowsTableWidget->setColumnCount(15);
     ui->windowsTableWidget->setRowCount(0);
     ui->windowsTableWidget->setHorizontalHeaderLabels(columnNames);
@@ -26,7 +26,6 @@ WindowsParametersDialog::WindowsParametersDialog(QWidget *parent) :
     this->setMaximumWidth(1850);
     settings = new QSettings(QCoreApplication::applicationDirPath()+QDir::separator()+"config.ini",QSettings::IniFormat,this);
     ui->minRatioLineEdit->setValidator(new QIntValidator(0,9999,ui->minRatioLineEdit));
-
     ui->relationsTableWidget->setColumnCount(3);
     columnNames.clear();
     columnNames<<"Амплитуда 1"<<"Амплитуда 2"<<"Мин Соотношение";
@@ -38,31 +37,6 @@ WindowsParametersDialog::WindowsParametersDialog(QWidget *parent) :
     connect(ui->minFreqSpinBox,SIGNAL(valueChanged(int)),this,SLOT(minFrqValueChanged(int)));
     connect(ui->maxFreqSpinBox,SIGNAL(valueChanged(int)),this,SLOT(maxFrqValueChanged(int)));
     readSettings();
-    //connect(ui->windowsTableWidget,SIGNAL(cellClicked(int,int)),this,SLOT(windowsTableWidgetItemChanged(int,int)));
-    //addRow();
-    //addRow();
-    /*int i=0;
-    for ( ;i<4;i++)
-    {
-        QLineEdit *lEdit=new QLineEdit;
-        lEdit->setValidator(new QIntValidator(0,500,lEdit));
-        lEdit->setFrame(false);
-        ui->windowsTableWidget->setCellWidget(0,i,lEdit);
-    }
-    for (;i<10;i++)
-    {
-        QCheckBox *pCheckBox = new QCheckBox();
-        ui->windowsTableWidget->setCellWidget(0,i,pCheckBox);
-        ui->windowsTableWidget->cellWidget(0,i)->setStyleSheet("margin-left:50%;margin-right:50%");
-    }
-    for ( ;i<15;i++)
-    {
-        QLineEdit *lEdit=new QLineEdit;
-        lEdit->setValidator(new QIntValidator(0,500,lEdit));
-        lEdit->setFrame(false);
-        ui->windowsTableWidget->setCellWidget(0,i,lEdit);
-    }
-    ui->windowsTableWidget->resizeColumnsToContents();*/
 }
 
 WindowsParametersDialog::~WindowsParametersDialog()
@@ -83,29 +57,20 @@ void WindowsParametersDialog::addRow()
         lEdit->setFrame(false);
         ui->windowsTableWidget->setCellWidget(ui->windowsTableWidget->rowCount()-1,i,lEdit);
         lEdit->setAlignment(Qt::AlignHCenter);
-        //ui->windowsTableWidget->cellWidget(ui->windowsTableWidget->rowCount()-1,i)->setStyleSheet("margin-left:50%;margin-right:50%");
     }
-
     pCheckBox = new QCheckBox();
-    //pCheckBox->set
     ui->windowsTableWidget->setCellWidget(ui->windowsTableWidget->rowCount()-1,4,pCheckBox);
     ui->windowsTableWidget->cellWidget(ui->windowsTableWidget->rowCount()-1,4)->setStyleSheet("margin-left:50%;margin-right:50%");
     connect(pCheckBox,SIGNAL(stateChanged(int)),this,SLOT(countAmplCheckBoxStateChanged(int)));
-    //connect(pCheckBox,SIGNAL())
-    //connect(pCheckBox,SIGNAL(stateChanged(int)),mapper,SLOT(map()));
-    //mapper->setMapping(pCheckBox,QString("A%1").arg(ui->windowsTableWidget->rowCount()));
     pCheckBox = new QCheckBox();
     ui->windowsTableWidget->setCellWidget(ui->windowsTableWidget->rowCount()-1,5,pCheckBox);
     ui->windowsTableWidget->cellWidget(ui->windowsTableWidget->rowCount()-1,5)->setStyleSheet("margin-left:50%;margin-right:50%");
     connect(pCheckBox,SIGNAL(stateChanged(int)),this,SLOT(countAmplCheckBoxStateChanged(int)));
-    //connect(pCheckBox,SIGNAL(stateChanged(int)),mapper,SLOT(map()));
-    //mapper->setMapping(pCheckBox,QString("R%1").arg(ui->windowsTableWidget->rowCount()));
     for (i=6;i<10;i++)
     {
         pCheckBox = new QCheckBox();
         ui->windowsTableWidget->setCellWidget(ui->windowsTableWidget->rowCount()-1,i,pCheckBox);
         ui->windowsTableWidget->cellWidget(ui->windowsTableWidget->rowCount()-1,i)->setStyleSheet("margin-left:50%;margin-right:50%");
-        //connect(pCheckBox,SIGNAL(stateChanged(int)),this,SLOT(countAmplCheckBoxStateChanged(int)));
     }
     for ( ;i<15;i++)
     {
@@ -114,21 +79,18 @@ void WindowsParametersDialog::addRow()
         lEdit->setFrame(false);
         ui->windowsTableWidget->setCellWidget(ui->windowsTableWidget->rowCount()-1,i,lEdit);
         lEdit->setAlignment(Qt::AlignHCenter);
-        //ui->windowsTableWidget->cellWidget(ui->windowsTableWidget->rowCount()-1,i)->setStyleSheet("margin-left:50%;margin-right:50%");
     }
     ui->windowsTableWidget->resizeColumnsToContents();
 }
+
 //сохраняем параметры
 void WindowsParametersDialog::saveSettings()
 {
-    //QVector<AttributeWindow*> windows;
-    //AttributeWindow *windowAttr;
     int minOffset,maxOffset,minTime,maxTime;
     QLineEdit *pLineE;
     QCheckBox *pCheckB;
     for (int i=0; i<ui->windowsTableWidget->rowCount();++i)
     {
-        //windowAttr = new AttributeWindow();
         pLineE=(qobject_cast<QLineEdit*>(ui->windowsTableWidget->cellWidget(i,0)));
         minOffset= pLineE->text().toInt();
         pLineE=(qobject_cast<QLineEdit*>(ui->windowsTableWidget->cellWidget(i,1)));
@@ -151,7 +113,6 @@ void WindowsParametersDialog::saveSettings()
     settings->setValue("/MutedTraces",ui->mutedCheckBox->isChecked());
     settings->setValue("/CheckTests",ui->checkTestsCheckBox->isChecked());
     settings->setValue("/MinAmplValue",ui->minAmplDoubleSpinBox->value());
-    //settings->setValue("/Relations",ui->relationsLineEdit->text());
     settings->beginWriteArray("/Windows");
     for(int j =0; j<ui->windowsTableWidget->rowCount();++j)
     {
@@ -216,7 +177,6 @@ void WindowsParametersDialog::readSettings()
     ui->checkTestsCheckBox->setChecked(settings->value("/CheckTests",false).toBool());
     ui->minAmplDoubleSpinBox->setValue(settings->value("/MinAmplValue",0.0).toDouble());
     ui->nbWindowsSpinBox->setValue(settings->value("/NbWindows",0).toInt());
-    //ui->relationsLineEdit->setText(settings->value("/Relations","").toString());
     int size = settings->beginReadArray("/Windows");
     for (int i=0; i<size; ++i)
     {
@@ -326,16 +286,7 @@ void WindowsParametersDialog::addRatioRow()
 }
 void WindowsParametersDialog::addRatioSlot()
 {
-    /*ui->relationsTableWidget->setRowCount(ui->relationsTableWidget->rowCount()+1);
-    for (int i =0; i<3; ++i )
-    {
-        QTableWidgetItem *item = new QTableWidgetItem();
-        item->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-        ui->relationsTableWidget->setItem(ui->relationsTableWidget->rowCount()-1,i,item);
-    }*/
-
     QStringList currentRelations;
-
     for (int i=0; i<ui->relationsTableWidget->rowCount();++i)
     {
         currentRelations.append(ui->relationsTableWidget->item(i,0)->text()+ui->relationsTableWidget->item(i,1)->text());
@@ -367,39 +318,11 @@ void WindowsParametersDialog::displayMenu(QPoint pos)
 {
     QMenu menu(this);
     QAction *act=menu.addAction("Удалить");
-    //QAction *paste = menu.addAction("Вставить глубины");
     QAction *a=menu.exec(ui->relationsTableWidget->viewport()->mapToGlobal(pos));
     if (act==a)
     {
-        //int ffid = ui->segyBreaksTableWidget->item(ui->segyBreaksTableWidget->currentRow(),0)->text().toInt();
         ui->relationsTableWidget->removeRow(ui->relationsTableWidget->currentRow());
-        /*QString itemText;
-
-        for (int i=0; i<ui->segyListWidget->count(); ++i)
-        {
-            itemText = ui->segyListWidget->item(i)->text();
-            if (itemText.left(itemText.indexOf('.')).toInt()==ffid)
-            {
-                ui->segyListWidget->takeItem(i);
-                break;
-            }
-        }*/
-        //QList<QListWidgetItem*> listItem = ui->segyBreaksTableWidget->
-        //ui->segyListWidget-> ffid.leftJustified()
-        //this->setFixedSize(ui->segyBreaksTableWidget->horizontalHeader()->length()+125,ui->segyBreaksTableWidget->verticalHeader()->length()+75);
     }
-    /*if (paste == a)
-    {
-        QString str = qApp->clipboard()->text();
-        QStringList strLst = str.split("\n");
-        QRegExp reg("(\\s)");
-        for (int i =0; i<ui->segyBreaksTableWidget->rowCount() && i<strLst.count();i++ )
-        {
-            QStringList strLst1 = strLst[i].split(reg);
-            ui->segyBreaksTableWidget->item(i,1)->setText(strLst1[0]);
-        }
-
-    }*/
 }
 
 void WindowsParametersDialog::minFrqValueChanged(int val)

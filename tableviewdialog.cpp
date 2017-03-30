@@ -12,7 +12,6 @@ TableViewDialog::TableViewDialog(QWidget *parent) :
     QStringList columnNames;
     columnNames << "Параметр" << "Отображение";
     ui->tableWidget->setHorizontalHeaderLabels(columnNames);
-
     settings = new QSettings(QCoreApplication::applicationDirPath()+QDir::separator()+"config.ini",QSettings::IniFormat,this);
     QStringList rowsNames;
     rowsNames = readSettings();

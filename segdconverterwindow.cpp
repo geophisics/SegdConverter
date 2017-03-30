@@ -65,6 +65,7 @@ void SegdConverterWindow::openConvertParametersDialog()
     if (dialogResult==1)
     {
         readConvertParamsSettings();
+        attr_model->setHeaders();
     }
 }
 //вызываем диалог параметров бинирования
@@ -77,7 +78,11 @@ void SegdConverterWindow::openBinningParametersDialog()
 void SegdConverterWindow::openWindowsParametersDialog()
 {
     WindowsParametersDialog *dialog = new WindowsParametersDialog();
-    dialog->exec();
+    int dialogResult = dialog->exec();
+    if (dialogResult==1)
+    {
+        attr_model->setHeaders();
+    }
 }
 void SegdConverterWindow::openTableViewParametersDialog()
 {
@@ -93,7 +98,6 @@ void SegdConverterWindow::readSettings()
     ui->outFileLineEdit->setText(settings->value("/OutFile","").toString());
     ui->attrFileLineEdit->setText(settings->value("AttrPath","").toString());
     WorkDir = settings->value("/WorkDir","").toString();
-    //int columns = settings->beginReadArray()
     QByteArray MyArray = settings->value("/TableState","").toByteArray();
     settings->endGroup();
     settings->beginGroup("/ViewSettings");
@@ -117,36 +121,6 @@ void SegdConverterWindow::readSettings()
     //ui->attributesTableView->setHorizontalHeader();
 }
 
-//void SegdConverterWindow::slot1()
-//{
-//    settings->beginGroup("/MainSettings");
-
-//    int size = settings->beginReadArray("/columns");
-//    QList<int> columnsOrder;
-
-//    int visColumn;
-//    int visColumn1;
-//    for (int i=0; i<size; ++i)
-//    {
-//        settings->setArrayIndex(i);
-//        columnsOrder.append(settings->value("/columnNb",i).toInt());
-//        //visColumn = settings->value("/columnNb",i).toInt();
-//        //visColumn1 = ui->attributesTableView->visualColumn(i);
-//        //ui->attributesTableView->horizontalHeader()->moveSection(ui->attributesTableView->visualColumn(i),visColumn);
-//        //a = ui->attributesTableView->visualColumn(i);
-//        //ui->attributesTableView->horizontalHeader()->swapSections(i,settings->value("/columnNb",i).toInt());
-//        this->repaint();
-//    }
-//    int a;
-//    for (int i = 0; i<columnsOrder.count();++i)
-//    {
-//        a = columnsOrder.indexOf(i);
-//        ui->attributesTableView->horizontalHeader()->moveSection(i,a+1);
-//    }
-//    //ui->attributesTableView->horizontalHeader()->moveSection(0,2);
-//    settings->endArray();
-//    settings->endGroup();
-//}
 //сохраняем настройки
 void SegdConverterWindow::saveSettings()
 {

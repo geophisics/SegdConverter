@@ -1,6 +1,5 @@
 #include "baseworker.h"
 #include "QQueue"
-
 #include "aquila/transform/FftFactory.h"
 #include "aquila/functions.h"
 #include <algorithm>
@@ -13,8 +12,6 @@
 
 QT_CHARTS_USE_NAMESPACE
 
-
-
 BaseWorker::BaseWorker(QObject *parent) : QObject(parent)
 {
 
@@ -22,10 +19,8 @@ BaseWorker::BaseWorker(QObject *parent) : QObject(parent)
 
 BaseWorker::BaseWorker(CountedAttributes *attr, QObject *parent):QObject(parent),attributes(attr)
 {
-    //attributes = attr;
     settings = new QSettings(QCoreApplication::applicationDirPath()+QDir::separator()+"config.ini",QSettings::IniFormat,this);
 }
-
 
 // устанавливаем путь до файлов segd
 void BaseWorker::setSegdPath(const QString &path)
@@ -759,16 +754,7 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
         maxAmpl = maxAmpl/segd->getExtendedHeader().getDumpStackingFold();
         float amplKoef=0.0;
         amplKoef = (maxAmpl-akfMaxAmpl)/akfMaxAmpl;
-        //qDebug()<<QString::number(amplKoef,'g',20);
-        /*if (maxAmpl>akfMaxAmpl)
-        {
-            amplKoef = std::round()
-        }
-        else
-        {
-
-        }*/
-        QVector<QPointF> *spectrumPoints = new QVector<QPointF>;
+         QVector<QPointF> *spectrumPoints = new QVector<QPointF>;
         QVector<QPointF> *tracePoints = new QVector<QPointF>;
         float frqStep = 1000000.0/segd->getExtendedHeader().getSampleRate()/spectrum.count();
         bool checkAkfTrace=false;
@@ -776,18 +762,11 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
         {
             checkAkfTrace = true;
         }
-        //bool checkMaxTime = (maxTime == akfMaxTime);
         bool checkSpectrum;
-        //qDebug()<<"MinFrq: "<<akfMinFrq<<"MaxFrq:"<<akfMaxFrq;
-
         int freqCount =std::round(akfMinFrq/frqStep);
-
         float minFrqValue = spectrum.value(freqCount);
-        //qDebug()<<"MinFrqPos"<<freqCount<<"MinFrqValue"<<minFrqValue;
         freqCount =std::round(akfMaxFrq/frqStep);
         float maxFrqValue = spectrum.value(freqCount);
-        //qDebug()<<"MaxFrqPos"<<freqCount<<"MaxFrqValue"<<minFrqValue;
-        //qDebug()<<"minFrqValue-maxFrqValue"<<minFrqValue-maxFrqValue <<"minFrqValue-akfFrqLvl"<<minFrqValue-akfFrqLvl <<"maxFrqValue-akfFrqLvl"<<maxFrqValue-akfFrqLvl;
         if (abs (minFrqValue-maxFrqValue) <5 && abs(minFrqValue-akfFrqLvl) <5 && abs(maxFrqValue-akfFrqLvl)<5)
         {
             checkSpectrum = true;
@@ -807,20 +786,12 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
         }
         if (checkSpectrum && checkAkfTrace)
         {
-
-            xlsxFormat.setPatternBackgroundColor(Qt::red);
-            xlsx.write(currentRow,currentColumn,"bad",xlsxFormat);
+            fileAttributes.append(qMakePair(QString("ok!"),true));
         }
         else
         {
-            xlsxFormat.setPatternBackgroundColor(Qt::green);
-            xlsx.write(currentRow,currentColumn,"ok",xlsxFormat);
+            fileAttributes.append(qMakePair(QString("bad!"),false));
         }
-        xlsxFormat.setPatternBackgroundColor(Qt::white);
-        emit sendAuxStatus(checkSpectrum && checkAkfTrace);
-
-        //ffidAttributes->append(checkSpectrum && checkAkfTrace);
-        fileAttributes.append(qMakePair(QString("ok"),true));
         emit sendVectors(tracePoints,checkAkfTrace,spectrumPoints,checkSpectrum,segd->getGeneralThree().getExtendedFileNumber());
     }
     else if (segd->getExtendedHeader().getTypeOfSource()==1)
@@ -860,21 +831,8 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
 void BaseWorker::checkingTests(SegdFile *segd)
 {
     float badTestsPercent = segd->checkTests();
-   // ffidAttributes->append(badTestsPercent);
-    fileAttributes.append(qMakePair(badTestsPercent,true));
-    if (badTestsPercent > testsPercent)
-    {
-        xlsxFormat.setPatternBackgroundColor(Qt::red);
-
-    }
-    else
-    {
-        xlsxFormat.setPatternBackgroundColor(Qt::red);
-        //emit sendTestStatus(badTestsPercent,Qt::green);
-    }
-    emit sendTestStatus(badTestsPercent,xlsxFormat.patternBackgroundColor());
-    xlsx.write(currentRow,currentColumn,badTestsPercent,xlsxFormat);
-    xlsxFormat.setPatternBackgroundColor(Qt::white);
+    bool checkTest = badTestsPercent<testsPercent ? true : false;
+    fileAttributes.append(qMakePair(badTestsPercent,checkTest));
 }
 
 QVector<float> BaseWorker::getSpectrumDb(std::vector<float> traceData)
