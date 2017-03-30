@@ -21,12 +21,9 @@ void CstWorker::Converting()
     logStream = new QTextStream(logFile);
     logStream->setCodec("UTF8");
     *logStream << QString("%1 Начало конвертации\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss"));
-
     int fileForConvertingNum;
-
     QFile cstFile;
     cstFile.setFileName(outPath);
-
     if (cstFile.open(QIODevice::WriteOnly))
     {
         cstFile.close();
@@ -84,23 +81,17 @@ void CstWorker::Converting()
         return;
     }
     int fileCount = 0; // количество ф.н. в сводном файле
-    writeXlsxHeaders();
-    currentRow = 11 + windows.count();
-//    FfidData segdData;
-//    QString fileForWork;
     run = new bool;
     *run = true;
     while (fileForConvertingNum<segdFilesInDir.count() && *run)
     {
         if (convertOneFile(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath()))
         {
-            currentRow++;
             fileCount++;
             *logStream << QString("%1 Выполнена конвертация файла %2\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(segdFilesInDir.value(fileForConvertingNum).fileName());
-            emit sendInfoMessage("Выполнена конвертация файла "+segdFilesInDir.value(fileForConvertingNum).absoluteFilePath(),Qt::darkGreen);
+            emit sendInfoMessage("Выполнена конвертация файла "+segdFilesInDir.value(fileForConvertingNum).fileName(),Qt::darkGreen);
         }
-        else
-        {
+        else {
             *logStream << QString("%1 Ошибка чтения файла %2. Переход к следующему файлу ").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(segdFilesInDir.value(fileForConvertingNum).fileName());
             emit sendSomeError(QString ("Ошибка чтения файла %1. Переход к следующему файлу").arg(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath()));
         }
@@ -113,28 +104,23 @@ void CstWorker::Converting()
         }
         fileForConvertingNum++;
     }
-    saveXlsxFile();
     *logStream << QString("%1 Завершение конвертации\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm:ss"));
     delete logStream;
     logFile->close();
     delete logFile;
-
     emit finished();
-    //segyFile->close();
 }
 
-void CstWorker::countAttributes(CstFile *cst, const int currentRow)
+void CstWorker::countAttributes(CstFile *cst)
 {
     QVector<QVector<float> > tracesInWindow;
     QList<AttributeWindow*>::iterator windowsIterator= windows.begin();
     QMap<QString,float> amplitudes;
-    int currentColumn = 7;
     int windowCount=0;
-    //float ampl;
-    //int currentRow = windows.count()+11;
     AttributeWindow * attrWin;
     SeisAttributes *attributes;
-
+    float attribute=0.0;
+    bool  checkAttribute=true;
     for(;windowsIterator!=windows.end(); ++ windowsIterator )
     {
         attributes = new SeisAttributes();
@@ -160,14 +146,8 @@ void CstWorker::countAttributes(CstFile *cst, const int currentRow)
             if (attributes->ampl < attrWin->getMinAmpl())
             {
                 attributes->correctAmpl = false;
-                xlsxFormat.setPatternBackgroundColor(Qt::red);
             }
-            //attributes->ampl = ampl;
-            xlsx.write(currentRow,currentColumn,attributes->ampl,xlsxFormat);
-            xlsxFormat.setPatternBackgroundColor(Qt::white);
             amplitudes.insert(QString("A%1").arg(windowCount),attributes->ampl);
-            currentColumn++;
-
         }
         if (attrWin->getCountRms())
         {
@@ -175,13 +155,8 @@ void CstWorker::countAttributes(CstFile *cst, const int currentRow)
             if (attributes->rms < attrWin->getMinRms())
             {
                 attributes->correctRms = false;
-                xlsxFormat.setPatternBackgroundColor(Qt::red);
             }
-            //attributes->rms = ampl;
-            xlsx.write(currentRow,currentColumn,attributes->rms,xlsxFormat);
-            xlsxFormat.setPatternBackgroundColor(Qt::white);
             amplitudes.insert(QString("R%1").arg(windowCount),attributes->rms);
-            currentColumn++;
         }
         if (attrWin->getCountFreq())
         {
@@ -189,12 +164,7 @@ void CstWorker::countAttributes(CstFile *cst, const int currentRow)
             if (attributes->freq < attrWin->getMinFreq())
             {
                 attributes->correctFreq = false;
-                xlsxFormat.setPatternBackgroundColor(Qt::red);
             }
-            xlsx.write(currentRow,currentColumn,attributes->freq,xlsxFormat);
-            xlsxFormat.setPatternBackgroundColor(Qt::white);
-            currentColumn++;
-
         }
         if (attrWin->getCountEnergy() || attrWin->getCountDfr() || attrWin->getWriteSpectrum() )
         {
@@ -226,11 +196,7 @@ void CstWorker::countAttributes(CstFile *cst, const int currentRow)
                 if (attributes->energy < attrWin->getMinEnergy())
                 {
                     attributes->correctEnergy = false;
-                    xlsxFormat.setPatternBackgroundColor(Qt::red);
                 }
-                xlsx.write(currentRow,currentColumn,attributes->energy,xlsxFormat);
-                xlsxFormat.setPatternBackgroundColor(Qt::white);
-                currentColumn++;
             }
 
             if (attrWin->getCountDfr())
@@ -246,19 +212,11 @@ void CstWorker::countAttributes(CstFile *cst, const int currentRow)
                 if (attributes->dfr < attrWin->getMinDfr())
                 {
                     attributes->correctDfr = false;
-                    xlsxFormat.setPatternBackgroundColor(Qt::red);
                 }
-                xlsx.write(currentRow,currentColumn,attributes->dfr,xlsxFormat);
-                xlsxFormat.setPatternBackgroundColor(Qt::white);
-                currentColumn++;
             }
-
         }
-
         tracesInWindow.clear();
-        emit sendSeisAttributes(attributes,windowCount);
     }
-    currentColumn++;
     float relation;
     foreach (QString str, relations) {
         QString tmp = str.left(str.lastIndexOf("/"));
@@ -271,26 +229,21 @@ void CstWorker::countAttributes(CstFile *cst, const int currentRow)
         float c = tmp.toFloat();
         if (relation<c)
         {
-            xlsxFormat.setPatternBackgroundColor(Qt::red);
             emit sendRelation(str.left(str.lastIndexOf(">")),a/b,false);
         }
         else
         {
             emit sendRelation(str.left(str.lastIndexOf(">")),a/b,true);
         }
-        xlsx.write(currentRow,currentColumn,relation,xlsxFormat);
-
-        xlsxFormat.setPatternBackgroundColor(Qt::white);
-        currentColumn++;
     }
 }
 
 bool CstWorker::convertOneFile(const QString &filePath)
 {
     QString fileForWork;
-    FfidData segdData;
     SegdFile *segd;
     CstFile *cst;
+    fileAttributes.clear();
     *logStream << QString("%1 Начало обработки файла %2\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(filePath);
     if (backup)
     {
@@ -361,20 +314,19 @@ bool CstWorker::convertOneFile(const QString &filePath)
             cst->setSourceCoordinats(pv);
         }
         cst->setGeometry();
-        segdData.ffid = cst->getFfid();
-        segdData.line = cst->getLine();
-        segdData.source = cst->getPoint();
-        segdData.X = cst->getEasting();
-        segdData.Y = cst->getNorthing();
-        segdData.Z = cst->getElevation();
-        emit sendSegdData(segdData);
-        if (checkTests)
-        {
-            checkingTests(segd);
-        }
+        fileAttributes.append(qMakePair(cst->getFfid(),true));
+        fileAttributes.append(qMakePair(cst->getLine(),true));
+        fileAttributes.append(qMakePair(cst->getPoint(),true));
+        fileAttributes.append(qMakePair(cst->getEasting(),true));
+        fileAttributes.append(qMakePair(cst->getNorthing(),true));
+        fileAttributes.append(qMakePair(cst->getElevation(),true));
         if (analysisAuxes)
         {
             chekingAuxData(segd);
+        }
+        if (checkTests)
+        {
+            checkingTests(segd);
         }
         delete segd;
         if (writeAuxesNewFile)
@@ -386,31 +338,9 @@ bool CstWorker::convertOneFile(const QString &filePath)
             cst->writeAuxTraces(outPath);
         }
         cst->writeTraces(outPath,writeMutedChannels,writeMissedChannels);
-        xlsx.write(currentRow,1,segdData.ffid,xlsxFormat);
-        xlsx.write(currentRow,2,segdData.line,xlsxFormat);
-        xlsx.write(currentRow,3,segdData.source,xlsxFormat);
-        xlsx.write(currentRow,4,segdData.X,xlsxFormat);
-        xlsx.write(currentRow,5,segdData.Y,xlsxFormat);
-        xlsx.write(currentRow,6,segdData.Z,xlsxFormat);
-        /*if (useExclusions)
-        {
-            QStringList *missed = new QStringList(cst->deleteTracesInExclusions(exclusions));
-            if (saveExclReport)
-            {
-                QFile* missedTraces = new QFile(outPath+"_missedTraces.txt");
-                QTextStream *missedStream = new QTextStream(missedTraces);
-                for (int i=0;i<missed->count();++i)
-                {
-                    *missedStream<<missed->value(i);
-                }
-                missedTraces->close();
-                delete missedTraces;
-                delete missedStream;
-            }
-            missed->clear();
-            delete missed;
-        }*/
-        countAttributes(cst,currentRow);
+        countAttributes(cst);
+        attributes->append(AttributesFromFile(fileAttributes));
+        emit fileConverted();
         delete cst;
         return true;
     }

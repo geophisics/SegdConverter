@@ -39,12 +39,11 @@ protected:
     QString spsPath;
     QString rpsPath;
     QString xpsPath;
-    QXlsx::Document xlsx;
-    QXlsx::Format xlsxFormat; //формат ячейки в таблице xlsx
+//    QXlsx::Document xlsx;
+//    QXlsx::Format xlsxFormat; //формат ячейки в таблице xlsx
 
     bool SercelMpFactor;
     bool mode; // true - Dir, false - File
-    //bool noMpFactor;
     bool writeMutedChannels;
     bool writeMissedChannels;
     bool analysisAuxes;
@@ -98,8 +97,8 @@ protected:
     CountedAttributes* attributes;
     AttributesFromFile fileAttributes;
 
-    int currentRow; //текущая ячейка в таблице xlsx
-    int currentColumn; //текущий столбец в таблице xlsx
+//    int currentRow; //текущая ячейка в таблице xlsx
+//    int currentColumn; //текущий столбец в таблице xlsx
 
 
 
@@ -123,8 +122,8 @@ public:
 protected:
 
 
-    void writeXlsxHeaders();
-    void saveXlsxFile();
+    //void writeXlsxHeaders();
+    //void saveXlsxFile();
     void setExclusions(const QString &exclFileName);
     void setReceiversInExclusions(const QString &exclFileName);
     void createFileForMissedTraces();

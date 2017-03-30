@@ -24,8 +24,6 @@ void SegyWorkerOnline::Converting()
     *logStream << QString("%1 Начало конвертации\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss"));
 
     fileCount = 0; // счетчик файлов в сводном файле
-    currentRow = 11 + windows.count(); //текущая ячейка в таблице xlsx
-
     QFileInfoList segdFilesInDir;
     QStringList filter;
     filter << "*.segd";
@@ -63,31 +61,17 @@ void SegyWorkerOnline::Converting()
 
     watcher->addPath(segdDir.absolutePath());
     // количество ф.н. в сводном файле
-    writeXlsxHeaders();
-
-    //FfidData segdData;
     writeFileHeaders = true;
     run = new bool;
     *run=true;
-    //QString fileForConverting;
     if (segdFilesInDir.isEmpty())
     {
         return;
     }
     while (fileForConvertingNum<segdFilesInDir.count()-1 && *run)
     {
-
-        //if (backup)
-        //{
-        //    fileForConverting =
-        //}
-
-
-
-
         if (convertOneFile(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath(),writeFileHeaders))
         {
-            currentRow++;
             writeFileHeaders = false;
             fileCount++;
             *logStream << QString("%1 Выполнена конвертация файла %2\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(segdFilesInDir.value(fileForConvertingNum).fileName());
@@ -111,7 +95,6 @@ void SegyWorkerOnline::Converting()
     }
     if (!(*run))
     {
-        saveXlsxFile();
         *logStream << QString("%1 Завершение конвертации\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss"));
         delete logStream;
         logFile->close();
@@ -139,7 +122,6 @@ void SegyWorkerOnline::Converting()
         fileForConvertingNum++;
         if (!(*run))
         {
-            saveXlsxFile();
             *logStream << QString("%1 Завершение конвертации\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss"));
             delete logStream;
             logFile->close();
@@ -240,13 +222,6 @@ bool SegyWorkerOnline:: convertOneFileOnline(const QString &filePath, const bool
             segy->writeAuxTraces(outPath);
         }
         segy->writeTraces(outPath,writeMutedChannels);
-
-        xlsx.write(currentRow,1,segy->getFileNumFirstTrace(),xlsxFormat);
-        xlsx.write(currentRow,2,segy->getSP(),xlsxFormat);
-        xlsx.write(currentRow,3,segy->getgetShotPointNum(),xlsxFormat);
-        xlsx.write(currentRow,4,segy->getSourceX(0),xlsxFormat);
-        xlsx.write(currentRow,5,segy->getSourceY(0),xlsxFormat);
-        xlsx.write(currentRow,6,segy->getSourceZ(0),xlsxFormat);
         countAttributes(segy);
         delete segy;
         return true;
@@ -287,7 +262,6 @@ void SegyWorkerOnline::segdDirChanged(QString string)
 
        if (w<10)
        {
-            currentRow++;
             writeFileHeaders = false;
             fileCount++;
             *logStream << QString("%1 Выполнена конвертация файла %2\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(segdFilesInDir.value(fileForConvertingNum).fileName());
@@ -311,7 +285,6 @@ void SegyWorkerOnline::segdDirChanged(QString string)
    }
    if (!(*run))
    {
-       saveXlsxFile();
        *logStream << QString("%1 Завершение конвертации\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss"));
        delete logStream;
        logFile->close();
@@ -322,5 +295,4 @@ void SegyWorkerOnline::segdDirChanged(QString string)
    {
        *run=false;
    }
-   //emit sendInfoMessage(QString::number(waitingTime));
 }

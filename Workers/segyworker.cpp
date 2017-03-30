@@ -1,10 +1,6 @@
 #include "segyworker.h"
-#include <QFileInfo>
-#include <QDir>
 #include <Segd/segdfile.h>
 #include <Segy/segyfile.h>
-#include <QTextStream>
-#include "segdconverterwindow.h"
 #include "aquila/functions.h"
 
 QTXLSX_USE_NAMESPACE
@@ -63,20 +59,13 @@ void SegyWorker::Converting()
         return;
     }
     int fileCount = 0; // количество ф.н. в сводном файле
-    //format.setHorizontalAlignment(Format::AlignHCenter);
-    //writeXlsxHeaders();
-    currentRow = 11 + windows.count();
-    //FfidData segdData;
-
     writeFileHeaders = true;
     run = new bool;
     *run=true;
     while (fileForConvertingNum<segdFilesInDir.count() && *run)
     {
-        currentColumn=7;
         if (convertOneFile(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath(),writeFileHeaders))
         {
-            currentRow++;
             fileCount++;
             writeFileHeaders = false;
             *logStream << QString("%1 Выполнена конвертация файла %2\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(segdFilesInDir.value(fileForConvertingNum).fileName());
@@ -97,15 +86,12 @@ void SegyWorker::Converting()
         }
         fileForConvertingNum++;
     }
-    //saveXlsxFile();
     *logStream << QString("%1 Завершение конвертации\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss"));
     delete logStream;
     logFile->close();
     delete logFile;
     emit finished();
 }
-
-//прописываем заголовки в файл xlsx
 
 void SegyWorker::countAttributes(SegyFile *sgy)
 {
@@ -302,12 +288,10 @@ bool SegyWorker::convertOneFile(const QString &filePath, const bool &writeHeader
         if (analysisAuxes)
         {
             chekingAuxData(segd);
-            currentColumn++;
         }
         if (checkTests)
         {
             checkingTests(segd);
-            currentColumn++;
         }
         delete(segd);
         if (writeHeaders)

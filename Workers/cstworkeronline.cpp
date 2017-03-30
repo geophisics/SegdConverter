@@ -14,7 +14,6 @@ void CstWorkerOnline::Converting()
 {
     QFileInfo fInfo(segdPath);
     QDir segdDir;
-
     logFile = new QFile(outPath+"_log.txt");
     logFile->open(QIODevice::Text|QIODevice::WriteOnly);
     logStream = new QTextStream(logFile);
@@ -84,9 +83,6 @@ void CstWorkerOnline::Converting()
 
 
     watcher->addPath(segdDir.absolutePath());
-    writeXlsxHeaders();
-    currentRow = 11 + windows.count();
-
     run = new bool;
     *run = true;
     if (segdFilesInDir.isEmpty())
@@ -97,7 +93,6 @@ void CstWorkerOnline::Converting()
     {
         if (convertOneFile(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath()))
         {
-            currentRow++;
             fileCount++;
             *logStream << QString("%1 Выполнена конвертация файла %2\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm:ss")).arg(segdFilesInDir.value(fileForConvertingNum).fileName());
             emit sendInfoMessage("Выполнена конвертация файла "+segdFilesInDir.value(fileForConvertingNum).absoluteFilePath(),Qt::darkGreen);
@@ -118,7 +113,6 @@ void CstWorkerOnline::Converting()
     }
     if (!(*run))
     {
-        saveXlsxFile();
         *logStream << QString("%1 Завершение конвертации\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss"));
         delete logStream;
         logFile->close();
@@ -146,7 +140,6 @@ void CstWorkerOnline::Converting()
         fileForConvertingNum++;
         if (!(*run))
         {
-            saveXlsxFile();
             delete logStream;
             logFile->close();
             delete logFile;
@@ -234,14 +227,7 @@ bool CstWorkerOnline::convertOneFileOnline(const QString &filePath)
             cst->writeAuxTraces(outPath);
         }
         cst->writeTraces(outPath,writeMutedChannels);
-        xlsx.write(currentRow,1,segdData.ffid);
-        xlsx.write(currentRow,2,segdData.line);
-        xlsx.write(currentRow,3,segdData.source);
-        xlsx.write(currentRow,4,segdData.X);
-        xlsx.write(currentRow,5,segdData.Y);
-        xlsx.write(currentRow,6,segdData.Z);
-
-        countAttributes(cst,currentRow);
+        countAttributes(cst);
         delete cst;
         return true;
     }
@@ -278,7 +264,6 @@ void CstWorkerOnline::segdDirChanged(QString string)
 
            if (w<10)
            {
-                currentRow++;
                 fileCount++;
                 *logStream << QString("Выполнена конвертация файла %1").arg(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath());
                 emit sendInfoMessage(QString("Выполнена конвертация файла %1").arg(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath()),Qt::darkGreen);
@@ -296,11 +281,9 @@ void CstWorkerOnline::segdDirChanged(QString string)
                outAuxesPath.insert(outAuxesPath.lastIndexOf('/')+1,'_');
                createFileForMissedTraces();
            }
-           //segdFilesInDir = segdDir.entryInfoList(filter,QDir::Files,QDir::Name);
        }
        if (!(*run))
        {
-           saveXlsxFile();
            delete logStream;
            logFile->close();
            delete logFile;

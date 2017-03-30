@@ -213,7 +213,7 @@ void BaseWorker::readSettings()
 
 //формирование заголовков файла атрибутов
 
-void BaseWorker::writeXlsxHeaders()
+/*void BaseWorker::writeXlsxHeaders()
 {
 
     xlsx.write(1,1,QString("Рассчет атрибутов"));
@@ -285,10 +285,10 @@ void BaseWorker::writeXlsxHeaders()
         currentColumn++;
     }
 
-}
+}*/
 
 //cохранение файла атрибутов
-void BaseWorker::saveXlsxFile()
+/*void BaseWorker::saveXlsxFile()
 {
     *logStream << QString("%1 Сохранение файла атрибутов \n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss"));
     bool save = xlsx.saveAs(attrFilePath);
@@ -300,7 +300,7 @@ void BaseWorker::saveXlsxFile()
         save = xlsx.saveAs(newName);
     }
     *logStream << QString("%1 Файл атрибутов %2 сохранен успешно!\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(newName);
-}
+}*/
 
 //чтение эксклюзивных зон
 
@@ -505,7 +505,6 @@ void BaseWorker::stopRunning()
         *run=false;
     }
     else {
-        xlsx.saveAs(attrFilePath);
         emit finished();
     }
 }
