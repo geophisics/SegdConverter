@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QtXlsx>
-#include <xlsxformat.h>
+
 #include <SUB/point.h>
 #include <SUB/exclusion.h>
 #include <attributewindow.h>
@@ -53,9 +53,7 @@ protected:
     int akfFrqLvl;
     uint akfMaxTime,akfMinFrq,akfMaxFrq;
     double akfMaxAmpl;
-
     TimeBreakSettings timeBreak, confirmedTimeBreak, upholeTime;
-
     float userMpFactorValue;
     bool writeAuxes;
     bool writeAuxesNewFile;
@@ -155,15 +153,7 @@ protected:
     bool checkTimeBreak(QVector<float> traceData, const int &sInt);
     bool checkConfirmedTimeBreak (QVector<float> traceData, const int &sInt);
 
-
     QQueue<QString>* findTemplates(const int &ffid);
-
-
-
-
-
-
-
 
 signals:
     void finished();

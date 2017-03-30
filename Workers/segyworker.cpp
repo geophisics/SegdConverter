@@ -3,7 +3,6 @@
 #include <QDir>
 #include <Segd/segdfile.h>
 #include <Segy/segyfile.h>
-#include <QtXlsx>
 #include <QTextStream>
 #include "segdconverterwindow.h"
 #include "aquila/functions.h"
@@ -113,16 +112,12 @@ void SegyWorker::countAttributes(SegyFile *sgy)
     QVector<QVector<float> > tracesInWindow;
     QList<AttributeWindow*>::iterator windowsIterator= windows.begin();
     QMap<QString,float> amplitudes;
-
-    //int currentColumn = 8;
-
     int windowCount=0;
     AttributeWindow *attrWin;
-    SeisAttributes *attributes;
+    float attribute=0.0;
+    bool checkAttribute=true;
     for(;windowsIterator!=windows.end(); ++ windowsIterator )
     {
-
-        attributes = new SeisAttributes();
         attrWin  = *windowsIterator;
         *logStream << QString("%1 Расчет атрибутов в окне Min Offset = %2; Max Offset = %3; Min Time = %4мс; Max Time = %5мс\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(attrWin ->getMinOffset()).arg(attrWin->getMaxOffset()).arg(attrWin->getMinTime()).arg(attrWin->getMaxTime());
         windowCount++;
@@ -139,53 +134,26 @@ void SegyWorker::countAttributes(SegyFile *sgy)
         else {
             tracesInWindow = sgy->getDataInWindow(logStream,attrWin ->getMinOffset(),attrWin ->getMaxOffset(),attrWin ->getMinTime(),attrWin ->getMaxTime(),notUseMutedTraces,badTests,minAmpl);
         }
-        //tracesInWindow = sgy->getDataInWindow(attrWin ->getMinOffset(),attrWin ->getMaxOffset(),attrWin ->getMinTime(),attrWin ->getMaxTime(),320,320,notUseMutedTraces);
         if (attrWin->getCountAmpl() )
         {
-            attributes->ampl = getAbsAvg(tracesInWindow);
-            fileAttributes.append(qMakePair(attributes->ampl,true));
-
-            //ffidAttributes->append(attributes->ampl);
-            if (attributes->ampl < attrWin->getMinAmpl())
-            {
-                attributes->correctAmpl = false;
-                xlsxFormat.setPatternBackgroundColor(Qt::red);
-            }
-            xlsx.write(currentRow,currentColumn,attributes->ampl,xlsxFormat);
-            xlsxFormat.setPatternBackgroundColor(Qt::white);
-            amplitudes.insert(QString("A%1").arg(windowCount),attributes->ampl);
-            currentColumn++;
+            attribute = getAbsAvg(tracesInWindow);
+            checkAttribute = attribute>attrWin->getMinAmpl() ? true:false;
+            fileAttributes.append(qMakePair(attribute,checkAttribute));
+            amplitudes.insert(QString("A%1").arg(windowCount),attribute);
         }
         if (attrWin->getCountRms())
         {
-            attributes->rms = getRms(tracesInWindow);
-            //ffidAttributes->append(attributes->rms);
-            fileAttributes.append(qMakePair(attributes->rms,true));
-            if (attributes->rms < attrWin->getMinRms())
-            {
-                attributes->correctRms = false;
-                xlsxFormat.setPatternBackgroundColor(Qt::red);
-            }
-            xlsx.write(currentRow,currentColumn,attributes->rms,xlsxFormat);
-            xlsxFormat.setPatternBackgroundColor(Qt::white);
-            amplitudes.insert(QString("R%1").arg(windowCount),attributes->rms);
-            currentColumn++;
+            attribute = getAbsAvg(tracesInWindow);
+            checkAttribute = attribute>attrWin->getMinRms() ? true:false;
+            fileAttributes.append(qMakePair(attribute,checkAttribute));
+            amplitudes.insert(QString("R%1").arg(windowCount),attribute);
         }
         if (attrWin->getCountFreq())
         {
-            attributes->freq = countFreq(tracesInWindow,sgy->getSampleInterval());
-            fileAttributes.append(qMakePair(attributes->freq,true));
-            //ffidAttributes->append(attributes->freq);
-            if (attributes->freq < attrWin->getMinFreq())
-            {
-                attributes->correctFreq = false;
-                xlsxFormat.setPatternBackgroundColor(Qt::red);
-            }
-            xlsx.write(currentRow,currentColumn,attributes->freq,xlsxFormat);
-            xlsxFormat.setPatternBackgroundColor(Qt::white);
-            currentColumn++;
+            attribute = countFreq(tracesInWindow,sgy->getSampleInterval());
+            checkAttribute = attribute>attrWin->getMinFreq() ? true:false;
+            fileAttributes.append(qMakePair(attribute,checkAttribute));
         }
-
         if (attrWin->getCountEnergy() || attrWin->getCountDfr() || attrWin->getWriteSpectrum() )
         {
             std::vector<double> spectrum = getSpectrum(tracesInWindow);
@@ -209,82 +177,52 @@ void SegyWorker::countAttributes(SegyFile *sgy)
                     delete spectrumFile;
                 }
             }
-            attributes->energy = getEnergy(spectrum,frqStep);
-            fileAttributes.append(qMakePair(attributes->energy,true));
-            //ffidAttributes->append(attributes->energy);
-            if (attrWin ->getCountEnergy())
+            if (attrWin->getCountEnergy() || attrWin->getCountDfr())
             {
-                if (attributes->energy < attrWin->getMinEnergy())
-                {
-                    attributes->correctEnergy = false;
-                    xlsxFormat.setPatternBackgroundColor(Qt::red);
-                }
-                xlsx.write(currentRow,currentColumn,attributes->energy,xlsxFormat);
-                xlsxFormat.setPatternBackgroundColor(Qt::white);
-                currentColumn++;
-            }
+               attribute = getEnergy(spectrum,frqStep);
+               if (attrWin->getCountEnergy())
+               {
+                   checkAttribute = attribute>attrWin->getMinEnergy() ? true:false;
+                   fileAttributes.append(qMakePair(attribute,checkAttribute));
+               }
+               if (attrWin->getCountDfr())
+               {
+                   if (widthByEnergy)
+                   {
+                       attribute = attribute/maxAmpl;
+                   }
+                   else
+                   {
+                       attribute = getWidth(spectrum)*frqStep;
+                   }
+                   checkAttribute = attribute>attrWin->getMinDfr() ? true:false;
+                   fileAttributes.append(qMakePair(attribute,checkAttribute));
 
-            if (attrWin->getCountDfr())
-            {
-                if (widthByEnergy)
-                {
-                    attributes->dfr = attributes->energy/maxAmpl;
-                }
-                else
-                {
-                    attributes->dfr = getWidth(spectrum)*frqStep;
-                }
-                fileAttributes.append(qMakePair(attributes->dfr,true));
-                //ffidAttributes->append(attributes->dfr);
-                if (attributes->dfr < attrWin->getMinDfr())
-                {
-                    attributes->correctDfr = false;
-                    xlsxFormat.setPatternBackgroundColor(Qt::red);
-                }
-                xlsx.write(currentRow,currentColumn,attributes->dfr,xlsxFormat);
-                xlsxFormat.setPatternBackgroundColor(Qt::white);
-                currentColumn++;
+               }
+
             }
         }
         tracesInWindow.clear();
-        emit sendSeisAttributes(attributes,windowCount);
     }
-    currentColumn++;
-    float relation;
     foreach (QString str, relations) {
         QString tmp = str.left(str.lastIndexOf("/"));
         float a = amplitudes.value(tmp);
         tmp = str.mid(str.indexOf("/")+1,str.indexOf(">")-str.indexOf("/")-1);
         float b = amplitudes.value(tmp);
-        relation = a/b;
-        fileAttributes.append(qMakePair(relation,true));
-        //ffidAttributes->append(relation);
+        attribute = a/b;
         tmp = str.mid(str.lastIndexOf(">")+1);
         float c = tmp.toFloat();
-        if (relation<c)
-        {
-            xlsxFormat.setPatternBackgroundColor(Qt::red);
-            emit sendRelation(str.left(str.lastIndexOf(">")),a/b,false);
-        }
-        else
-        {
-            emit sendRelation(str.left(str.lastIndexOf(">")),a/b,true);
-        }
-        xlsx.write(currentRow,currentColumn,relation,xlsxFormat);
-
-        xlsxFormat.setPatternBackgroundColor(Qt::white);
-        currentColumn++;
+        checkAttribute = attribute>c ? true:false;
+        fileAttributes.append(qMakePair(attribute,checkAttribute));
     }
 }
 
 bool SegyWorker::convertOneFile(const QString &filePath, const bool &writeHeaders)
 {
     QString fileForWork;
-    FfidData segdData;
     SegdFile *segd;
     SegyFile *segy;
     fileAttributes.clear();
-    //ffidAttributes = new QVector<QVariant>();
     *logStream << QString("%1 Начало обработки файла %2\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(filePath);
     emit sendInfoMessage(QTime::currentTime().toString(),Qt::black);
     if (backup)
@@ -355,26 +293,12 @@ bool SegyWorker::convertOneFile(const QString &filePath, const bool &writeHeader
             segy->setSourceCoordinats(pv);
         }
         segy->setGeometry();
-        segdData.ffid = segy->getFileNumFirstTrace();
-        segdData.line = segy->getSP();
-        segdData.source = segy->getgetShotPointNum();
-        segdData.X = segy->getSourceX(0);
-        segdData.Y = segy->getSourceY(0);
-        segdData.Z = segy->getSourceZ(0);
         fileAttributes.append(qMakePair(segy->getFileNumFirstTrace(),true));
         fileAttributes.append(qMakePair(segy->getSP(),true));
         fileAttributes.append(qMakePair(segy->getgetShotPointNum(),true));
         fileAttributes.append(qMakePair(segy->getSourceX(0),true));
         fileAttributes.append(qMakePair(segy->getSourceY(0),true));
         fileAttributes.append(qMakePair(segy->getSourceZ(0),true));
-        /*ffidAttributes->append(segy->getFileNumFirstTrace());
-        ffidAttributes->append(segy->getSP());
-        ffidAttributes->append(segy->getgetShotPointNum());
-        ffidAttributes->append(segy->getSourceX(0));
-        ffidAttributes->append(segy->getSourceY(0));
-        ffidAttributes->append(segy->getSourceZ(0));*/
-
-        emit sendSegdData(segdData);
         if (checkTests)
         {
             checkingTests(segd);
@@ -403,63 +327,8 @@ bool SegyWorker::convertOneFile(const QString &filePath, const bool &writeHeader
             segy->writeAuxTraces(outPath);
         }
         segy->writeTraces(outPath,writeMutedChannels,writeMissedChannels);
-        xlsx.write(currentRow,1,segy->getFileNumFirstTrace(),xlsxFormat);
-        xlsx.write(currentRow,2,segy->getSP(),xlsxFormat);
-        xlsx.write(currentRow,3,segy->getgetShotPointNum(),xlsxFormat);
-        xlsx.write(currentRow,4,segy->getSourceX(0),xlsxFormat);
-        xlsx.write(currentRow,5,segy->getSourceY(0),xlsxFormat);
-        xlsx.write(currentRow,6,segy->getSourceZ(0),xlsxFormat);
-        /*if (useExclusions)
-        {
-            if (saveExclReport)
-            {
-                QStringList *missed;
-                if (exType == exclusionType::mesaExcl)
-                {
-                    missed = new QStringList(segy->deleteFileInExclusions(exclusions));
-                }
-                else
-                {
-                    missed = new QStringList(segy->deleteReceiversInExclusions(exclPoints));
-                }
-                QFile* missedTraces = new QFile(outPath+"_missedTraces.txt");
-                if (missedTraces->open(QIODevice::Append|QIODevice::Text))
-                {
-                    QTextStream *missedStream = new QTextStream(missedTraces);
-
-                    for (int i=0;i<missed->count();++i)
-                    {
-                        *missedStream<<missed->value(i);
-                    }
-                    missed->clear();
-                    missedTraces->close();
-                    delete missedTraces;
-                    delete missedStream;
-                }
-                else
-                {
-                    emit sendSomeError(QString("Ошибка открытия файла для записи отчета эксклюзивных зон \n"
-                                               "Сохранение отчета экслюзивных зон не производится"));
-                    saveExclReport = false;
-                }
-
-            }
-            else
-            {
-                if (exType == exclusionType::mesaExcl)
-                {
-                    segy->deleteFileInExclusions(exclusions);
-                }
-                else
-                {
-                    segy->deleteReceiversInExclusions(exclPoints);
-                }
-            }
-        }*/
         countAttributes(segy);
         attributes->append(AttributesFromFile(fileAttributes));
-        //emit sendSegdAttributes(ffidAttributes);
-
         emit fileConverted();
         emit sendInfoMessage(QTime::currentTime().toString(),Qt::black);
         delete segy;

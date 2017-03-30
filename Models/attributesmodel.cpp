@@ -3,6 +3,7 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QDebug>
+#include <QBrush>
 
 AttributesModel::AttributesModel(QObject *parent):QAbstractTableModel(parent)
 {
@@ -81,23 +82,23 @@ void AttributesModel::setHeaders()
     }
     settings->endArray();
     settings->endGroup();
-
     emit headerDataChanged(Qt::Horizontal,0,headers.count());
 }
 
-
 QVariant AttributesModel::data(const QModelIndex &index, int role) const
 {
-
-
-    if (role == Qt::DisplayRole)
-    {
+    switch (role) {
+    case 0:
         return attributes.value(index.row()).at(index.column()).first;
-        //return QString("%1.%2").arg(index.row()).arg(index.column());//attributes.at(index.row()).at(index.column());
+        break;
+    case 8:
+        return QBrush(attributes.value(index.row()).at(index.column()).second ? Qt::white : Qt::red,Qt::SolidPattern);
+    default:
+        return QVariant();
+        break;
     }
-    else return QVariant();
+    return QVariant();
 }
-
 
 QVariant AttributesModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
@@ -115,31 +116,12 @@ QVariant AttributesModel::headerData(int section, Qt::Orientation orientation, i
    return QVariant();
 }
 
-
 CountedAttributes* AttributesModel::getAttributes()
 {
     return &attributes;
 }
+
 void AttributesModel::receiveFfidData(/*QVector<QVariant> *data*/)
 {
-   // beginInsertRows(QModelIndex(),1,1);
-    //qDebug()<<data->count();
-    //beginInsertRows(QModelIndex(),rows,rows);//attributes.count(),attributes.count());
-    //attributes.push_back(*data);
-    //rows++;
-    //endInsertRows();
-    //qDebug()<<attributes.count();
-
-    //QModelIndex top = createIndex(attributes.count()-1,0);
-    //QModelIndex bottom = createIndex(attributes.count()-1,headers.count());
-    //emit dataChanged(top,bottom);
-    //this->resetInternalData();
     emit layoutChanged();
-    //qDebug()<<rows;
-    //endInsertRows();
-    //
-    //emit dataChanged(createIndex(0,0),createIndex(rows,columns));
-   // this->resetInternalData();
-    //qDebug()<<rows;
-    //emit dataChanged(createIndex(rowCount(),0),createIndex(rowCount(),columnCount()));
 }
