@@ -2,16 +2,6 @@
 #include "Segd/segdfile.h"
 #include "Segy/segyfile.h"
 
-
-SegyWorkerOnline::SegyWorkerOnline(QObject *parent) : SegyWorker(parent)
-{
-    settings = new QSettings(QCoreApplication::applicationDirPath()+QDir::separator()+"config.ini",QSettings::IniFormat,this);
-    readSettings();
-
-    watcher  = new QFileSystemWatcher(this);
-    connect(watcher,SIGNAL(directoryChanged(QString)),this,SLOT(segdDirChanged(QString)),Qt::DirectConnection);
-}
-
 void SegyWorkerOnline::Converting()
 {
     QFileInfo fInfo(segdPath);
@@ -140,7 +130,7 @@ void SegyWorkerOnline::Converting()
 bool SegyWorkerOnline:: convertOneFileOnline(const QString &filePath, const bool &writeHeaders)
 {
     QString fileForWork;
-    FfidData segdData;
+    //FfidData segdData;
     SegdFile *segd;
     SegyFile *segy;
     *logStream << QString("%1 Начало обработки файла %2\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(filePath);
@@ -190,13 +180,13 @@ bool SegyWorkerOnline:: convertOneFileOnline(const QString &filePath, const bool
             segy->setSourceCoordinats(pv);
         }
         segy->setGeometry();
-        segdData.ffid = segy->getFileNumFirstTrace();
-        segdData.line = segy->getSP();
-        segdData.source = segy->getgetShotPointNum();
-        segdData.X = segy->getSourceX(0);
-        segdData.Y = segy->getSourceY(0);
-        segdData.Z = segy->getSourceZ(0);
-        emit sendSegdData(segdData);
+        fileAttributes.append(qMakePair(segy->getFileNumFirstTrace(),true));
+        fileAttributes.append(qMakePair(segy->getSP(),true));
+        fileAttributes.append(qMakePair(segy->getgetShotPointNum(),true));
+        fileAttributes.append(qMakePair(segy->getSourceX(0),true));
+        fileAttributes.append(qMakePair(segy->getSourceY(0),true));
+        fileAttributes.append(qMakePair(segy->getSourceZ(0),true));
+//        emit sendSegdData(segdData);
         if (checkTests)
         {
             checkingTests(segd);
@@ -222,7 +212,8 @@ bool SegyWorkerOnline:: convertOneFileOnline(const QString &filePath, const bool
             segy->writeAuxTraces(outPath);
         }
         segy->writeTraces(outPath,writeMutedChannels);
-        countAttributes(segy);
+        countAttributesFromFile(segy);
+        emit attributesCounted();
         delete segy;
         return true;
     }

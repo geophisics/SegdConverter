@@ -3,19 +3,10 @@
 #include "Cst/cstfile.h"
 #include "aquila/functions.h"
 QTXLSX_USE_NAMESPACE
-
-
-CstWorker::CstWorker(QObject *parent) : BaseWorker(parent)
-{
-    settings = new QSettings(QCoreApplication::applicationDirPath()+QDir::separator()+"config.ini",QSettings::IniFormat,this);
-    //readSettings();
-}
-
 void CstWorker::Converting()
 {
     QFileInfo fInfo(segdPath);
     QDir segdDir;
-
     logFile = new QFile(outPath+"_log.txt");
     logFile->open(QIODevice::Text|QIODevice::WriteOnly);
     logStream = new QTextStream(logFile);
@@ -45,7 +36,6 @@ void CstWorker::Converting()
             writeAuxesNewFile = false;
         }
     }
-
     QFileInfoList segdFilesInDir;
     QStringList filter;
     filter << "*.segd";
@@ -114,127 +104,37 @@ void CstWorker::Converting()
 void CstWorker::countAttributes(CstFile *cst)
 {
     QVector<QVector<float> > tracesInWindow;
-    QList<AttributeWindow*>::iterator windowsIterator= windows.begin();
     QMap<QString,float> amplitudes;
-    int windowCount=0;
-    AttributeWindow * attrWin;
-    SeisAttributes *attributes;
-    float attribute=0.0;
-    bool  checkAttribute=true;
-    for(;windowsIterator!=windows.end(); ++ windowsIterator )
+
+    for (int i=0; i<windows.count();++i)
     {
-        attributes = new SeisAttributes();
-        attrWin  = *windowsIterator;
-        *logStream << QString("%1 Расчет атрибутов в окне Min Offset = %2; Max Offset = %3; Min Time = %4мс; Max Time = %5мс\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(attrWin ->getMinOffset()).arg(attrWin->getMaxOffset()).arg(attrWin->getMinTime()).arg(attrWin->getMaxTime());
-        windowCount++;
+        *logStream << QString("%1 Расчет атрибутов в окне Min Offset = %2; Max Offset = %3; Min Time = %4мс; Max Time = %5мс\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(windows.at(i).minOffset).arg(windows.at(i).maxOffset).arg(windows.at(i).minTime).arg(windows.at(i).maxTime);
         if (useExclusions)
         {
             if  (exType == exclusionType::txtExcl) {
-                tracesInWindow = cst->getDataInWindow(logStream,attrWin ->getMinOffset(),attrWin ->getMaxOffset(),attrWin ->getMinTime(),attrWin ->getMaxTime(),notUseMutedTraces,badTests,minAmpl,exclPoints);
+                tracesInWindow = cst->getDataInWindow(logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl,exclPoints);
             }
             else
             {
-                tracesInWindow = cst->getDataInWindow(logStream,attrWin ->getMinOffset(),attrWin ->getMaxOffset(),attrWin ->getMinTime(),attrWin ->getMaxTime(),notUseMutedTraces,badTests,minAmpl,exclusions);
+                tracesInWindow = cst->getDataInWindow(logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl,exclusions);
             }
         }
         else {
-            tracesInWindow = cst->getDataInWindow(logStream,attrWin ->getMinOffset(),attrWin ->getMaxOffset(),attrWin ->getMinTime(),attrWin ->getMaxTime(),notUseMutedTraces,badTests,minAmpl);
+            tracesInWindow = cst->getDataInWindow(logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl);
         }
-        if (attrWin->getCountAmpl() )
-        {
-            attributes->ampl = getAbsAvg(tracesInWindow);
-            if (attributes->ampl < attrWin->getMinAmpl())
-            {
-                attributes->correctAmpl = false;
-            }
-            amplitudes.insert(QString("A%1").arg(windowCount),attributes->ampl);
-        }
-        if (attrWin->getCountRms())
-        {
-            attributes->rms = getRms(tracesInWindow);
-            if (attributes->rms < attrWin->getMinRms())
-            {
-                attributes->correctRms = false;
-            }
-            amplitudes.insert(QString("R%1").arg(windowCount),attributes->rms);
-        }
-        if (attrWin->getCountFreq())
-        {
-            attributes->freq = countFreq(tracesInWindow,cst->getSampleRate());
-            if (attributes->freq < attrWin->getMinFreq())
-            {
-                attributes->correctFreq = false;
-            }
-        }
-        if (attrWin->getCountEnergy() || attrWin->getCountDfr() || attrWin->getWriteSpectrum() )
-        {
-            std::vector<double> spectrum = getSpectrum(tracesInWindow);
-            float frqStep = (1000000.0/cst->getSampleRate())/spectrum.size();
-            spectrum.resize(spectrum.size()/2+1);
-            double maxAmpl = *(std::max_element(spectrum.begin(),spectrum.end()));
-            if (attrWin->getWriteSpectrum())
-            {
-
-                QFile *spectrumFile = new QFile();
-                spectrumFile->setFileName(QString("%1_ffid%2_spectrum_for_attributeWindow#_%3.txt").arg(attrFilePath).arg(cst->getFfid()).arg(windows.indexOf(attrWin)+1));
-                if (spectrumFile->open(QIODevice::WriteOnly|QIODevice::Text))
-                {
-                    QTextStream tStream(spectrumFile);
-                    tStream <<"Freq, Hz \t A \t A, dB \n";
-                    for (std::size_t i = 0; i<spectrum.size(); ++i)
-                    {
-                        tStream << QString::number(frqStep*i)<<"\t"<<QString::number(spectrum.at(i))<<"\t"<<QString::number(Aquila::dB(spectrum.at(i),maxAmpl))<<"\n";
-                    }
-                    spectrumFile->close();
-                    delete spectrumFile;
-                }
-            }
-            attributes->energy = getEnergy(spectrum,frqStep);
-
-            if (attrWin ->getCountEnergy())
-            {
-                if (attributes->energy < attrWin->getMinEnergy())
-                {
-                    attributes->correctEnergy = false;
-                }
-            }
-
-            if (attrWin->getCountDfr())
-            {
-                if (widthByEnergy)
-                {
-                    attributes->dfr = attributes->energy/maxAmpl;
-                }
-                else
-                {
-                    attributes->dfr = getWidth(spectrum)*frqStep;
-                }
-                if (attributes->dfr < attrWin->getMinDfr())
-                {
-                    attributes->correctDfr = false;
-                }
-            }
-        }
+        countAttriburesInWindow(tracesInWindow,i,cst->getSampleRate(),cst->getFfid(),&amplitudes);
         tracesInWindow.clear();
     }
-    float relation;
     foreach (QString str, relations) {
         QString tmp = str.left(str.lastIndexOf("/"));
         float a = amplitudes.value(tmp);
         tmp = str.mid(str.indexOf("/")+1,str.indexOf(">")-str.indexOf("/")-1);
         float b = amplitudes.value(tmp);
-        relation = a/b;
-        //if (relation<
+        float attribute = a/b;
         tmp = str.mid(str.lastIndexOf(">")+1);
         float c = tmp.toFloat();
-        if (relation<c)
-        {
-            emit sendRelation(str.left(str.lastIndexOf(">")),a/b,false);
-        }
-        else
-        {
-            emit sendRelation(str.left(str.lastIndexOf(">")),a/b,true);
-        }
+        bool checkAttribute = attribute>c ? true:false;
+        fileAttributes.append(qMakePair(attribute,checkAttribute));
     }
 }
 
@@ -340,7 +240,7 @@ bool CstWorker::convertOneFile(const QString &filePath)
         cst->writeTraces(outPath,writeMutedChannels,writeMissedChannels);
         countAttributes(cst);
         attributes->append(AttributesFromFile(fileAttributes));
-        emit fileConverted();
+        emit attributesCounted();
         delete cst;
         return true;
     }

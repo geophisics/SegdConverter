@@ -6,8 +6,10 @@ class CstWorkerOnline : public CstWorker
 {
     Q_OBJECT
 public:
-    explicit CstWorkerOnline(QObject *parent = 0);
-
+     explicit CstWorkerOnline(CountedAttributes *attr) : CstWorker(attr) {
+        watcher  = new QFileSystemWatcher(this);
+        connect(watcher,SIGNAL(directoryChanged(QString)),this,SLOT(segdDirChanged(QString)),Qt::DirectConnection);
+    }
 private slots:
     void segdDirChanged(QString string);
 

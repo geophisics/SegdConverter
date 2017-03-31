@@ -28,8 +28,7 @@ class BaseWorker : public QObject
 
 public:
     enum exclusionType {mesaExcl, txtExcl};
-    explicit BaseWorker(QObject *parent = 0);
-    explicit BaseWorker(CountedAttributes *attr,QObject *parent=Q_NULLPTR);
+    explicit BaseWorker(CountedAttributes *attr);
 
 protected:
     QString segdPath;
@@ -84,7 +83,7 @@ protected:
     QVector<Exclusion*> exclusions;
     QVector<int> exclPoints;
     QSettings *settings;
-    QList<AttributeWindow*> windows;
+    QVector<AttributeWindow> windows;
     uint energyMaxFreq, energyMinFreq, widthLvl;
     bool widthByEnergy,rmsSpectrum;
 
@@ -129,6 +128,7 @@ protected:
     void createFileForMissedTraces();
 
     //функции расчета атрибутов
+    void countAttriburesInWindow(QVector<QVector<float> > &traces, const int &winNb, const int &sInt, const int &ffid, QMap<QString,float> *ampls); //
     float getAbsAvg(QVector<QVector<float> > &tracesData); //абсолютная амплитуда
     float getRms(QVector <QVector<float> > &tracesData); //среднеквадратическая амплитуда
     double countFreq(QVector<QVector<float> > &tracesData, const int &sRate); // доминантная частота в окне
@@ -158,9 +158,6 @@ signals:
     void sendInfoMessage(QString, QColor);
     void sendSomeError(QString);
     void badSegdFile(QString);
-    void sendSegdData(FfidData);
-    void sendSeisAttributes(SeisAttributes*, int);
-    void sendRelation(QString realtionName, float relationValue, bool correct);
     void sendAkf(QVector<float>*, int, int);
     void sendVibroAux(QVector<float>*,QVector<float>*,int,int);
     void sendSeries(QtCharts::QLineSeries *trace, QtCharts::QLineSeries *spectrum);
@@ -169,7 +166,7 @@ signals:
     void sendAuxStatus(bool);
     void sendTestStatus(float,QColor);
     void sendSegdAttributes(QVector<QVariant> *data);
-    void fileConverted();
+    void attributesCounted();
 
 public slots:
     void stopRunning();

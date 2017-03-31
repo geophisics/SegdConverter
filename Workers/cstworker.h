@@ -7,16 +7,11 @@ class CstWorker : public BaseWorker
 {
     Q_OBJECT
 public:
-    explicit CstWorker(QObject *parent = 0);
-    explicit CstWorker(CountedAttributes *attr,QObject *parent=Q_NULLPTR) : BaseWorker(attr,parent) {}
-signals:
+    explicit CstWorker(CountedAttributes *attr) : BaseWorker(attr) {}
 
 protected:
     void countAttributes(CstFile *cst);
     bool convertOneFile(const QString &filePath);
-
-
-
 public slots:
 
     virtual void Converting();

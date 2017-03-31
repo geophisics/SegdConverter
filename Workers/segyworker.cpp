@@ -5,13 +5,6 @@
 
 QTXLSX_USE_NAMESPACE
 
-SegyWorker::SegyWorker(QObject *parent) : BaseWorker(parent)
-{
-    settings = new QSettings(QCoreApplication::applicationDirPath()+QDir::separator()+"config.ini",QSettings::IniFormat,this);
-    //readSettings();
-}
-
-
 void SegyWorker::Converting()
 {
     QFileInfo fInfo(segdPath);
@@ -93,101 +86,27 @@ void SegyWorker::Converting()
     emit finished();
 }
 
-void SegyWorker::countAttributes(SegyFile *sgy)
+void SegyWorker::countAttributesFromFile(SegyFile *sgy)
 {
     QVector<QVector<float> > tracesInWindow;
-    QList<AttributeWindow*>::iterator windowsIterator= windows.begin();
     QMap<QString,float> amplitudes;
-    int windowCount=0;
-    AttributeWindow *attrWin;
-    float attribute=0.0;
-    bool checkAttribute=true;
-    for(;windowsIterator!=windows.end(); ++ windowsIterator )
+    for (int i=0; i<windows.count();++i)
     {
-        attrWin  = *windowsIterator;
-        *logStream << QString("%1 Расчет атрибутов в окне Min Offset = %2; Max Offset = %3; Min Time = %4мс; Max Time = %5мс\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(attrWin ->getMinOffset()).arg(attrWin->getMaxOffset()).arg(attrWin->getMinTime()).arg(attrWin->getMaxTime());
-        windowCount++;
+        *logStream << QString("%1 Расчет атрибутов в окне Min Offset = %2; Max Offset = %3; Min Time = %4мс; Max Time = %5мс\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(windows.at(i).minOffset).arg(windows.at(i).maxOffset).arg(windows.at(i).minTime).arg(windows.at(i).maxTime);
         if (useExclusions)
         {
             if  (exType == exclusionType::txtExcl) {
-                tracesInWindow = sgy->getDataInWindow(logStream,attrWin ->getMinOffset(),attrWin ->getMaxOffset(),attrWin ->getMinTime(),attrWin ->getMaxTime(),notUseMutedTraces,badTests,minAmpl,exclPoints);
+                tracesInWindow = sgy->getDataInWindow(logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl,exclPoints);
             }
             else
             {
-                tracesInWindow = sgy->getDataInWindow(logStream,attrWin ->getMinOffset(),attrWin ->getMaxOffset(),attrWin ->getMinTime(),attrWin ->getMaxTime(),notUseMutedTraces,badTests,minAmpl,exclusions);
+                tracesInWindow = sgy->getDataInWindow(logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl,exclusions);
             }
         }
         else {
-            tracesInWindow = sgy->getDataInWindow(logStream,attrWin ->getMinOffset(),attrWin ->getMaxOffset(),attrWin ->getMinTime(),attrWin ->getMaxTime(),notUseMutedTraces,badTests,minAmpl);
+            tracesInWindow = sgy->getDataInWindow(logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl);
         }
-        if (attrWin->getCountAmpl() )
-        {
-            attribute = getAbsAvg(tracesInWindow);
-            checkAttribute = attribute>attrWin->getMinAmpl() ? true:false;
-            fileAttributes.append(qMakePair(attribute,checkAttribute));
-            amplitudes.insert(QString("A%1").arg(windowCount),attribute);
-        }
-        if (attrWin->getCountRms())
-        {
-            attribute = getAbsAvg(tracesInWindow);
-            checkAttribute = attribute>attrWin->getMinRms() ? true:false;
-            fileAttributes.append(qMakePair(attribute,checkAttribute));
-            amplitudes.insert(QString("R%1").arg(windowCount),attribute);
-        }
-        if (attrWin->getCountFreq())
-        {
-            attribute = countFreq(tracesInWindow,sgy->getSampleInterval());
-            checkAttribute = attribute>attrWin->getMinFreq() ? true:false;
-            fileAttributes.append(qMakePair(attribute,checkAttribute));
-        }
-        if (attrWin->getCountEnergy() || attrWin->getCountDfr() || attrWin->getWriteSpectrum() )
-        {
-            std::vector<double> spectrum = getSpectrum(tracesInWindow);
-            float frqStep = (1000000.0/sgy->getSampleInterval())/spectrum.size();
-            spectrum.resize(spectrum.size()/2+1);
-            double maxAmpl = *(std::max_element(spectrum.begin(),spectrum.end()));
-            if (attrWin->getWriteSpectrum())
-            {
-
-                QFile *spectrumFile = new QFile();
-                spectrumFile->setFileName(QString("%1_ffid%2_spectrum_for_attributeWindow#_%3.txt").arg(attrFilePath).arg(sgy->getFileNumFirstTrace()).arg(windows.indexOf(attrWin)+1));
-                if (spectrumFile->open(QIODevice::WriteOnly|QIODevice::Text))
-                {
-                    QTextStream tStream(spectrumFile);
-                    tStream <<"Freq, Hz \t A \t A, dB \n";
-                    for (std::size_t i = 0; i<spectrum.size(); ++i)
-                    {
-                        tStream << QString::number(frqStep*i)<<"\t"<<QString::number(spectrum.at(i))<<"\t"<<QString::number(Aquila::dB(spectrum.at(i),maxAmpl))<<"\n";
-                    }
-                    spectrumFile->close();
-                    delete spectrumFile;
-                }
-            }
-            if (attrWin->getCountEnergy() || attrWin->getCountDfr())
-            {
-               attribute = getEnergy(spectrum,frqStep);
-               if (attrWin->getCountEnergy())
-               {
-                   checkAttribute = attribute>attrWin->getMinEnergy() ? true:false;
-                   fileAttributes.append(qMakePair(attribute,checkAttribute));
-               }
-               if (attrWin->getCountDfr())
-               {
-                   if (widthByEnergy)
-                   {
-                       attribute = attribute/maxAmpl;
-                   }
-                   else
-                   {
-                       attribute = getWidth(spectrum)*frqStep;
-                   }
-                   checkAttribute = attribute>attrWin->getMinDfr() ? true:false;
-                   fileAttributes.append(qMakePair(attribute,checkAttribute));
-
-               }
-
-            }
-        }
+        countAttriburesInWindow(tracesInWindow,i,sgy->getSampleInterval(),sgy->getFileNumFirstTrace(),&amplitudes);
         tracesInWindow.clear();
     }
     foreach (QString str, relations) {
@@ -195,10 +114,10 @@ void SegyWorker::countAttributes(SegyFile *sgy)
         float a = amplitudes.value(tmp);
         tmp = str.mid(str.indexOf("/")+1,str.indexOf(">")-str.indexOf("/")-1);
         float b = amplitudes.value(tmp);
-        attribute = a/b;
+        float attribute = a/b;
         tmp = str.mid(str.lastIndexOf(">")+1);
         float c = tmp.toFloat();
-        checkAttribute = attribute>c ? true:false;
+        bool checkAttribute = attribute>c ? true:false;
         fileAttributes.append(qMakePair(attribute,checkAttribute));
     }
 }
@@ -311,9 +230,9 @@ bool SegyWorker::convertOneFile(const QString &filePath, const bool &writeHeader
             segy->writeAuxTraces(outPath);
         }
         segy->writeTraces(outPath,writeMutedChannels,writeMissedChannels);
-        countAttributes(segy);
+        countAttributesFromFile(segy);
         attributes->append(AttributesFromFile(fileAttributes));
-        emit fileConverted();
+        emit attributesCounted();
         emit sendInfoMessage(QTime::currentTime().toString(),Qt::black);
         delete segy;
         return true;

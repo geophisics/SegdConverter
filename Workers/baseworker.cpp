@@ -12,12 +12,7 @@
 
 QT_CHARTS_USE_NAMESPACE
 
-BaseWorker::BaseWorker(QObject *parent) : QObject(parent)
-{
-
-}
-
-BaseWorker::BaseWorker(CountedAttributes *attr, QObject *parent):QObject(parent),attributes(attr)
+BaseWorker::BaseWorker(CountedAttributes *attr):attributes(attr)
 {
     settings = new QSettings(QCoreApplication::applicationDirPath()+QDir::separator()+"config.ini",QSettings::IniFormat,this);
 }
@@ -141,11 +136,28 @@ void BaseWorker::readSettings()
 
 
     int size = settings->beginReadArray("/Windows");
+    AttributeWindow window;
     for (int i=0; i<size; ++i)
     {
         settings->setArrayIndex(i);
-        AttributeWindow *window = new AttributeWindow(this);
-        window->setMinTime(settings->value("/MinTime","0").toInt());
+        window.minTime=settings->value("/MinTime","0").toInt();
+        window.maxTime=settings->value("/MaxTime","0").toInt();
+        window.minOffset=settings->value("/MinOffset","0").toInt();
+        window.maxOffset=settings->value("/MaxOffset","0").toInt();
+        window.minAmpl=settings->value("/MinAmpl","0.0").toFloat();
+        window.minRms=settings->value("/MinRms","0.0").toFloat();
+        window.minFreq=settings->value("/MinFreq","0.0").toFloat();
+        window.minDfr=settings->value("/MinDfr","0.0").toFloat();
+        window.minEnergy=settings->value("/MinEnergy","0.0").toFloat();
+        window.countAmpl=settings->value("/CountAmpl",false).toBool();
+        window.countRms=settings->value("/CountRms",false).toBool();
+        window.countFreq=settings->value("/CountFreq",false).toBool();
+        window.countEnergy=settings->value("/CountEnergy",false).toBool();
+        window.countDfr=settings->value("/CountDfr",false).toBool();
+        window.writeSpectrum=settings->value("/WriteSpectrum",false).toBool();
+        //AttributeWindow window; //= new AttributeWindow(this);
+
+        /*window->setMinTime(settings->value("/MinTime","0").toInt());
         window->setMaxTime(settings->value("/MaxTime","0").toInt());
         window->setMinOffset(settings->value("/MinOffset","0").toInt());
         window->setMaxOffset(settings->value("/MaxOffset","0").toInt());
@@ -159,8 +171,8 @@ void BaseWorker::readSettings()
         window->setCountFreq(settings->value("/CountFreq",false).toBool());
         window->setCountEnergy(settings->value("/CountEnergy",false).toBool());
         window->setCountDfr(settings->value("/CountDfr",false).toBool());
-        window->setWriteSpectrum(settings->value("/WriteSpectrum",false).toBool());
-        windows.append(window);
+        window->setWriteSpectrum(settings->value("/WriteSpectrum",false).toBool());*/
+        windows.append(AttributeWindow(window));
     }
     settings->endArray();
     size = settings->beginReadArray("/Relations");
@@ -556,6 +568,83 @@ QQueue<QString> *BaseWorker::findTemplates(const int &ffid)
     }
     return result;
 }
+
+//рассчитываем все атрибуты в окне
+void BaseWorker::countAttriburesInWindow(QVector<QVector<float> > &traces, const int &winNb, const int &sInt, const int &ffid, QMap<QString,float> *ampls)
+{
+    float attribute=0.0;
+    bool checkAttribute=true;
+    if (windows.at(winNb).countAmpl)
+    {
+        attribute = getAbsAvg(traces);
+        checkAttribute = attribute>windows.at(winNb).minAmpl ? true:false;
+        fileAttributes.append(qMakePair(attribute,checkAttribute));
+        ampls->insert(QString("A%1").arg(winNb+1),attribute);
+    }
+    if (windows.at(winNb).countRms)
+    {
+        attribute = getAbsAvg(traces);
+        checkAttribute = attribute>windows.at(winNb).minRms ? true:false;
+        fileAttributes.append(qMakePair(attribute,checkAttribute));
+        ampls->insert(QString("R%1").arg(winNb+1),attribute);
+    }
+    if (windows.at(winNb).countFreq)
+    {
+        attribute = countFreq(traces,sInt);
+        checkAttribute = attribute>windows.at(winNb).minFreq ? true:false;
+        fileAttributes.append(qMakePair(attribute,checkAttribute));
+    }
+    if (windows.at(winNb).countEnergy || windows.at(winNb).countDfr || windows.at(winNb).writeSpectrum )
+    {
+        std::vector<double> spectrum = getSpectrum(traces);
+        float frqStep = (1000000.0/sInt)/spectrum.size();
+        spectrum.resize(spectrum.size()/2+1);
+        double maxAmpl = *(std::max_element(spectrum.begin(),spectrum.end()));
+        if (windows.at(winNb).writeSpectrum)
+        {
+
+            QFile *spectrumFile = new QFile();
+            spectrumFile->setFileName(QString("%1_ffid%2_spectrum_for_attributeWindow#_%3.txt").arg(attrFilePath).arg(ffid).arg(winNb+1));
+            if (spectrumFile->open(QIODevice::WriteOnly|QIODevice::Text))
+            {
+                QTextStream tStream(spectrumFile);
+                tStream <<"Freq, Hz \t A \t A, dB \n";
+                for (std::size_t i = 0; i<spectrum.size(); ++i)
+                {
+                    tStream << QString::number(frqStep*i)<<"\t"<<QString::number(spectrum.at(i))<<"\t"<<QString::number(Aquila::dB(spectrum.at(i),maxAmpl))<<"\n";
+                }
+                spectrumFile->close();
+                delete spectrumFile;
+            }
+        }
+        if (windows.at(winNb).countEnergy || windows.at(winNb).countDfr)
+        {
+           attribute = getEnergy(spectrum,frqStep);
+           if (windows.at(winNb).countEnergy)
+           {
+               checkAttribute = attribute>windows.at(winNb).minEnergy ? true:false;
+               fileAttributes.append(qMakePair(attribute,checkAttribute));
+           }
+           if (windows.at(winNb).countDfr)
+           {
+               if (widthByEnergy)
+               {
+                   attribute = attribute/maxAmpl;
+               }
+               else
+               {
+                   attribute = getWidth(spectrum)*frqStep;
+               }
+               checkAttribute = attribute>windows.at(winNb).minDfr ? true:false;
+               fileAttributes.append(qMakePair(attribute,checkAttribute));
+
+           }
+
+        }
+    }
+    //tracesInWindow.clear();
+}
+
 
 // считаем среднее значение сигнала
 float BaseWorker::getAbsAvg(QVector<QVector<float> > &tracesData)

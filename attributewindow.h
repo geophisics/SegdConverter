@@ -1,33 +1,14 @@
 #ifndef ATTRIBUTEWINDOW_H
 #define ATTRIBUTEWINDOW_H
 
-#include <QObject>
-
-
-class AttributeWindow : public QObject
+struct AttributeWindow
 {
-    Q_OBJECT
-public:
-    explicit AttributeWindow(QObject *parent = 0);
-    int minOffset;
-    int maxOffset;
-    int minTime;
-    int maxTime;
-private:
-    float minAmpl;
-    float minRms;
-    float minFreq;
-    float minDfr;
-    float minEnergy;
-    bool countAmpl;
-    bool countRms;
-    bool countFreq;
-    bool countEnergy;
-    bool countDfr;
-    bool writeSpectrum;
 
 public:
-    void setMinOffset(int offset);
+    explicit AttributeWindow();
+    AttributeWindow(const AttributeWindow &other);
+
+/*    void setMinOffset(int offset);
     void setMaxOffset(int offset);
     void setMinTime(int time);
     void setMaxTime(int time);
@@ -57,20 +38,28 @@ public:
     bool getCountFreq();
     bool getCountEnergy();
     bool getCountDfr();
-    bool getWriteSpectrum();
-
+    bool getWriteSpectrum();*/
     bool isCorrect();
 
-    //static float getAbsAvg(QVector<QVector<float> > &tracesData);
-    //static float getRms(QVector <QVector<float> > &tracesData);
-
-signals:
-
-public slots:
+    int minOffset;
+    int maxOffset;
+    int minTime;
+    int maxTime;
+    float minAmpl;
+    float minRms;
+    float minFreq;
+    float minDfr;
+    float minEnergy;
+    bool countAmpl;
+    bool countRms;
+    bool countFreq;
+    bool countEnergy;
+    bool countDfr;
+    bool writeSpectrum;
 };
 
 
-struct SeisAttributes
+/*struct SeisAttributes
 {
     float ampl;
     bool correctAmpl;
@@ -102,5 +91,5 @@ public:
     FfidData (int f, int l, int p, float x, float y, float z);
     FfidData(const FfidData &other);
     ~FfidData();
-};
+};*/
 #endif // ATTRIBUTEWINDOW_H

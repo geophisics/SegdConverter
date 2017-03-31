@@ -16,12 +16,11 @@ class SegyWorker : public BaseWorker
 {
     Q_OBJECT
 public:
-    explicit SegyWorker(QObject *parent = 0);
-    explicit SegyWorker(CountedAttributes *attr,QObject *parent=Q_NULLPTR) : BaseWorker(attr,parent) {}
+    explicit SegyWorker(CountedAttributes *attr) : BaseWorker(attr) {}
 signals:
 protected:
     bool writeFileHeaders; //требуется или нет писать заголовки segy файла
-    void countAttributes(SegyFile *sgy);
+    void countAttributesFromFile(SegyFile *sgy);
     bool convertOneFile(const QString &filePath, const bool &writeHeaders);
 public slots:
     virtual void Converting();

@@ -1,14 +1,6 @@
 #include "cstworkeronline.h"
 #include "Segd/segdfile.h"
 #include "Cst/cstfile.h"
-CstWorkerOnline::CstWorkerOnline(QObject *parent) : CstWorker(parent)
-{
-    settings = new QSettings(QCoreApplication::applicationDirPath()+QDir::separator()+"config.ini",QSettings::IniFormat,this);
-    readSettings();
-
-    watcher  = new QFileSystemWatcher(this);
-    connect(watcher,SIGNAL(directoryChanged(QString)),this,SLOT(segdDirChanged(QString)),Qt::DirectConnection);
-}
 
 void CstWorkerOnline::Converting()
 {
@@ -156,7 +148,6 @@ void CstWorkerOnline::Converting()
 bool CstWorkerOnline::convertOneFileOnline(const QString &filePath)
 {
     QString fileForWork;
-    FfidData segdData;
     SegdFile *segd;
     CstFile *cst;
     *logStream << QString("%1 Начало обработки файла %2\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(filePath);
@@ -203,13 +194,13 @@ bool CstWorkerOnline::convertOneFileOnline(const QString &filePath)
             cst->setSourceCoordinats(pv);
         }
         cst->setGeometry();
-        segdData.ffid = cst->getFfid();
-        segdData.line = cst->getLine();
-        segdData.source = cst->getPoint();
-        segdData.X = cst->getEasting();
-        segdData.Y = cst->getNorthing();
-        segdData.Z = cst->getElevation();
-        emit sendSegdData(segdData);
+        fileAttributes.append(qMakePair(cst->getFfid(),true));
+        fileAttributes.append(qMakePair(cst->getLine(),true));
+        fileAttributes.append(qMakePair(cst->getPoint(),true));
+        fileAttributes.append(qMakePair(cst->getEasting(),true));
+        fileAttributes.append(qMakePair(cst->getNorthing(),true));
+        fileAttributes.append(qMakePair(cst->getElevation(),true));
+ //       emit sendSegdData(segdData);
         if (checkTests)
         {
             checkingTests(segd);
@@ -228,6 +219,7 @@ bool CstWorkerOnline::convertOneFileOnline(const QString &filePath)
         }
         cst->writeTraces(outPath,writeMutedChannels);
         countAttributes(cst);
+        emit attributesCounted();
         delete cst;
         return true;
     }

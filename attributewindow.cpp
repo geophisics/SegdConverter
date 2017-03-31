@@ -3,12 +3,45 @@
 #include <math.h>
 #include <QFile>
 #include <QDebug>
-AttributeWindow::AttributeWindow(QObject *parent) : QObject(parent)
+AttributeWindow::AttributeWindow()
 {
-
+    minOffset = 0;
+    maxOffset=0;
+    minTime=0;
+    maxTime=0;
+    minAmpl=0;
+    minRms=0;
+    minFreq=0;
+    minDfr=0;
+    minEnergy=0;
+    countAmpl=false;
+    countRms=false;
+    countFreq=false;
+    countEnergy=false;
+    countDfr=false;
+    writeSpectrum=false;
 }
 
-void AttributeWindow::setMinOffset(int offset)
+AttributeWindow::AttributeWindow(const AttributeWindow &other)
+{
+    minOffset = other.minOffset;
+    maxOffset=other.maxOffset;
+    minTime=other.minTime;
+    maxTime=other.maxTime;
+    minAmpl=other.minAmpl;
+    minRms=other.minRms;
+    minFreq=other.minFreq;
+    minDfr=other.minDfr;
+    minEnergy=other.minEnergy;
+    countAmpl=other.countAmpl;
+    countRms=other.countRms;
+    countFreq=other.countFreq;
+    countEnergy=other.countEnergy;
+    countDfr=other.countDfr;
+    writeSpectrum=other.writeSpectrum;
+}
+
+/*void AttributeWindow::setMinOffset(int offset)
 {
     minOffset = offset;
 }
@@ -129,7 +162,7 @@ void AttributeWindow::setMinEnergy(float energy)
 float AttributeWindow::getMinEnergy()
 {
     return minEnergy;
-}
+}*/
 bool AttributeWindow::isCorrect()
 {
     if (maxOffset>minOffset && maxTime>minTime)
@@ -143,7 +176,7 @@ bool AttributeWindow::isCorrect()
 }
 
 
-FfidData::FfidData()
+/*FfidData::FfidData()
 {
     ffid = 0;
     X=0.0;
@@ -219,4 +252,4 @@ SeisAttributes::~SeisAttributes()
 {
 
 }
-
+*/

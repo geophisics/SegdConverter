@@ -10,14 +10,12 @@
 #include <Cst/cstfile.h>
 #include <Segy/segyfile.h>
 #include <QHeaderView>
-#include "Workers/cstworker.h"
 #include "Workers/segyworkeronline.h"
 #include "Workers/cstworkeronline.h"
 #include "QMessageBox"
 #include "auxesdialog.h"
 #include "auxviewdialog.h"
-Q_DECLARE_METATYPE(FfidData)
-Q_DECLARE_METATYPE(SeisAttributes)
+#include "SUB/general.h"
 
 
 SegdConverterWindow::SegdConverterWindow(QWidget *parent) :
@@ -29,8 +27,8 @@ SegdConverterWindow::SegdConverterWindow(QWidget *parent) :
     ui->actionStop->setEnabled(false);
     readSettings();
     readConvertParamsSettings();
-    qRegisterMetaType<FfidData>();
-    qRegisterMetaType<SeisAttributes>();
+//    qRegisterMetaType<FfidData>();
+//    qRegisterMetaType<SeisAttributes>();
     attr_model=new AttributesModel(this);
 
     ui->attributesTableView->setModel(attr_model);
@@ -460,16 +458,10 @@ void SegdConverterWindow::runSegy()
     }
     ui->logTextEdit->append("Начало конвертации.");
     connect(p_myThread,SIGNAL(started()),p_segyWorker,SLOT(Converting()));
-    connect(p_segyWorker,SIGNAL(sendSegdAttributes(QVector<QVariant>*)),attr_model,SLOT(receiveFfidData()));
     connect(p_segyWorker,SIGNAL(finished()),this,SLOT(convertingEnded()));
     connect(p_segyWorker,SIGNAL(finished()),p_segyWorker,SLOT(deleteLater()));
     connect(p_segyWorker,SIGNAL(sendInfoMessage(QString,QColor)),this,SLOT(recieveInfoMessage(QString,QColor)));
-    connect(p_segyWorker,SIGNAL(fileConverted()),attr_model,SLOT(receiveFfidData()));
-    //connect(p_segyWorker,SIGNAL(sendSegdData(FfidData)),this,SLOT(receiveFfidDataSlot(FfidData)));
-    //connect(p_segyWorker,SIGNAL(sendSeisAttributes(SeisAttributes*,int)),this,SLOT(receiveSeisAttributes(SeisAttributes*,int)));
-    //connect(p_segyWorker,SIGNAL(sendRelation(QString,float,bool)),this,SLOT(receiveRelation(QString,float,bool)));
-    //connect(p_segyWorker,SIGNAL(sendAuxStatus(bool)),this,SLOT(receiveAuxStatus(bool)));
-    //connect(p_segyWorker,SIGNAL(sendTestStatus(float,QColor)),this,SLOT(receiveTestStatus(float,QColor)));
+    connect(p_segyWorker,SIGNAL(fileConverted()),attr_model,SIGNAL(layoutChanged()));
     connect(p_myThread,SIGNAL(finished()),p_myThread,SLOT(deleteLater()));
     connect(ui->actionStop,SIGNAL(triggered(bool)),p_segyWorker,SLOT(stopRunning()),Qt::DirectConnection);
     connect(ui->actionStop,SIGNAL(triggered(bool)),this,SLOT(disableStop(bool)));
@@ -483,7 +475,7 @@ void SegdConverterWindow::runSegy()
 //конвертация в файл segy в режиме онлайн
 void SegdConverterWindow::runSegyOnline()
 {
-    SegyWorker *p_segyWorker = new SegyWorkerOnline();
+    SegyWorker *p_segyWorker = new SegyWorkerOnline(attr_model->getAttributes());
     connect(p_segyWorker,SIGNAL(sendSomeError(QString)),this,SLOT(receiveSomeError(QString)));
     p_segyWorker->readSettings();
     p_segyWorker->setSegdPath(ui->segdLineEdit->text());
@@ -524,10 +516,7 @@ void SegdConverterWindow::runSegyOnline()
     connect(p_segyWorker,SIGNAL(finished()),this,SLOT(convertingEnded()));
     connect(p_segyWorker,SIGNAL(finished()),p_segyWorker,SLOT(deleteLater()));
     connect(p_segyWorker,SIGNAL(sendInfoMessage(QString,QColor)),this,SLOT(recieveInfoMessage(QString,QColor)));
-    connect(p_segyWorker,SIGNAL(sendSegdData(FfidData)),this,SLOT(receiveFfidDataSlot(FfidData)));
-    connect(p_segyWorker,SIGNAL(sendSeisAttributes(SeisAttributes*,int)),this,SLOT(receiveSeisAttributes(SeisAttributes*,int)));
-    connect(p_segyWorker,SIGNAL(sendRelation(QString,float,bool)),this,SLOT(receiveRelation(QString,float,bool)));
-    connect(p_segyWorker,SIGNAL(sendAuxStatus(bool)),this,SLOT(receiveAuxStatus(bool)));
+    connect(p_segyWorker,SIGNAL(fileConverted()),attr_model,SIGNAL(layoutChanged()));
     connect(p_myThread,SIGNAL(finished()),p_myThread,SLOT(deleteLater()));
     connect(ui->actionStop,SIGNAL(triggered(bool)),p_segyWorker,SLOT(stopRunning()),Qt::DirectConnection);
     connect(ui->actionStop,SIGNAL(triggered(bool)),this,SLOT(disableStop(bool)));
@@ -538,7 +527,7 @@ void SegdConverterWindow::runSegyOnline()
 
 void SegdConverterWindow::runCst()
 {
-    CstWorker *p_cstWorker = new CstWorker();
+    CstWorker *p_cstWorker = new CstWorker(attr_model->getAttributes());
     connect(p_cstWorker,SIGNAL(sendSomeError(QString)),this,SLOT(receiveSomeError(QString)));
     p_cstWorker->readSettings();
     p_cstWorker->setSegdPath(ui->segdLineEdit->text());
@@ -587,10 +576,7 @@ void SegdConverterWindow::runCst()
     connect(p_cstWorker,SIGNAL(finished()),this,SLOT(convertingEnded()));
     connect(p_cstWorker,SIGNAL(finished()),p_cstWorker,SLOT(deleteLater()));
     connect(p_cstWorker,SIGNAL(sendInfoMessage(QString,QColor)),this,SLOT(recieveInfoMessage(QString,QColor)));
-    connect(p_cstWorker,SIGNAL(sendSegdData(FfidData)),this,SLOT(receiveFfidDataSlot(FfidData)));
-    connect(p_cstWorker,SIGNAL(sendSeisAttributes(SeisAttributes*,int)),this,SLOT(receiveSeisAttributes(SeisAttributes*,int)));
-    connect(p_cstWorker,SIGNAL(sendRelation(QString,float,bool)),this,SLOT(receiveRelation(QString,float,bool)));
-    connect(p_cstWorker,SIGNAL(sendAuxStatus(bool)),this,SLOT(receiveAuxStatus(bool)));
+    connect(p_cstWorker,SIGNAL(fileConverted()),attr_model,SIGNAL(layoutChanged()));
     connect(p_myThread,SIGNAL(finished()),p_myThread,SLOT(deleteLater()));
     connect(ui->actionStop,SIGNAL(triggered(bool)),p_cstWorker,SLOT(stopRunning()),Qt::DirectConnection);
     connect(ui->actionStop,SIGNAL(triggered(bool)),this,SLOT(disableStop(bool)));
@@ -599,7 +585,7 @@ void SegdConverterWindow::runCst()
 
 void SegdConverterWindow::runCstOnline()
 {
-    CstWorkerOnline *p_cstWorker = new CstWorkerOnline();
+    CstWorkerOnline *p_cstWorker = new CstWorkerOnline(attr_model->getAttributes());
     connect(p_cstWorker,SIGNAL(sendSomeError(QString)),this,SLOT(receiveSomeError(QString)));
     p_cstWorker->readSettings();
     p_cstWorker->setSegdPath(ui->segdLineEdit->text());
@@ -640,10 +626,7 @@ void SegdConverterWindow::runCstOnline()
     connect(p_cstWorker,SIGNAL(finished()),this,SLOT(convertingEnded()));
     connect(p_cstWorker,SIGNAL(finished()),p_cstWorker,SLOT(deleteLater()));
     connect(p_cstWorker,SIGNAL(sendInfoMessage(QString,QColor)),this,SLOT(recieveInfoMessage(QString,QColor)));
-    connect(p_cstWorker,SIGNAL(sendSegdData(FfidData)),this,SLOT(receiveFfidDataSlot(FfidData)));
-    connect(p_cstWorker,SIGNAL(sendSeisAttributes(SeisAttributes*,int)),this,SLOT(receiveSeisAttributes(SeisAttributes*,int)));
-    connect(p_cstWorker,SIGNAL(sendRelation(QString,float,bool)),this,SLOT(receiveRelation(QString,float,bool)));
-    connect(p_cstWorker,SIGNAL(sendAuxStatus(bool)),this,SLOT(receiveAuxStatus(bool)));
+    connect(p_cstWorker,SIGNAL(fileConverted()),attr_model,SIGNAL(layoutChanged()));
     connect(p_myThread,SIGNAL(finished()),p_myThread,SLOT(deleteLater()));
     connect(ui->actionStop,SIGNAL(triggered(bool)),p_cstWorker,SLOT(stopRunning()),Qt::DirectConnection);
     connect(ui->actionStop,SIGNAL(triggered(bool)),this,SLOT(disableStop(bool)));
