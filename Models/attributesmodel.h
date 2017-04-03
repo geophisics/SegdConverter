@@ -2,6 +2,7 @@
 #define ATTRIBUTESMODEL_H
 
 #include <QAbstractTableModel>
+#include <QSortFilterProxyModel>
 #include "SUB/general.h"
 
 
@@ -32,5 +33,7 @@ public slots:
     void receiveFfidData();
     void saveDataInXlsx(const QString &path);
 };
+
+
 
 #endif // ATTRIBUTESMODEL_H

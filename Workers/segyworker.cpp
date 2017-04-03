@@ -20,6 +20,12 @@ void SegyWorker::Converting()
     QFileInfoList segdFilesInDir;
     QStringList filter;
     filter << "*.segd";
+
+
+
+
+
+
     if (fInfo.isDir() && mode)
     {
         segdDir.setPath(segdPath);
@@ -93,6 +99,19 @@ void SegyWorker::countAttributesFromFile(SegyFile *sgy)
     for (int i=0; i<windows.count();++i)
     {
         *logStream << QString("%1 Расчет атрибутов в окне Min Offset = %2; Max Offset = %3; Min Time = %4мс; Max Time = %5мс\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(windows.at(i).minOffset).arg(windows.at(i).maxOffset).arg(windows.at(i).minTime).arg(windows.at(i).maxTime);
+        switch (exType) {
+        case exclusionType::txtExcl:
+            tracesInWindow = sgy->getDataInWindow(logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl,exclPoints);
+            break;
+        case exclusionType::mesaExcl:
+            tracesInWindow = sgy->getDataInWindow(logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl,exclusions);
+            break;
+        default:
+            tracesInWindow = sgy->getDataInWindow(logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl);
+            break;
+        }
+        /*
+
         if (useExclusions)
         {
             if  (exType == exclusionType::txtExcl) {
@@ -105,7 +124,7 @@ void SegyWorker::countAttributesFromFile(SegyFile *sgy)
         }
         else {
             tracesInWindow = sgy->getDataInWindow(logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl);
-        }
+        }*/
         countAttriburesInWindow(tracesInWindow,i,sgy->getSampleInterval(),sgy->getFileNumFirstTrace(),&amplitudes);
         tracesInWindow.clear();
     }
@@ -191,11 +210,11 @@ bool SegyWorker::convertOneFile(const QString &filePath, const bool &writeHeader
         }
 
 
-        if (useExternalRps)
+        if (!pp.isEmpty())
         {
             segy->setReceiverCoordinats(pp);
         }
-        if (useExternalSps)
+        if (!pv.isEmpty())
         {
             segy->setSourceCoordinats(pv);
         }
@@ -217,12 +236,24 @@ bool SegyWorker::convertOneFile(const QString &filePath, const bool &writeHeader
         delete(segd);
         if (writeHeaders)
         {
-            if (writeAuxesNewFile)
+            if (auxMode==writeAuxesMode::writeInNewFile)
             {
                 segy->writeHeaders(outAuxesPath);
             }
             segy->writeHeaders(outPath);
         }
+        switch (auxMode) {
+        case writeAuxesMode::writeInNewFile:
+            segy->writeAuxTraces(outAuxesPath);
+            break;
+        case writeAuxesMode::write:
+            segy->writeAuxTraces(outPath);
+            break;
+        default:
+            break;
+        }
+        /*
+
         if (writeAuxesNewFile)
         {
             segy->writeAuxTraces(outAuxesPath);
@@ -230,7 +261,7 @@ bool SegyWorker::convertOneFile(const QString &filePath, const bool &writeHeader
         if (writeAuxes)
         {
             segy->writeAuxTraces(outPath);
-        }
+        }*/
         segy->writeTraces(outPath,writeMutedChannels,writeMissedChannels);
         countAttributesFromFile(segy);
         attributes->append(AttributesFromFile(fileAttributes));

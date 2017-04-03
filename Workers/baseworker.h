@@ -2,13 +2,19 @@
 #define BASEWORKER_H
 
 #include <QObject>
-#include <QtXlsx>
 
 #include <SUB/point.h>
 #include <SUB/exclusion.h>
 #include <attributewindow.h>
 #include <QtCharts/QLineSeries>
 #include <SUB/general.h>
+#include <QSettings>
+#include <QFile>
+#include <QTextStream>
+#include <QFileSystemWatcher>
+
+typedef QMap<QString,QString> Paths;
+
 
 class SegdTrace;
 class SegdFile;
@@ -22,40 +28,55 @@ struct TimeBreakSettings
     TimeBreakSettings();
 };
 
+struct AkfSettings
+{
+    AkfSettings();
+    quint8 traceNb;
+    int frqLvl;
+    uint maxTime,minFrq,maxFrq;
+    double maxAmpl;
+
+};
+
 class BaseWorker : public QObject
 {
     Q_OBJECT
 
 public:
-    enum exclusionType {mesaExcl, txtExcl};
+    enum exclusionType {mesaExcl, txtExcl, noExcl};
+    enum readMode{fromDir,fromFile};
+    enum writeAuxesMode {write,writeInNewFile,noWrite};
+
     explicit BaseWorker(CountedAttributes *attr);
 
 protected:
+
+
+    Paths paths;
     QString segdPath;
     QString outPath;
     QString outAuxesPath;
     QString attrFilePath;
-    QString spsPath;
-    QString rpsPath;
-    QString xpsPath;
-//    QXlsx::Document xlsx;
-//    QXlsx::Format xlsxFormat; //формат ячейки в таблице xlsx
+    //QString spsPath;
+    //QString rpsPath;
+    //QString xpsPath;
+
+
 
     bool SercelMpFactor;
+    //readMode rMode;
     bool mode; // true - Dir, false - File
     bool writeMutedChannels;
     bool writeMissedChannels;
     bool analysisAuxes;
-    quint8 akfTraceNb;
+    AkfSettings akf;
+
+    /*quint8 akfTraceNb;
     int akfFrqLvl;
     uint akfMaxTime,akfMinFrq,akfMaxFrq;
-    double akfMaxAmpl;
+    double akfMaxAmpl;*/
     TimeBreakSettings timeBreak, confirmedTimeBreak, upholeTime;
     float userMpFactorValue;
-    bool writeAuxes;
-    bool writeAuxesNewFile;
-    bool useExternalSps;
-    bool useExternalRps;
     bool useExternalXps;
     //параметры трасс для расчета атрибутов
     bool notUseMutedTraces;
@@ -73,11 +94,12 @@ protected:
     int waitingTime;
     bool *run;
     QString BackupFolder;
-    QMap<QString, Point*> pp;
-    QMap<QString, Point*> pv;
+    QMap<QString, Point> pp;
+    QMap<QString, Point> pv;
 
-    bool useExclusions; // используем или нет экслюзивные зоны
+   // bool useExclusions; // используем или нет экслюзивные зоны
     exclusionType exType;
+    writeAuxesMode auxMode;
 
     QVector<Exclusion*> exclusions;
     QVector<int> exclPoints;
@@ -106,16 +128,16 @@ public:
     void setSegdPath(const QString &path);
     void setOutPath(const QString &path);
     void setAttrFilePath(const QString &path);
-    void setRpsPath(const QString &path);
-    void setSpsPath(const QString &path);
+//    void setRpsPath(const QString &path);
+//    void setSpsPath(const QString &path);
     void setXpsPath(const QString &path);
 
     void setMode (const bool &md);
     void setUseExternalSps(const bool &use);
     void setUseExternalRps(const bool &use);
     void setUseExternalXps(const bool &use);
-    bool readRps(const QString &path);
-    bool readSps(const QString &path);
+    void readRps(const QString &path);
+    void readSps(const QString &path);
     void readSettings();
 
 protected:

@@ -2,7 +2,7 @@
 #include "Segd/segdfile.h"
 #include "Cst/cstfile.h"
 #include "aquila/functions.h"
-QTXLSX_USE_NAMESPACE
+
 void CstWorker::Converting()
 {
     QFileInfo fInfo(segdPath);
@@ -23,7 +23,7 @@ void CstWorker::Converting()
         emit sendSomeError("Ошибка создания файла СST");
         emit finished();
     }
-    if (writeAuxesNewFile)
+    if (auxMode==writeInNewFile)
     {
         cstFile.setFileName(outAuxesPath);
         if (cstFile.open(QIODevice::WriteOnly))
@@ -33,7 +33,8 @@ void CstWorker::Converting()
         else
         {
             emit sendSomeError("Ошибка создания файла служебный трасс. Запись служебный трасс не производится");
-            writeAuxesNewFile = false;
+            auxMode=noWrite;
+            //writeAuxesNewFile = false;
         }
     }
     QFileInfoList segdFilesInDir;
@@ -109,6 +110,18 @@ void CstWorker::countAttributes(CstFile *cst)
     for (int i=0; i<windows.count();++i)
     {
         *logStream << QString("%1 Расчет атрибутов в окне Min Offset = %2; Max Offset = %3; Min Time = %4мс; Max Time = %5мс\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(windows.at(i).minOffset).arg(windows.at(i).maxOffset).arg(windows.at(i).minTime).arg(windows.at(i).maxTime);
+        switch (exType) {
+        case exclusionType::txtExcl:
+            tracesInWindow = cst->getDataInWindow(logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl,exclPoints);
+            break;
+        case exclusionType::mesaExcl:
+            tracesInWindow = cst->getDataInWindow(logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl,exclusions);
+            break;
+        default:
+            tracesInWindow = cst->getDataInWindow(logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl);
+            break;
+        }
+        /*
         if (useExclusions)
         {
             if  (exType == exclusionType::txtExcl) {
@@ -121,7 +134,7 @@ void CstWorker::countAttributes(CstFile *cst)
         }
         else {
             tracesInWindow = cst->getDataInWindow(logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl);
-        }
+        }*/
         countAttriburesInWindow(tracesInWindow,i,cst->getSampleRate(),cst->getFfid(),&amplitudes);
         tracesInWindow.clear();
     }
@@ -206,12 +219,10 @@ bool CstWorker::convertOneFile(const QString &filePath)
         }
 
 
-        if (useExternalRps)
-        {
+        if (!pp.isEmpty()) {
             cst->setReceiverCoordinats(pp);
         }
-        if (useExternalSps)
-        {
+        if (!pv.isEmpty()) {
             cst->setSourceCoordinats(pv);
         }
         cst->setGeometry();
@@ -230,14 +241,24 @@ bool CstWorker::convertOneFile(const QString &filePath)
             checkingTests(segd);
         }
         delete segd;
-        if (writeAuxesNewFile)
+        switch (auxMode) {
+        case writeAuxesMode::writeInNewFile:
+            cst->writeAuxTraces(outAuxesPath);
+            break;
+        case writeAuxesMode::write:
+             cst->writeAuxTraces(outPath);
+            break;
+        default:
+            break;
+        }
+        /*if (writeAuxesNewFile)
         {
             cst->writeAuxTraces(outAuxesPath);
         }
         if (writeAuxes)
         {
             cst->writeAuxTraces(outPath);
-        }
+        }*/
         cst->writeTraces(outPath,writeMutedChannels,writeMissedChannels);
         countAttributes(cst);
         attributes->append(AttributesFromFile(fileAttributes));

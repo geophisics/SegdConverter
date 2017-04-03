@@ -112,7 +112,7 @@ float CstFile::getYorigin()
     return yOrigin;
 }
 
-void CstFile::setReceiverCoordinats(QMap<QString, Point *> coordinates)
+void CstFile::setReceiverCoordinats(QMap<QString, Point> coordinates)
 {
     QVector<CstTrace*>::iterator traceIt = traces.begin();
     CstTrace *trace;
@@ -123,14 +123,14 @@ void CstFile::setReceiverCoordinats(QMap<QString, Point *> coordinates)
            linePoint = QString::number(trace->getReceiverLinePoint());
            if (coordinates.contains(linePoint))
            {
-               trace->setReceiverX(coordinates.value(linePoint)->getX());
-               trace->setReceiverY(coordinates.value(linePoint)->getY());
+               trace->setReceiverX(coordinates.value(linePoint).getX());
+               trace->setReceiverY(coordinates.value(linePoint).getY());
                //trace->setReceiverZ(coordinates.value(linePoint)->getZ());
            }
     }
 }
 
-void CstFile::setSourceCoordinats(QMap<QString, Point *> coordinates)
+void CstFile::setSourceCoordinats(QMap<QString, Point> coordinates)
 {
     QVector<CstTrace*>::iterator traceIt = traces.begin();
     CstTrace *trace;
@@ -140,8 +140,8 @@ void CstFile::setSourceCoordinats(QMap<QString, Point *> coordinates)
         for (; traceIt!=traces.end();++traceIt)
         {
             trace = *traceIt;
-            trace->setSourceX(coordinates.value(linePoint)->getX());
-            trace->setSourceY(coordinates.value(linePoint)->getY());
+            trace->setSourceX(coordinates.value(linePoint).getX());
+            trace->setSourceY(coordinates.value(linePoint).getY());
         }
     }
 }

@@ -2,12 +2,17 @@
 #include "math.h"
 #include <QQueue>
 #include <QVector>
-Point::Point(QObject *parent) : QObject(parent)
+Point::Point( )
 {
-
+    line = 0;
+    point = 0;
+    x = 0;
+    y = 0;
+    z = 0;
+    linePoint ="NoPoint";// QString::number(line)+QString::number(point);
 }
 
-Point::Point(QString &str, QObject *parent):QObject(parent)
+Point::Point(QString &str)
 {
     QString tmp = str.mid(1,16);
     line = tmp.toInt();
@@ -19,6 +24,16 @@ Point::Point(QString &str, QObject *parent):QObject(parent)
     y=tmp.toFloat();
     tmp = str.mid(65,6);
     z=tmp.toFloat();
+    linePoint = QString::number(line)+QString::number(point);
+}
+
+Point::Point(const Point &other)
+{
+    line = other.line;
+    point = other.point;
+    x = other.x;
+    y = other.y;
+    z = other.z;
     linePoint = QString::number(line)+QString::number(point);
 }
 
@@ -34,15 +49,15 @@ void Point::setPoint(const int &p)
 {
     point = p;
 }
-uint Point::getX()
+uint Point::getX() const
 {
     return round(x);
 }
-uint Point::getY()
+uint Point::getY() const
 {
     return round(y);
 }
-uint Point::getZ()
+uint Point::getZ() const
 {
     return round(z);
 }

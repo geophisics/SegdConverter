@@ -31,8 +31,8 @@ public:
     int getI0();
     int getJ0();
 
-    void setReceiverCoordinats(QMap<QString,Point*> coordinates);
-    void setSourceCoordinats(QMap<QString, Point*> coordinates);
+    void setReceiverCoordinats(QMap<QString,Point> coordinates);
+    void setSourceCoordinats(QMap<QString, Point> coordinates);
     void setGeometry();
     void writeAuxTraces(const QString &filePath);
     void writeTraces(const QString &filePath, const bool &muted);

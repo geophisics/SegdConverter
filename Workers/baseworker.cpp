@@ -20,15 +20,24 @@ BaseWorker::BaseWorker(CountedAttributes *attr):attributes(attr)
 // устанавливаем путь до файлов segd
 void BaseWorker::setSegdPath(const QString &path)
 {
+    paths.insert("SegdPath",QDir::toNativeSeparators(path));
     segdPath = path;
 }
 
 // устанавливаем куда будем писать выходной файл
 void BaseWorker::setOutPath(const QString &path)
 {
-    outPath = path;
-    QString tmp=path;
-    outAuxesPath = tmp.insert(tmp.lastIndexOf('.'),"_auxes");
+    QString newPath = QDir::toNativeSeparators(path);
+    paths.insert("OutPath",newPath);
+    paths.insert("SpectrumsPath",newPath.left(newPath.lastIndexOf(QDir::separator())+1)+"spectrums"+QDir::separator());
+    paths.insert("AuxPath",newPath.insert(newPath.lastIndexOf('.'),"_auxes"));
+    qDebug()<<paths.value("OutPath");
+    qDebug()<<paths.value("SpectrumsPath");
+    qDebug()<<paths.value("AuxPath");
+    //paths.insert( path.lastIndexOf(QDir::separator()))
+    //outPath = path;
+    //QString tmp=path;
+    //outAuxesPath = tmp.insert(tmp.lastIndexOf('.'),"_auxes");
 }
 
 //устанавливаем куда будем писать файл атрибутов
@@ -38,20 +47,23 @@ void BaseWorker::setAttrFilePath(const QString &path)
 }
 
 //устанавливаем откуда будем читать r-файл
-void BaseWorker::setRpsPath(const QString &path)
-{
-    rpsPath = path;
-}
+//void BaseWorker::setRpsPath(const QString &path)
+//{
+//    paths.insert("RpsPath",QDir::toNativeSeparators(path));
+//    //rpsPath = path;
+//}
 
 //устанавливаем откуда будем читать s-файл
-void BaseWorker::setSpsPath(const QString &path)
-{
-    spsPath = path;
-}
+//void BaseWorker::setSpsPath(const QString &path)
+//{
+//    paths.insert("SpsPath",QDir::toNativeSeparators(path));
+//    //spsPath = path;
+//}
 
 void BaseWorker::setXpsPath(const QString &path)
 {
-    xpsPath = path;
+    paths.insert("XpsPath",QDir::toNativeSeparators(path));
+    //xpsPath = path;
 }
 
 //чтение настроек конвертации
@@ -78,6 +90,17 @@ void BaseWorker::readSettings()
         }
     }
     waitingTime = settings->value("/WaitingTime",10).toInt(0);
+
+    if (settings->value("/Exclusions",false).toBool())
+    {
+        exType = settings->value("/TxtExclusion",false).toBool() ? exclusionType::txtExcl : exclusionType::mesaExcl;
+    }
+    else
+    {
+        exType = exclusionType::noExcl;
+    }
+    /*
+
     useExclusions = settings->value("/Exclusions",false).toBool();
 
     if (settings->value("/TxtExclusion",false).toBool())
@@ -87,9 +110,9 @@ void BaseWorker::readSettings()
     else
     {
         exType = exclusionType::mesaExcl;
-    }
+    }*/
 
-    if (useExclusions)
+    if (exType!=exclusionType::noExcl)
     {
         QString exclPath =settings->value("/ExclusionsPath","").toString();
         if (exType ==exclusionType::mesaExcl)
@@ -103,8 +126,23 @@ void BaseWorker::readSettings()
     }
     writeMutedChannels = settings->value("/MuteChannels",true).toBool();
     writeMissedChannels = settings->value("/MissedChannels",false).toBool();
-    writeAuxes=(settings->value("/WriteAuxes",0).toBool());
-    writeAuxesNewFile = settings->value("/WriteAuxesInNewFile",0).toBool();
+    if (settings->value("/WriteAuxes",false).toBool())
+    {
+        if (settings->value("/WriteAuxesInNewFile",false).toBool()) {
+            auxMode = writeAuxesMode::writeInNewFile;
+        }
+        else{
+            auxMode = writeAuxesMode::write;
+        }
+
+
+    }
+    else
+    {
+        auxMode = writeAuxesMode::noWrite;
+    }
+//    writeAuxes=(settings->value("/WriteAuxes",0).toBool());
+//    writeAuxesNewFile = settings->value("/WriteAuxesInNewFile",0).toBool();
     backup = settings->value("/Backup",false).toBool();
     if (backup)
     {
@@ -191,12 +229,18 @@ void BaseWorker::readSettings()
     if (analysisAuxes)
     {
         settings->beginGroup("/VibAuxSettings");
-        akfTraceNb = settings->value("/AkfTrace",2).toUInt();
-        akfMaxTime = settings->value("/PeakTime",500).toUInt();
-        akfFrqLvl = settings->value("/FreqLvl",-50).toInt();
-        akfMinFrq = settings->value("/MinFreq",7).toUInt();
-        akfMaxFrq =settings->value("/MaxFreq",100).toUInt();
-        akfMaxAmpl = settings->value("/AkfMaxAmpl",0.0).toDouble();
+        akf.traceNb =settings->value("/AkfTrace",2).toUInt();
+        //akfTraceNb = settings->value("/AkfTrace",2).toUInt();
+        akf.maxTime = settings->value("/PeakTime",500).toUInt();
+        //akfMaxTime = settings->value("/PeakTime",500).toUInt();
+        akf.frqLvl = settings->value("/FreqLvl",-50).toInt();
+        //akfFrqLvl = settings->value("/FreqLvl",-50).toInt();
+        akf.minFrq = settings->value("/MinFreq",7).toUInt();
+        //akfMinFrq = settings->value("/MinFreq",7).toUInt();
+        akf.maxFrq = settings->value("/MaxFreq",100).toUInt();
+        //akfMaxFrq =settings->value("/MaxFreq",100).toUInt();
+        akf.maxAmpl = settings->value("/AkfMaxAmpl",0.0).toDouble();
+        //akfMaxAmpl = settings->value("/AkfMaxAmpl",0.0).toDouble();
         settings->endGroup();
 
         settings->beginGroup("/ExplAuxSettings");
@@ -325,7 +369,7 @@ void BaseWorker::setExclusions(const QString &exclFileName)
         if (tmp!="# Version Number\n")
         {
             emit sendSomeError(QString("Файл %1 не является файлом эксклюзивных зон Mesa").arg(exclFileName));
-            useExclusions = false;
+            exType = exclusionType::noExcl;
             return;
         }
         tmp = xclFile.readLine();
@@ -391,7 +435,7 @@ void BaseWorker::setExclusions(const QString &exclFileName)
     }
     else
     {
-        useExclusions = false;
+        exType = exclusionType::noExcl;;
         return;
     }
 
@@ -417,7 +461,7 @@ void BaseWorker::setReceiversInExclusions(const QString &exclFileName)
     }
     else
     {
-        useExclusions = false;
+        exType = exclusionType::noExcl;
         return;
     }
 }
@@ -430,7 +474,7 @@ void BaseWorker::setMode(const bool &md)
 
 // устанавливаем откуда брать координаты пв
 
-void BaseWorker::setUseExternalSps(const bool &use)
+/*void BaseWorker::setUseExternalSps(const bool &use)
 {
     useExternalSps = use;
 }
@@ -440,70 +484,70 @@ void BaseWorker::setUseExternalSps(const bool &use)
 void BaseWorker::setUseExternalRps(const bool &use)
 {
     useExternalRps = use;
-}
+}*/
 
 void BaseWorker::setUseExternalXps(const bool &use)
 {
     useExternalXps = use;
 }
 //читаем r-файл
-bool BaseWorker::readRps(const QString &path)
+void BaseWorker::readRps(const QString &path)
 {
     QFile rpsFile(path);
     QString tmp;
-    Point *p_receiver;
+    Point receiver;
     if (rpsFile.open(QIODevice::ReadOnly|QIODevice::Text))
     {
         while (!rpsFile.atEnd()) {
             tmp=rpsFile.readLine();
             if (tmp[0]=='R')
             {
-                p_receiver = new Point(tmp);
-                pp.insert(p_receiver->getLinePoint(),p_receiver);
+                receiver = Point(tmp);
+                pp.insert(receiver.getLinePoint(),Point(receiver));
             }
         }
     }
     else
     {
-        return false;
+        emit sendSomeError(QString("Ошибка открытия файла %1. Координаты ПП будут взяты из заголовков SEGD файла.").arg(path));
     }
     if (pp.isEmpty())
     {
-        return false;
+        emit sendSomeError(QString("В файле %1 не содержится R-записей. Координаты ПВ будут взяты из заголовков SEGD файла.").arg(path));
     }
     else
     {
-        return true;
+        emit sendInfoMessage(QString("В файле %1 содержится %2 R-записей").arg(path).arg(pp.count()),Qt::darkGray);
     }
 }
 //читаем s-файл
-bool BaseWorker::readSps(const QString &path)
+void BaseWorker::readSps(const QString &path)
 {
     QFile spsFile(path);
     QString tmp;
-    Point *p_source;
+    Point source;
     if (spsFile.open(QIODevice::ReadOnly|QIODevice::Text))
     {
         while (!spsFile.atEnd()) {
             tmp=spsFile.readLine();
             if (tmp[0]=='S')
             {
-                p_source = new Point(tmp);
-                pv.insert(p_source->getLinePoint(),p_source);
+                source = Point(tmp);
+                pv.insert(source.getLinePoint(),Point(source));
             }
         }
     }
     else
     {
-        return false;
+        emit sendSomeError(QString("Ошибка открытия файла %1. Координаты ПВ будут взяты из заголовков SEGD файла.").arg(path));
     }
-    if (pp.isEmpty())
+    if (pv.isEmpty())
     {
-        return false;
+        emit sendSomeError(QString("В файле %1 не содержится S-записей. Координаты ПВ будут взяты из заголовков SEGD файла.").arg(path));
     }
     else
     {
-        return true;
+        emit sendInfoMessage(QString("В файле %1 содержится %2 S-записей").arg(path).arg(pv.count()),Qt::darkGray);
     }
 }
 
@@ -543,7 +587,8 @@ void BaseWorker::createFileForMissedTraces()
 QQueue<QString> *BaseWorker::findTemplates(const int &ffid)
 {
     QQueue<QString> *result = new QQueue<QString>();
-    QFile xps(xpsPath);
+    //QFile xps(xpsPath);
+    QFile xps(paths.value("XpsPath"));
     if (xps.open(QIODevice::ReadOnly|QIODevice::Text))
     {
         QString line;
@@ -846,28 +891,28 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
 {
     if (segd->getExtendedHeader().getTypeOfProcess() > 2 && segd->getExtendedHeader().getTypeOfSource()==2 )
     {
-        QVector<float> traceData = segd->getTrace(akfTraceNb-1)->getTraceData();
+        QVector<float> traceData = segd->getTrace(akf.traceNb-1)->getTraceData();
         QVector<float> spectrum = getSpectrumDb(traceData.toStdVector());
         uint sampleRate = segd->getExtendedHeader().getSampleRate()/1000;
         float maxAmpl = *std::max_element(traceData.begin(),traceData.end());
         uint maxTime = traceData.indexOf(maxAmpl) * sampleRate ;
         maxAmpl = maxAmpl/segd->getExtendedHeader().getDumpStackingFold();
         float amplKoef=0.0;
-        amplKoef = (maxAmpl-akfMaxAmpl)/akfMaxAmpl;
+        amplKoef = (maxAmpl-akf.maxAmpl)/akf.maxAmpl;
          QVector<QPointF> *spectrumPoints = new QVector<QPointF>;
         QVector<QPointF> *tracePoints = new QVector<QPointF>;
         float frqStep = 1000000.0/segd->getExtendedHeader().getSampleRate()/spectrum.count();
         bool checkAkfTrace=false;
-        if ((maxTime==akfMaxTime) && fabs(round(amplKoef*10000)/10000.0)==0)
+        if ((maxTime==akf.maxTime) && fabs(round(amplKoef*10000)/10000.0)==0)
         {
             checkAkfTrace = true;
         }
         bool checkSpectrum;
-        int freqCount =std::round(akfMinFrq/frqStep);
+        int freqCount =std::round(akf.minFrq/frqStep);
         float minFrqValue = spectrum.value(freqCount);
-        freqCount =std::round(akfMaxFrq/frqStep);
+        freqCount =std::round(akf.maxFrq/frqStep);
         float maxFrqValue = spectrum.value(freqCount);
-        if (abs (minFrqValue-maxFrqValue) <5 && abs(minFrqValue-akfFrqLvl) <5 && abs(maxFrqValue-akfFrqLvl)<5)
+        if (abs (minFrqValue-maxFrqValue) <5 && abs(minFrqValue-akf.frqLvl) <5 && abs(maxFrqValue-akf.frqLvl)<5)
         {
             checkSpectrum = true;
         }
@@ -879,10 +924,10 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
         {
             spectrumPoints->append(QPointF(frqStep*i,spectrum.value(i)));
         }
-        int numOfSamplesForTrace = akfMaxTime*2/sampleRate;
+        int numOfSamplesForTrace = akf.maxTime*2/sampleRate;
         for (int i=0 ; i<=numOfSamplesForTrace; i++)
         {
-            tracePoints->append(QPointF(segd->getTrace(akfTraceNb-1)->getTraceData().value(i),i*segd->getExtendedHeader().getSampleRate()/1000));
+            tracePoints->append(QPointF(segd->getTrace(akf.traceNb-1)->getTraceData().value(i),i*segd->getExtendedHeader().getSampleRate()/1000));
         }
         if (checkSpectrum && checkAkfTrace)
         {
@@ -1003,4 +1048,13 @@ TimeBreakSettings::TimeBreakSettings()
     maxAmpl=1.0;
 }
 
+AkfSettings::AkfSettings()
+{
+    traceNb=1;
+    frqLvl=-10;
+    maxTime=0;
+    minFrq=0;
+    maxFrq=0;
+    maxAmpl=0.0;
+}
 

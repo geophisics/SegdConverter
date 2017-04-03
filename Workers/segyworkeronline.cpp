@@ -171,12 +171,10 @@ bool SegyWorkerOnline:: convertOneFileOnline(const QString &filePath, const bool
     {
         segy = new SegyFile(segd,this);
         delete(segd);
-        if (useExternalRps)
-        {
+        if (!pp.isEmpty()) {
             segy->setReceiverCoordinats(pp);
         }
-        if (useExternalSps)
-        {
+        if (!pv.isEmpty()) {
             segy->setSourceCoordinats(pv);
         }
         segy->setGeometry();
@@ -197,19 +195,21 @@ bool SegyWorkerOnline:: convertOneFileOnline(const QString &filePath, const bool
         }
         if (writeHeaders)
         {
-            if (writeAuxesNewFile)
+            if (auxMode==writeAuxesMode::writeInNewFile)
             {
                 segy->writeHeaders(outAuxesPath);
             }
             segy->writeHeaders(outPath);
         }
-        if (writeAuxesNewFile)
-        {
+        switch (auxMode) {
+        case writeAuxesMode::writeInNewFile:
             segy->writeAuxTraces(outAuxesPath);
-        }
-        if (writeAuxes)
-        {
+            break;
+        case writeAuxesMode::write:
             segy->writeAuxTraces(outPath);
+            break;
+        default:
+            break;
         }
         segy->writeTraces(outPath,writeMutedChannels);
         countAttributesFromFile(segy);

@@ -405,7 +405,7 @@ void SegyFile::writeAuxTraces(const QString &filePath)
     //fileOut.close();
 }
 
-void SegyFile::setReceiverCoordinats(QMap<QString, Point *> coordinates)
+void SegyFile::setReceiverCoordinats(QMap<QString, Point> coordinates)
 {
     QVector<segyTrace*>::iterator traceIt = segyTraces.begin();
     segyTrace *trace;
@@ -416,14 +416,14 @@ void SegyFile::setReceiverCoordinats(QMap<QString, Point *> coordinates)
            linePoint = trace->getReceiverLinePoint();
            if (coordinates.contains(linePoint))
            {
-               trace->setReceiverX(coordinates.value(linePoint)->getX());
-               trace->setReceiverY(coordinates.value(linePoint)->getY());
-               trace->setReceiverZ(coordinates.value(linePoint)->getZ());
+               trace->setReceiverX(coordinates.value(linePoint).getX());
+               trace->setReceiverY(coordinates.value(linePoint).getY());
+               trace->setReceiverZ(coordinates.value(linePoint).getZ());
            }
     }
 }
 
-void SegyFile::setSourceCoordinats(QMap<QString, Point *> coordinates)
+void SegyFile::setSourceCoordinats(QMap<QString, Point> coordinates)
 {
     QVector<segyTrace*>::iterator traceIt = segyTraces.begin();
     segyTrace *trace;
@@ -434,9 +434,9 @@ void SegyFile::setSourceCoordinats(QMap<QString, Point *> coordinates)
            linePoint = trace->getSourceLinePoint();
            if (coordinates.contains(linePoint))
            {
-               trace->setSourceX(coordinates.value(linePoint)->getX());
-               trace->setSourceY(coordinates.value(linePoint)->getY());
-               trace->setSourceZ(coordinates.value(linePoint)->getZ());
+               trace->setSourceX(coordinates.value(linePoint).getX());
+               trace->setSourceY(coordinates.value(linePoint).getY());
+               trace->setSourceZ(coordinates.value(linePoint).getZ());
            }
     }
 }

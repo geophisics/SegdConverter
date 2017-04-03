@@ -23,7 +23,7 @@ void CstWorkerOnline::Converting()
         emit sendSomeError("Ошибка создания файла СST");
         emit finished();
     }
-    if (writeAuxesNewFile)
+    if (auxMode==writeInNewFile)
     {
         cstFile.setFileName(outAuxesPath);
         if (cstFile.open(QIODevice::WriteOnly))
@@ -33,9 +33,28 @@ void CstWorkerOnline::Converting()
         else
         {
             emit sendSomeError("Ошибка создания файла служебный трасс. Запись служебный трасс не производится");
-            writeAuxesNewFile = false;
+            auxMode=noWrite;
+            //writeAuxesNewFile = false;
         }
     }
+
+
+
+
+
+//    if (writeAuxesNewFile)
+//    {
+//        cstFile.setFileName(outAuxesPath);
+//        if (cstFile.open(QIODevice::WriteOnly))
+//        {
+//            cstFile.close();
+//        }
+//        else
+//        {
+//            emit sendSomeError("Ошибка создания файла служебный трасс. Запись служебный трасс не производится");
+//            writeAuxesNewFile = false;
+//        }
+//    }
 
     QFileInfoList segdFilesInDir;
     QStringList filter;
@@ -185,12 +204,10 @@ bool CstWorkerOnline::convertOneFileOnline(const QString &filePath)
         cst = new CstFile(segd,this);
 
         delete segd;
-        if (useExternalRps)
-        {
+        if (!pp.isEmpty()) {
             cst->setReceiverCoordinats(pp);
         }
-        if (useExternalSps)
-        {
+        if (!pv.isEmpty()) {
             cst->setSourceCoordinats(pv);
         }
         cst->setGeometry();
@@ -209,6 +226,16 @@ bool CstWorkerOnline::convertOneFileOnline(const QString &filePath)
         {
             chekingAuxData(segd);
         }
+        switch (auxMode) {
+        case writeAuxesMode::writeInNewFile:
+            cst->writeAuxTraces(outAuxesPath);
+            break;
+        case writeAuxesMode::write:
+             cst->writeAuxTraces(outPath);
+            break;
+        default:
+            break;
+        }/*
         if (writeAuxesNewFile)
         {
             cst->writeAuxTraces(outAuxesPath);
@@ -216,7 +243,7 @@ bool CstWorkerOnline::convertOneFileOnline(const QString &filePath)
         if (writeAuxes)
         {
             cst->writeAuxTraces(outPath);
-        }
+        }*/
         cst->writeTraces(outPath,writeMutedChannels);
         countAttributes(cst);
         emit attributesCounted();

@@ -5,18 +5,18 @@
 #include <QVector>
 #include <QQueue>
 struct Template;
-class Point : public QObject
+class Point
 {
-    Q_OBJECT
 public:
-    explicit Point(QObject *parent = 0);
-    explicit Point(QString &str, QObject *parent = 0);
+    explicit Point();
+    Point(QString &str);
+    Point(const Point &other);
     void setLine(const int &l);
     void setPoint(const int &p);
     QString getLinePoint();
-    uint getX();
-    uint getY();
-    uint getZ();
+    uint getX() const;
+    uint getY() const;
+    uint getZ() const;
 private:
     int line;
     int point;

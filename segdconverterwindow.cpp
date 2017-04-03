@@ -423,25 +423,11 @@ void SegdConverterWindow::runSegy()
     p_segyWorker->moveToThread(p_myThread);
     if (ui->actionOpenRPS->isChecked())
     {
-        if (p_segyWorker->readRps(rpsFile))
-        {
-            p_segyWorker->setUseExternalRps(true);
-        }
-        else
-        {
-            p_segyWorker->setUseExternalRps(false);
-        }
+        p_segyWorker->readRps(rpsFile);
     }
     if (ui->actionOpenSPS->isChecked())
     {
-        if (p_segyWorker->readSps(spsFile))
-        {
-            p_segyWorker->setUseExternalSps(true);
-        }
-        else
-        {
-            p_segyWorker->setUseExternalSps(false);
-        }
+        p_segyWorker->readSps(spsFile);
     }
     if (ui->actionOpenXPS->isChecked())
     {
@@ -485,25 +471,11 @@ void SegdConverterWindow::runSegyOnline()
     p_segyWorker->moveToThread(p_myThread);
     if (ui->actionOpenRPS->isChecked())
     {
-        if (p_segyWorker->readRps(rpsFile))
-        {
-            p_segyWorker->setUseExternalRps(true);
-        }
-        else
-        {
-            p_segyWorker->setUseExternalRps(false);
-        }
+        p_segyWorker->readRps(rpsFile);
     }
     if (ui->actionOpenSPS->isChecked())
     {
-        if (p_segyWorker->readSps(spsFile))
-        {
-            p_segyWorker->setUseExternalSps(true);
-        }
-        else
-        {
-            p_segyWorker->setUseExternalSps(false);
-        }
+        p_segyWorker->readSps(spsFile);
     }
     p_segyWorker->setUseExternalXps(false);
     if (ui->actionAuxes->isEnabled())
@@ -535,27 +507,11 @@ void SegdConverterWindow::runCst()
     p_cstWorker->setAttrFilePath(ui->attrFileLineEdit->text());
     p_cstWorker->setMode(ui->segdLabel->text()=="Директория Segd");
     p_cstWorker->moveToThread(p_myThread);
-    if (ui->actionOpenRPS->isChecked())
-    {
-        if (p_cstWorker->readRps(rpsFile))
-        {
-            p_cstWorker->setUseExternalRps(true);
-        }
-        else
-        {
-            p_cstWorker->setUseExternalRps(false);
-        }
+    if (ui->actionOpenRPS->isChecked()) {
+        p_cstWorker->readRps(rpsFile);
     }
-    if (ui->actionOpenSPS->isChecked())
-    {
-        if (p_cstWorker->readSps(spsFile))
-        {
-            p_cstWorker->setUseExternalSps(true);
-        }
-        else
-        {
-            p_cstWorker->setUseExternalSps(false);
-        }
+    if (ui->actionOpenSPS->isChecked())  {
+        p_cstWorker->readSps(spsFile);
     }
     if (ui->actionOpenXPS->isChecked())
     {
@@ -593,27 +549,11 @@ void SegdConverterWindow::runCstOnline()
     p_cstWorker->setAttrFilePath(ui->attrFileLineEdit->text());
     p_cstWorker->setMode(ui->segdLabel->text()=="Директория Segd");
     p_cstWorker->moveToThread(p_myThread);
-    if (ui->actionOpenRPS->isChecked())
-    {
-        if (p_cstWorker->readRps(rpsFile))
-        {
-            p_cstWorker->setUseExternalRps(true);
-        }
-        else
-        {
-            p_cstWorker->setUseExternalRps(false);
-        }
+    if (ui->actionOpenRPS->isChecked())    {
+        p_cstWorker->readRps(rpsFile);
     }
-    if (ui->actionOpenSPS->isChecked())
-    {
-        if (p_cstWorker->readSps(spsFile))
-        {
-            p_cstWorker->setUseExternalSps(true);
-        }
-        else
-        {
-            p_cstWorker->setUseExternalSps(false);
-        }
+    if (ui->actionOpenSPS->isChecked()) {
+        p_cstWorker->readSps(spsFile);
     }
     p_cstWorker->setUseExternalXps(false);
     if (ui->actionAuxes->isEnabled())
