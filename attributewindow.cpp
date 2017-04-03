@@ -41,6 +41,21 @@ AttributeWindow::AttributeWindow(const AttributeWindow &other)
     writeSpectrum=other.writeSpectrum;
 }
 
+
+Relation::Relation()
+{
+    dividend ="";
+    devider ="";
+    minValue =0.0;
+}
+
+Relation::Relation(const Relation &other)
+{
+    dividend =other.dividend;
+    devider =other.devider;
+    minValue =other.minValue;
+}
+
 /*void AttributeWindow::setMinOffset(int offset)
 {
     minOffset = offset;

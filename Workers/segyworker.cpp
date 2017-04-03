@@ -109,6 +109,8 @@ void SegyWorker::countAttributesFromFile(SegyFile *sgy)
         countAttriburesInWindow(tracesInWindow,i,sgy->getSampleInterval(),sgy->getFileNumFirstTrace(),&amplitudes);
         tracesInWindow.clear();
     }
+    countRelations(amplitudes);
+    /*
     foreach (QString str, relations) {
         QString tmp = str.left(str.lastIndexOf("/"));
         float a = amplitudes.value(tmp);
@@ -119,7 +121,7 @@ void SegyWorker::countAttributesFromFile(SegyFile *sgy)
         float c = tmp.toFloat();
         bool checkAttribute = attribute>c ? true:false;
         fileAttributes.append(qMakePair(attribute,checkAttribute));
-    }
+    }*/
 }
 
 bool SegyWorker::convertOneFile(const QString &filePath, const bool &writeHeaders)

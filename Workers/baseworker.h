@@ -73,7 +73,6 @@ protected:
     int waitingTime;
     bool *run;
     QString BackupFolder;
-    QStringList relations;
     QMap<QString, Point*> pp;
     QMap<QString, Point*> pv;
 
@@ -84,6 +83,7 @@ protected:
     QVector<int> exclPoints;
     QSettings *settings;
     QVector<AttributeWindow> windows;
+    QVector<Relation> relations;
     uint energyMaxFreq, energyMinFreq, widthLvl;
     bool widthByEnergy,rmsSpectrum;
 
@@ -129,6 +129,7 @@ protected:
 
     //функции расчета атрибутов
     void countAttriburesInWindow(QVector<QVector<float> > &traces, const int &winNb, const int &sInt, const int &ffid, QMap<QString,float> *ampls); //
+    void countRelations(QMap<QString,float> ampls);
     float getAbsAvg(QVector<QVector<float> > &tracesData); //абсолютная амплитуда
     float getRms(QVector <QVector<float> > &tracesData); //среднеквадратическая амплитуда
     double countFreq(QVector<QVector<float> > &tracesData, const int &sRate); // доминантная частота в окне

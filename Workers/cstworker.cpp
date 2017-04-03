@@ -125,7 +125,7 @@ void CstWorker::countAttributes(CstFile *cst)
         countAttriburesInWindow(tracesInWindow,i,cst->getSampleRate(),cst->getFfid(),&amplitudes);
         tracesInWindow.clear();
     }
-    foreach (QString str, relations) {
+    /*foreach (QString str, relations) {
         QString tmp = str.left(str.lastIndexOf("/"));
         float a = amplitudes.value(tmp);
         tmp = str.mid(str.indexOf("/")+1,str.indexOf(">")-str.indexOf("/")-1);
@@ -135,7 +135,8 @@ void CstWorker::countAttributes(CstFile *cst)
         float c = tmp.toFloat();
         bool checkAttribute = attribute>c ? true:false;
         fileAttributes.append(qMakePair(attribute,checkAttribute));
-    }
+    }*/
+    countRelations(amplitudes);
 }
 
 bool CstWorker::convertOneFile(const QString &filePath)

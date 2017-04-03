@@ -231,7 +231,7 @@ bool CstWorkerOnline::convertOneFileOnline(const QString &filePath)
 
 void CstWorkerOnline::segdDirChanged(QString string)
 {
-    QDir segdDir(string);
+       QDir segdDir(string);
        int w;
        QFileInfoList segdFilesInDir;
        QStringList filter;

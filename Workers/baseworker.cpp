@@ -176,11 +176,10 @@ void BaseWorker::readSettings()
     }
     settings->endArray();
     size = settings->beginReadArray("/Relations");
-    //QString tmp;
     for (int i=0; i<size; ++i)
     {
         settings->setArrayIndex(i);
-        relations.append(QString("%1/%2>%3").arg(settings->value("/A1","A1").toString()).arg(settings->value("/A2","A1").toString()).arg(settings->value("/ratio","0").toString()));
+        relations.append(Relation(settings->value("/A1","A1").toString(),settings->value("/A2","A1").toString(),settings->value("/ratio","0").toFloat()));
     }
     settings->endArray();
     energyMinFreq =settings->value("/EnergyMinFreq",1).toUInt();
@@ -645,6 +644,19 @@ void BaseWorker::countAttriburesInWindow(QVector<QVector<float> > &traces, const
     //tracesInWindow.clear();
 }
 
+
+
+void BaseWorker::countRelations(QMap<QString, float> ampls)
+{
+    float attribute =0.0;
+    bool checkAttribute = true;
+    foreach (Relation r, relations) {
+        qDebug()<<ampls.value(r.dividend) << ampls.value(r.devider);
+        attribute = ampls.value(r.dividend)/ampls.value(r.devider);
+        checkAttribute = attribute>r.minValue ? true:false;
+        fileAttributes.append(qMakePair(attribute,checkAttribute));
+    }
+}
 
 // считаем среднее значение сигнала
 float BaseWorker::getAbsAvg(QVector<QVector<float> > &tracesData)
