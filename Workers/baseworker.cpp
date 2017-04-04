@@ -967,7 +967,6 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
             confirmedTimeBreakPoints->append(QPointF(segd->getTrace(confirmedTimeBreak.traceNb-1)->getTraceData().value(i/sampleInt),i));
             upholeTimePoints->append(QPointF(segd->getTrace(upholeTime.traceNb-1)->getTraceData().value(i/sampleInt),i));
         }
-        emit sendAuxStatus(correctTimeBreak && correctConfrimedTimeBreak && correctUpholeTime);
         emit sendExplAuxes(timeBreakPoints,correctTimeBreak,confirmedTimeBreakPoints,correctConfrimedTimeBreak,upholeTimePoints,correctUpholeTime);
     }
 

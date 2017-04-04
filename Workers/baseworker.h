@@ -46,7 +46,6 @@ public:
     enum exclusionType {mesaExcl, txtExcl, noExcl};
     enum readMode{fromDir,fromFile};
     enum writeAuxesMode {write,writeInNewFile,noWrite};
-
     explicit BaseWorker(CountedAttributes *attr);
 
 protected:
@@ -70,11 +69,6 @@ protected:
     bool writeMissedChannels;
     bool analysisAuxes;
     AkfSettings akf;
-
-    /*quint8 akfTraceNb;
-    int akfFrqLvl;
-    uint akfMaxTime,akfMinFrq,akfMaxFrq;
-    double akfMaxAmpl;*/
     TimeBreakSettings timeBreak, confirmedTimeBreak, upholeTime;
     float userMpFactorValue;
     bool useExternalXps;
@@ -118,18 +112,10 @@ protected:
     CountedAttributes* attributes;
     AttributesFromFile fileAttributes;
 
-//    int currentRow; //текущая ячейка в таблице xlsx
-//    int currentColumn; //текущий столбец в таблице xlsx
-
-
-
-
 public:
     void setSegdPath(const QString &path);
     void setOutPath(const QString &path);
     void setAttrFilePath(const QString &path);
-//    void setRpsPath(const QString &path);
-//    void setSpsPath(const QString &path);
     void setXpsPath(const QString &path);
 
     void setMode (const bool &md);
@@ -143,8 +129,6 @@ public:
 protected:
 
 
-    //void writeXlsxHeaders();
-    //void saveXlsxFile();
     void setExclusions(const QString &exclFileName);
     void setReceiversInExclusions(const QString &exclFileName);
     void createFileForMissedTraces();
@@ -186,9 +170,6 @@ signals:
     void sendSeries(QtCharts::QLineSeries *trace, QtCharts::QLineSeries *spectrum);
     void sendVectors(QVector<QPointF> *trace,bool,QVector<QPointF> *spectrum,bool,int);
     void sendExplAuxes(QVector<QPointF>* , bool,QVector<QPointF>* , bool,QVector<QPointF>* , bool );
-    void sendAuxStatus(bool);
-    void sendTestStatus(float,QColor);
-    void sendSegdAttributes(QVector<QVariant> *data);
     void attributesCounted();
 
 public slots:
