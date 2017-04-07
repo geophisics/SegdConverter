@@ -422,22 +422,49 @@ void SegyFile::setReceiverCoordinats(QMap<QString, Point> coordinates)
            }
     }
 }
-
-void SegyFile::setSourceCoordinats(QMap<QString, Point> coordinates)
+int SegyFile::setReceiverCoordinats(QTextStream *logStr, QMap<QString, Point> coordinates)
 {
     QVector<segyTrace*>::iterator traceIt = segyTraces.begin();
     segyTrace *trace;
-    QString linePoint;
+    int notInRPS=0;
+    //QString linePoint;
     for (; traceIt!=segyTraces.end();++traceIt)
     {
            trace = *traceIt;
-           linePoint = trace->getSourceLinePoint();
-           if (coordinates.contains(linePoint))
+           if (trace->getTraceIdCode()!=9 && trace->getTraceIdCode()!=3)
            {
-               trace->setSourceX(coordinates.value(linePoint).getX());
-               trace->setSourceY(coordinates.value(linePoint).getY());
-               trace->setSourceZ(coordinates.value(linePoint).getZ());
+               if (coordinates.contains(trace->getReceiverLinePoint()))
+               {
+                   trace->setReceiverX(coordinates.value(trace->getReceiverLinePoint()).getX());
+                   trace->setReceiverY(coordinates.value(trace->getReceiverLinePoint()).getY());
+                   trace->setReceiverZ(coordinates.value(trace->getReceiverLinePoint()).getZ());
+               }
+               else
+               {
+                   notInRPS++;
+                   *logStr<<QString("В R файле не содержится координата для ПП %1 \n").arg(trace->getReceiverLinePoint());
+               }
            }
+    }
+    return notInRPS;
+}
+bool SegyFile::setSourceCoordinats(QMap<QString, Point> coordinates)
+{
+    QVector<segyTrace*>::iterator traceIt = segyTraces.begin();
+    segyTrace *trace =*traceIt;
+    if (coordinates.contains(trace->getSourceLinePoint()))
+    {
+        for (;traceIt!=segyTraces.end();++traceIt)
+        {
+               trace = *traceIt;
+               trace->setSourceX(coordinates.value(trace->getSourceLinePoint()).getX());
+               trace->setSourceY(coordinates.value(trace->getSourceLinePoint()).getY());
+               trace->setSourceZ(coordinates.value(trace->getSourceLinePoint()).getZ());
+        }
+        return true;
+    }
+    else {
+        return false;
     }
 }
 

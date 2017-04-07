@@ -34,6 +34,10 @@ private:
     QString spsFile, rpsFile, xpsFile;
     QPointer<AuxViewDialog> viewDialog;
     AttributesModel *attr_model;
+
+    volatile bool running;
+
+
 signals:
     void stopSignal();
 protected:

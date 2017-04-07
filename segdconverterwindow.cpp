@@ -190,6 +190,7 @@ void SegdConverterWindow::selectSpsFile(bool checked)
         if (!str.isEmpty())
         {
             spsFile = str;
+            WorkDir = QFileInfo(str).absolutePath();
         }
         else
         {
@@ -209,6 +210,7 @@ void SegdConverterWindow::selectRpsFile(bool checked)
         if (!str.isEmpty())
         {
             rpsFile = str;
+            WorkDir = QFileInfo(str).absolutePath();
         }
         else
         {
@@ -226,6 +228,7 @@ void SegdConverterWindow::selectXpsFile(bool checked)
         if (!str.isEmpty())
         {
             xpsFile = str;
+            WorkDir = QFileInfo(str).absolutePath();
         }
         else
         {
@@ -237,88 +240,48 @@ void SegdConverterWindow::selectXpsFile(bool checked)
 //открываем папку/файл с данными для конвертирования
 void SegdConverterWindow::openDataSlot()
 {
-    //QString str=ui->segdDirLineEdit->text();
-    QString str=ui->segdLineEdit->text();
+    QString str = ui->segdLineEdit->text().isEmpty()? WorkDir:QFileInfo(ui->segdLineEdit->text()).path();
     if (ui->segdLabel->text()=="Директория Segd")
     {
-        if (str.isEmpty())
-        {
-            str = QFileDialog::getExistingDirectory(this,"Выберите директорию с *.segd файлами",WorkDir,QFileDialog::DontResolveSymlinks);
-        }
-        else
-        {
-            //str=str.left(str.lastIndexOf(QDir::separator()));
-            str = QFileDialog::getExistingDirectory(this,"Выберите директорию с *.segd файлами",str,QFileDialog::DontResolveSymlinks);
-        }
-
+        str = QFileDialog::getExistingDirectory(this,"Выберите директорию с *.segd файлами",str,QFileDialog::DontResolveSymlinks);
     }
     else
     {
-        if (str.isEmpty())
-        {
-            str = QFileDialog::getOpenFileName(this,"Выберите файл *.segd",WorkDir,"SEGD files(*.segd *.SEGD)");
-        }
-        else
-        {
-            str = QFileDialog::getOpenFileName(this,"Выберите файл *.segd",str,"SEGD files(*.segd *.SEGD)");
-        }
-
+        str = QFileDialog::getOpenFileName(this,"Выберите файл *.segd",str,"SEGD files(*.segd *.SEGD)");
     }
     if (!str.isEmpty())
     {
         ui->segdLineEdit->setText(str);
-        WorkDir = str;
+        WorkDir = QFileInfo(str).absolutePath();
     }
 }
 //выбираем файл, в который будет сохранен результат конвертации
 void SegdConverterWindow::saveDataSlot()
 {
-    QString str=ui->outFileLineEdit->text();
+    QString str = ui->outFileLineEdit->text().isEmpty() ? WorkDir : QFileInfo(ui->outFileLineEdit->text()).path();
     if (ui->outFileLabel->text()=="Файл CST")
     {
-        if (str.isEmpty())
-        {
-            str = QFileDialog::getSaveFileName(this,"Выберите файл *.cst для сохранения",WorkDir,"CST files(*.cst *.CST)");
-        }
-        else
-        {
-            str = QFileDialog::getSaveFileName(this,"Выберите файл *.cst для сохранения",str,"SEGD files(*.cst *.CST)");
-        }
+        str = QFileDialog::getSaveFileName(this,"Выберите файл *.cst для сохранения",str,"SEGD files(*.cst *.CST)");
     }
     else
     {
-        if (str.isEmpty())
-        {
-            str = QFileDialog::getSaveFileName(this,"Выберите файл *.sgy для сохранения",WorkDir,"SEGY files(*.segy *.SEGY *.sgy *.SGY)");
-        }
-        else
-        {
-            str = QFileDialog::getSaveFileName(this,"Выберите файл *.segy для сохранения",str,"SEGY files(*.segy *.SEGY *.sgy *.SGY)");
-        }
+        str = QFileDialog::getSaveFileName(this,"Выберите файл *.segy для сохранения",str,"SEGY files(*.segy *.SEGY *.sgy *.SGY)");
     }
     if (!str.isEmpty())
     {
         ui->outFileLineEdit->setText(str);
-        WorkDir = str;
+        WorkDir = QFileInfo(str).absolutePath();
     }
 }
 //выбираем файл для атрибутов
 void SegdConverterWindow::saveAttributesFileSlot()
 {
-    QString str=ui->attrFileLineEdit->text();
-    if (str.isEmpty())
-    {
-        str = QFileDialog::getSaveFileName(this,"Выберите файл *.xlsx для сохранения",WorkDir,"Excel files(*.xlsx *.XLSX)");
-    }
-    else
-    {
-        str = QFileDialog::getSaveFileName(this,"Выберите файл *.xlsx для сохранения",str,"Excel files(*.xlsx *.XLSX)");
-    }
-
+    QString str = ui->attrFileLineEdit->text().isEmpty() ? WorkDir : QFileInfo(ui->attrFileLineEdit->text()).path() ;
+    str = QFileDialog::getSaveFileName(this,"Выберите файл *.xlsx для сохранения",str,"Excel files(*.xlsx *.XLSX)");
     if (!str.isEmpty())
     {
         ui->attrFileLineEdit->setText(str);
-        WorkDir = str;
+        WorkDir = QFileInfo(str).absolutePath();
     }
 }
 
@@ -344,25 +307,26 @@ void SegdConverterWindow::runActionSlot()
     }
     else
     {
-        if (online)
+ /*       if (online)
         {
             runSegyOnline();
-        }
-        else
-        {
+        }*/
+        //else
+       // {
             runSegy();
-        }
+       // }
     }
 }
 void SegdConverterWindow::disableStop(bool disable)
 {
     Q_UNUSED(disable);
+    running = false;
+ //   BaseWorker.stopRunning();
     ui->actionStop->setEnabled(false);
 }
 
 void SegdConverterWindow::convertingEnded()
 {
-     ui->logTextEdit->append("Конвертация завершена");
      attr_model->saveDataInXlsx(ui->attrFileLineEdit->text());
      ui->actionRun->setEnabled(true);
      ui->actionExit->setEnabled(true);
@@ -412,15 +376,13 @@ void SegdConverterWindow::recieveInfoMessage(const QString &message, const QColo
 //конвертация в файл segy
 void SegdConverterWindow::runSegy()
 {
-    //SegyWorker *p_segyWorker = new SegyWorker();
-    SegyWorker *p_segyWorker = new SegyWorker(attr_model->getAttributes());
-    connect(p_segyWorker,SIGNAL(sendSomeError(QString)),this,SLOT(receiveSomeError(QString)));
-    p_segyWorker->readSettings();
+    running = true;
+    SegyWorker *p_segyWorker = new SegyWorker(&running,attr_model->getAttributes());
+    p_segyWorker->moveToThread(p_myThread);
+    connect(p_segyWorker,SIGNAL(sendInfoMessage(QString,QColor)),this,SLOT(recieveInfoMessage(QString,QColor)));
     p_segyWorker->setSegdPath(ui->segdLineEdit->text());
     p_segyWorker->setOutPath(ui->outFileLineEdit->text());
-    p_segyWorker->setAttrFilePath(ui->attrFileLineEdit->text());
-    p_segyWorker->setMode(ui->segdLabel->text()=="Директория Segd");
-    p_segyWorker->moveToThread(p_myThread);
+    p_segyWorker->readSettings();
     if (ui->actionOpenRPS->isChecked())
     {
         p_segyWorker->readRps(rpsFile);
@@ -431,28 +393,21 @@ void SegdConverterWindow::runSegy()
     }
     if (ui->actionOpenXPS->isChecked())
     {
-        p_segyWorker->setUseExternalXps(true);
         p_segyWorker->setXpsPath(xpsFile);
     }
-    else
-    {
-        p_segyWorker->setUseExternalXps(false);
-    }
+    p_segyWorker->setAttrFilePath(ui->attrFileLineEdit->text());
+    p_segyWorker->setMode(ui->segdLabel->text()=="Директория Segd");
     if (ui->actionAuxes->isEnabled())
     {
         setViewAuxesDialog(p_segyWorker);
     }
-    ui->logTextEdit->append("Начало конвертации.");
     connect(p_myThread,SIGNAL(started()),p_segyWorker,SLOT(Converting()));
     connect(p_segyWorker,SIGNAL(finished()),this,SLOT(convertingEnded()));
     connect(p_segyWorker,SIGNAL(finished()),p_segyWorker,SLOT(deleteLater()));
-    connect(p_segyWorker,SIGNAL(sendInfoMessage(QString,QColor)),this,SLOT(recieveInfoMessage(QString,QColor)));
-    connect(p_segyWorker,SIGNAL(attributesCounted()),attr_model,SIGNAL(layoutChanged()));
     connect(p_myThread,SIGNAL(finished()),p_myThread,SLOT(deleteLater()));
-    connect(ui->actionStop,SIGNAL(triggered(bool)),p_segyWorker,SLOT(stopRunning()),Qt::DirectConnection);
+    connect(p_segyWorker,SIGNAL(attributesCounted()),attr_model,SIGNAL(layoutChanged()));
+    connect(ui->actionStop,SIGNAL(triggered(bool)),p_segyWorker,SLOT(stopRunning()));
     connect(ui->actionStop,SIGNAL(triggered(bool)),this,SLOT(disableStop(bool)));
-    //connect(ui->actionStop,SIGNAL(triggered(bool)),ui->actionStop,SLOT(setVisible(false)));
-
     p_myThread->start();
 
 }
@@ -461,7 +416,7 @@ void SegdConverterWindow::runSegy()
 //конвертация в файл segy в режиме онлайн
 void SegdConverterWindow::runSegyOnline()
 {
-    SegyWorker *p_segyWorker = new SegyWorkerOnline(attr_model->getAttributes());
+    SegyWorker *p_segyWorker = new SegyWorkerOnline(&running,attr_model->getAttributes());
     connect(p_segyWorker,SIGNAL(sendSomeError(QString)),this,SLOT(receiveSomeError(QString)));
     p_segyWorker->readSettings();
     p_segyWorker->setSegdPath(ui->segdLineEdit->text());
@@ -499,7 +454,7 @@ void SegdConverterWindow::runSegyOnline()
 
 void SegdConverterWindow::runCst()
 {
-    CstWorker *p_cstWorker = new CstWorker(attr_model->getAttributes());
+    CstWorker *p_cstWorker = new CstWorker(&running,attr_model->getAttributes());
     connect(p_cstWorker,SIGNAL(sendSomeError(QString)),this,SLOT(receiveSomeError(QString)));
     p_cstWorker->readSettings();
     p_cstWorker->setSegdPath(ui->segdLineEdit->text());
@@ -541,7 +496,7 @@ void SegdConverterWindow::runCst()
 
 void SegdConverterWindow::runCstOnline()
 {
-    CstWorkerOnline *p_cstWorker = new CstWorkerOnline(attr_model->getAttributes());
+    CstWorkerOnline *p_cstWorker = new CstWorkerOnline(&running,attr_model->getAttributes());
     connect(p_cstWorker,SIGNAL(sendSomeError(QString)),this,SLOT(receiveSomeError(QString)));
     p_cstWorker->readSettings();
     p_cstWorker->setSegdPath(ui->segdLineEdit->text());
@@ -736,7 +691,7 @@ void SegdConverterWindow::setViewAuxesDialog(BaseWorker *worker)
 }*/
 void SegdConverterWindow::closeEvent(QCloseEvent *event)
 {
-    if (ui->actionStop->isEnabled())
+    if (!ui->actionRun->isEnabled())
     {
         QMessageBox::warning(0,"Дождитесь завершения","Дождитесь завершения процедуры конвертации",QMessageBox::Ok);
         event->ignore();

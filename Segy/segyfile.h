@@ -122,7 +122,8 @@ public:
    int getFileNumFirstTrace();
    void writeFile(const QString &filePath,const bool &writeFileHeader, const int &traceToRecord, const int &numOfTraces);
    void setReceiverCoordinats(QMap<QString,Point> coordinates);
-   void setSourceCoordinats(QMap<QString, Point> coordinates);
+   int setReceiverCoordinats(QTextStream *logStr, QMap<QString, Point> coordinates);
+   bool setSourceCoordinats(QMap<QString, Point> coordinates);
    void writeHeaders(const QString &filePath);
    void writeTraces(const QString &filePath, const bool &muted);
    void writeTraces(const QString &filePath, const bool &muted, const bool &missed);

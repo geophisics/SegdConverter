@@ -176,8 +176,10 @@ void ConvertParametersDialog::saveSettings()
     settings->setValue("/CheckTests",ui->testsCheckBox->isChecked());
     settings->setValue("/TestPercent",ui->testsSpinBox->value());
     settings->setValue("/NoWriteAuxes",ui->noWriteAuxRadioButton->isChecked());
+
     settings->setValue("/WriteAuxes",ui->writeAuxRadioButton->isChecked());
     settings->setValue("/WriteAuxesInNewFile",ui->writeAuxInNewFileRadioButton->isChecked());
+
     settings->setValue("/AnalisysAuxes",ui->analisysAuxesCheckBox->isChecked());
     settings->setValue("/MuteChannels",ui->useMuteChannelsRadioButton->isChecked());
     settings->setValue("/MissedChannels",ui->writeMissedRadioButton->isChecked());
@@ -211,9 +213,11 @@ void ConvertParametersDialog::readSettings()
     ui->testsCheckBox->setChecked(settings->value("/CheckTests",false).toBool());
     ui->testsSpinBox->setValue(settings->value("/TestPercent",2).toInt());
     ui->testsSpinBox->setEnabled(ui->testsCheckBox->isChecked());
+
     ui->noWriteAuxRadioButton->setChecked(settings->value("/NoWriteAuxes",1).toBool());
     ui->writeAuxRadioButton->setChecked(settings->value("/WriteAuxes",0).toBool());
     ui->writeAuxInNewFileRadioButton->setChecked(settings->value("/WriteAuxesInNewFile",0).toBool());
+
     ui->analisysAuxesCheckBox->setChecked(settings->value("/AnalisysAuxes",false).toBool());
     ui->useMuteChannelsRadioButton->setChecked(settings->value("/MuteChannels",1).toBool());
     ui->noUseMuteChannelsRadioButton->setChecked(!ui->useMuteChannelsRadioButton->isChecked());

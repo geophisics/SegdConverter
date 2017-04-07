@@ -1,7 +1,7 @@
 #include "segyworker.h"
 #include <Segd/segdfile.h>
 #include <Segy/segyfile.h>
-#include "aquila/functions.h"
+//#include "aquila/functions.h"
 
 void SegyWorker::Converting()
 {
@@ -31,7 +31,7 @@ void SegyWorker::Converting()
 
     while (fileForConvertingNum<numOfFilesInDir && *p_running)
     {
-        if (convertOneFile(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath(),writeFileHeaders))
+        if (convertOneFile(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath()))
         {
             fileCount++;
             writeFileHeaders = false;
@@ -95,7 +95,7 @@ void SegyWorker::countAttributesFromFile(SegyFile *sgy)
     countRelations(amplitudes);
 }
 
-bool SegyWorker::convertOneFile(const QString &filePath, const bool &writeHeaders)
+bool SegyWorker::convertOneFile(const QString &filePath)
 {
     QString fileForWork;
     SegdFile *segd;
@@ -132,8 +132,8 @@ bool SegyWorker::convertOneFile(const QString &filePath, const bool &writeHeader
     if (segd->getFileState())
     {
         segy = new SegyFile(segd,this);
-        //if (useExternalXps)
-        if (!paths.value("XpsPath").isEmpty())
+		
+      if (!paths.value("XpsPath").isEmpty())
         {
             QQueue<QString> templates = findTemplates(segy->getFileNumFirstTrace());
             if (!templates.isEmpty())
@@ -188,7 +188,7 @@ bool SegyWorker::convertOneFile(const QString &filePath, const bool &writeHeader
             checkingTests(segd);
         }
         delete(segd);
-        if (writeHeaders)
+        if (writeFileHeaders)
         {
             if (auxMode==writeAuxesMode::writeInNewFile)
             {
@@ -231,7 +231,7 @@ void SegyWorker::segdDirChanged(QString string)
     {
         messaging(QString(" Обнаружен файл ").append(segdFilesInDir.value(fileForConvertingNum).fileName()),Qt::blue);
         attempt=0;
-        while(!convertOneFile(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath(),writeFileHeaders) && attempt<10 && *p_running) {
+        while(!convertOneFile(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath()) && attempt<10 && *p_running) {
             attempt++;
             messaging(QString(" Ошибка доступа к файлу. Ожидание"),Qt::red);
             thread()->sleep(waitingTime);

@@ -15,6 +15,10 @@ protected:
 public slots:
 
     virtual void Converting();
+
+private slots:
+    void segdDirChanged(QString string);
+
 };
 
 #endif // CSTWORKER_H

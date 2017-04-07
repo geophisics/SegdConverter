@@ -5,101 +5,68 @@
 
 void CstWorker::Converting()
 {
-    QFileInfo fInfo(segdPath);
+    QFileInfo fInfo(paths.value("SegdPath"));
     QDir segdDir;
-    logFile.setFileName(outPath+"_log.txt");
-    //logFile->open(QIODevice::Text|QIODevice::WriteOnly);
-    logStream.setDevice(&logFile);
-    logStream.setCodec("UTF8");
-    logStream << QString("%1 Начало конвертации\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss"));
-    int fileForConvertingNum;
-    QFile cstFile;
-    cstFile.setFileName(outPath);
-    if (cstFile.open(QIODevice::WriteOnly))
-    {
-        cstFile.close();
-    }
-    else {
-        emit sendSomeError("Ошибка создания файла СST");
-        emit finished();
-    }
-    if (auxMode==writeInNewFile)
-    {
-        cstFile.setFileName(outAuxesPath);
-        if (cstFile.open(QIODevice::WriteOnly))
-        {
-            cstFile.close();
-        }
-        else
-        {
-            emit sendSomeError("Ошибка создания файла служебный трасс. Запись служебный трасс не производится");
-            auxMode=noWrite;
-            //writeAuxesNewFile = false;
-        }
-    }
+
+    messaging(" Начало конвертации");
+    fileForConvertingNum =0; // порядковый номер в директории конвертируемого файла
+    fileCount = 0; // количество ф.н. в сводном файле
     QFileInfoList segdFilesInDir;
-    QStringList filter;
-    filter << "*.segd";
-    if (fInfo.isDir() && mode)
-    {
-        segdDir.setPath(segdPath);
-        segdFilesInDir = segdDir.entryInfoList(filter,QDir::Files,QDir::Name);
-        fileForConvertingNum =0;
-    }
-    else if (fInfo.isFile() && !mode)
-    {
-        segdDir=fInfo.dir();
-        segdFilesInDir = segdDir.entryInfoList(filter,QDir::Files,QDir::Name);
+    segdDir = fInfo.dir();
+    segdFilesInDir = segdDir.entryInfoList(QStringList()<<"*.segd",QDir::Files,QDir::Name);
+    if (rMode==readMode::fromFile) {
         fileForConvertingNum = segdFilesInDir.indexOf(fInfo);
     }
-    else
+    if (fileForConvertingNum==-1)
     {
-        if (mode)
-        {
-            logStream << QString ("Не найдена директория %1\n").arg(segdPath);
-            emit sendSomeError(QString ("Не найдена директория %1").arg(segdPath));
-        }
-        else
-        {
-            logStream << QString ("Не найден файл %1\n").arg(segdPath);
-            emit sendSomeError(QString ("Не найден файл %1").arg(segdPath));
-        }
-        logStream << QString("%1 Завершение конвертации\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss"));
-        //delete logStream;
-        logFile.close();
-        //delete logFile;
-        emit finished();
+        messaging(QString(" Не найден указанный путь ").append(paths.value("SegdPath")),Qt::red);
+        stopRunning();
         return;
     }
-    int fileCount = 0; // количество ф.н. в сводном файле
-    run = new bool;
-    *run = true;
-    while (fileForConvertingNum<segdFilesInDir.count() && *run)
+
+    int numOfFilesInDir = segdFilesInDir.count();
+    if (online) {
+        numOfFilesInDir--;
+    }
+
+    while (fileForConvertingNum<numOfFilesInDir && *p_running)
     {
         if (convertOneFile(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath()))
         {
             fileCount++;
-            logStream << QString("%1 Выполнена конвертация файла %2\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(segdFilesInDir.value(fileForConvertingNum).fileName());
-            emit sendInfoMessage("Выполнена конвертация файла "+segdFilesInDir.value(fileForConvertingNum).fileName(),Qt::darkGreen);
+
+            messaging(QString(" Выполнена конвертация файла ").append(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath()),Qt::darkGreen);
         }
         else {
-            logStream << QString("%1 Ошибка чтения файла %2. Переход к следующему файлу ").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(segdFilesInDir.value(fileForConvertingNum).fileName());
-            emit sendSomeError(QString ("Ошибка чтения файла %1. Переход к следующему файлу").arg(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath()));
+            messaging(QString (" Ошибка чтения файла %1. Переход к следующему файлу").arg(segdFilesInDir.value(fileForConvertingNum).fileName()),Qt::red);
         }
         if (limitMaxFiles && fileCount >= maxFilesValue)
         {
             fileCount=0;
-            outPath.insert(outPath.lastIndexOf('/')+1,'_');
-            outAuxesPath.insert(outAuxesPath.lastIndexOf('/')+1,'_');
-            //createFileForMissedTraces();
+            QString newPath = paths.value("OutPath");
+            newPath.insert(newPath.lastIndexOf(QDir::separator())+1,'_');
+            paths.insert("OutPath",QString(newPath));
+            newPath = paths.value("AuxPath");
+            newPath.insert(newPath.lastIndexOf(QDir::separator())+1,'_');
+            paths.insert("AuxPath",QString(newPath));
+        }
+        if (online){
+            segdFilesInDir = segdDir.entryInfoList(QStringList()<<"*.segd",QDir::Files,QDir::Name);
+            numOfFilesInDir = segdFilesInDir.count()-1;
         }
         fileForConvertingNum++;
     }
-    logStream << QString("%1 Завершение конвертации\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm:ss"));
-    //delete logStream;
-    logFile.close();
-    //delete logFile;
-    emit finished();
+    if (*p_running && online)
+    {
+        watcher  = new QFileSystemWatcher(this);
+        watcher->addPath(segdDir.absolutePath());
+        connect(watcher,SIGNAL(directoryChanged(QString)),this,SLOT(segdDirChanged(QString)),Qt::DirectConnection);
+        segdDirChanged(segdDir.absolutePath());
+    }
+    else
+    {
+         stopRunning();
+    }
 }
 
 void CstWorker::countAttributes(CstFile *cst)
@@ -121,34 +88,9 @@ void CstWorker::countAttributes(CstFile *cst)
             tracesInWindow = cst->getDataInWindow(&logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl);
             break;
         }
-        /*
-        if (useExclusions)
-        {
-            if  (exType == exclusionType::txtExcl) {
-                tracesInWindow = cst->getDataInWindow(logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl,exclPoints);
-            }
-            else
-            {
-                tracesInWindow = cst->getDataInWindow(logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl,exclusions);
-            }
-        }
-        else {
-            tracesInWindow = cst->getDataInWindow(logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl);
-        }*/
         countAttriburesInWindow(tracesInWindow,i,cst->getSampleRate(),cst->getFfid(),&amplitudes);
         tracesInWindow.clear();
     }
-    /*foreach (QString str, relations) {
-        QString tmp = str.left(str.lastIndexOf("/"));
-        float a = amplitudes.value(tmp);
-        tmp = str.mid(str.indexOf("/")+1,str.indexOf(">")-str.indexOf("/")-1);
-        float b = amplitudes.value(tmp);
-        float attribute = a/b;
-        tmp = str.mid(str.lastIndexOf(">")+1);
-        float c = tmp.toFloat();
-        bool checkAttribute = attribute>c ? true:false;
-        fileAttributes.append(qMakePair(attribute,checkAttribute));
-    }*/
     countRelations(amplitudes);
 }
 
@@ -158,12 +100,11 @@ bool CstWorker::convertOneFile(const QString &filePath)
     SegdFile *segd;
     CstFile *cst;
     fileAttributes.clear();
-    logStream << QString("%1 Начало обработки файла %2\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(filePath);
+    messaging(QString(" Обработка файла ").append(filePath));
     if (backup)
     {
-        logStream << QString("%1 Копирование файла %2\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(filePath);
-        emit sendInfoMessage("Копирование файла " + filePath,Qt::black);
-        fileForWork = BackupFolder +"/"+filePath.mid(filePath.lastIndexOf('/')+1);// segdFilesInDir.value(fileForConvertingNum).fileName();
+        messaging(QString(" Копирование файла ").append(filePath));
+        fileForWork = paths.value("BackupFolder") +"/"+filePath.mid(filePath.lastIndexOf('/')+1);// segdFilesInDir.value(fileForConvertingNum).fileName();
         if (QFile::exists(fileForWork))
         {
             QFile::remove(fileForWork);
@@ -172,15 +113,13 @@ bool CstWorker::convertOneFile(const QString &filePath)
         {
             backup = false;
             fileForWork = filePath;
-            logStream << QString("%1 Ошибка создания резервной копии. Копирование файлов не производится").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss"));
-            emit sendSomeError("Ошибка создания резервной копии \n Копирование файлов не производится");
+            messaging(QString(" Ошибка создания резервной копии. Копирование файлов не производится"),Qt::red);
         }
     }
     else {
         fileForWork = filePath;
     }
-    logStream << QString("%1 Конвертация файла %2\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(fileForWork);
-    emit sendInfoMessage("Обработка файла " +fileForWork,Qt::black);
+    messaging(QString(" Конвертация файла ").append(fileForWork));
     if (SercelMpFactor)
     {
         segd = new SegdFile(fileForWork);
@@ -192,38 +131,45 @@ bool CstWorker::convertOneFile(const QString &filePath)
     if (segd->getFileState())
     {
         cst = new CstFile(segd,this);
-
-        if (useExternalXps)
-        {
+       if (!paths.value("XpsPath").isEmpty())
+      {
             QQueue<QString> templates = findTemplates(cst->getFfid());
             if (!templates.isEmpty())
             {
-                XFile *xF = new XFile(templates);
-                if (xF->checkTemplates())
+                XFile xF(templates);// = new XFile(*templates);
+                if (xF.checkTemplates())
                 {
-                    if (!cst->setTemplates(xF))
+                    if (!cst->setTemplates(&xF))
                     {
-                        sendSomeError(QString("Несоответсвие количества трасс в XPS и SEGD файлах. Геометрия присваивается из заголовков"));
+                        messaging(QString(" Несоответсвие количества трасс в XPS и SEGD файлах. Геометрия присваивается из заголовков"),Qt::red);
                     }
                 }
                 else
                 {
-                    sendSomeError(QString("Некорректные расстановки в XPS файле. Геометрия присваивается из заголовков"));
+                    messaging(QString(" Некорректные расстановки в XPS файле. Геометрия присваивается из заголовков"),Qt::red);
                 }
             }
             else
             {
-                emit sendSomeError(QString("Файл № %1 не найден в XPS файле. Геометрия присваивается из заголовков").arg(cst->getFfid()));
+                messaging(QString(" Файл № %1 не найден в XPS файле. Геометрия присваивается из заголовков").arg(cst->getFfid()),Qt::red);
             }
 
         }
+        if (!pp.isEmpty())
+        {
+            messaging(" Редакция координат ПП");
+            int receivers = cst->setReceiverCoordinats(&logStream,pp);
+            if (receivers>0){
+                messaging(QString(" В R-файле не содержатся координаты для %1 ПП").arg(receivers),Qt::red);
+            }
 
-
-        if (!pp.isEmpty()) {
-            cst->setReceiverCoordinats(pp);
         }
-        if (!pv.isEmpty()) {
-            cst->setSourceCoordinats(pv);
+        if (!pv.isEmpty())
+        {
+            messaging(" Редакция координат ПВ");
+            if(!cst->setSourceCoordinats(pv)) {
+                 messaging(QString(" В sps файле не содержатся координаты для ПВ %1_%2. Координаты взяты из заголовков").arg(segy->getSP()).arg(segy->getgetShotPointNum()),Qt::red);
+             }
         }
         cst->setGeometry();
         fileAttributes.append(qMakePair(cst->getFfid(),true));
@@ -243,22 +189,15 @@ bool CstWorker::convertOneFile(const QString &filePath)
         delete segd;
         switch (auxMode) {
         case writeAuxesMode::writeInNewFile:
-            cst->writeAuxTraces(outAuxesPath);
+            cst->writeAuxTraces(paths.value("AuxPath"));
             break;
         case writeAuxesMode::write:
-             cst->writeAuxTraces(outPath);
+            cst->writeAuxTraces(paths.value("OutPath"));
             break;
         default:
             break;
         }
-        /*if (writeAuxesNewFile)
-        {
-            cst->writeAuxTraces(outAuxesPath);
-        }
-        if (writeAuxes)
-        {
-            cst->writeAuxTraces(outPath);
-        }*/
+ 
         cst->writeTraces(outPath,writeMutedChannels,writeMissedChannels);
         countAttributes(cst);
         attributes->append(AttributesFromFile(fileAttributes));
@@ -272,4 +211,60 @@ bool CstWorker::convertOneFile(const QString &filePath)
     }
 }
 
+void CstWorker::segdDirChanged(QString string)
+{
+       QDir segdDir(string);
+       int w;
+       QFileInfoList segdFilesInDir;
+       QStringList filter;
+       filter << "*.segd";
+       segdFilesInDir = segdDir.entryInfoList(filter,QDir::Files,QDir::Name);
+       *run = true;
+       if (fileForConvertingNum < segdFilesInDir.count())
+       {
+           logStream << QString("Обнаружен файл %1").arg(segdFilesInDir.value(fileForConvertingNum).fileName());
+           emit sendInfoMessage("Обнаружен файл " + segdFilesInDir.value(fileForConvertingNum).fileName(),Qt::blue);
+       }
+       while (fileForConvertingNum<segdFilesInDir.count() && *run)
+       {
+           w = 0;
+           while (!convertOneFileOnline(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath()) && w<10)
+           {
+               w++;
+               logStream << "Ошибка доступа к файлу. Ожидание.";
+               emit sendSomeError("Ошибка доступа к файлу. Ожидание.");
+               thread()->sleep(waitingTime);
+           }
 
+           if (w<10)
+           {
+                fileCount++;
+                logStream << QString("Выполнена конвертация файла %1").arg(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath());
+                emit sendInfoMessage(QString("Выполнена конвертация файла %1").arg(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath()),Qt::darkGreen);
+
+           }
+           else {
+               logStream << QString ("Превышено врямя ожидания файла %1. Переход к следующему файлу").arg(segdFilesInDir.value(fileForConvertingNum).fileName());
+               emit sendSomeError(QString ("Превышено врямя ожидания файла %1. Переход к следующему файлу").arg(segdFilesInDir.value(fileForConvertingNum).fileName()));
+           }
+           fileForConvertingNum++;
+           if (limitMaxFiles && fileCount >= maxFilesValue)
+           {
+               fileCount=0;
+               outPath.insert(outPath.lastIndexOf('/')+1,'_');
+               outAuxesPath.insert(outAuxesPath.lastIndexOf('/')+1,'_');
+               //createFileForMissedTraces();
+           }
+       }
+       if (!(*run))
+       {
+           //delete logStream;
+           logFile.close();
+           //delete logFile;
+           emit finished();
+       }
+       else
+       {
+           *run=false;
+       }
+}

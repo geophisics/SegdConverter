@@ -129,11 +129,16 @@ void CstFile::setReceiverCoordinats(QMap<QString, Point> coordinates)
            }
     }
 }
-
-void CstFile::setSourceCoordinats(QMap<QString, Point> coordinates)
+void CstFile::setReceiverCoordinats(QTextStream *logStr, QMap<QString, Point> coordinates)
 {
     QVector<CstTrace*>::iterator traceIt = traces.begin();
-    CstTrace *trace;
+    CstTrace ;
+}
+
+bool CstFile::setSourceCoordinats(QMap<QString, Point> coordinates)
+{
+    QVector<CstTrace*>::iterator traceIt = traces.begin();
+    CstTrace *trace = *traceIt;
     QString linePoint = QString::number(line)+QString::number(point);
     if (coordinates.contains(linePoint))
     {
@@ -143,6 +148,10 @@ void CstFile::setSourceCoordinats(QMap<QString, Point> coordinates)
             trace->setSourceX(coordinates.value(linePoint).getX());
             trace->setSourceY(coordinates.value(linePoint).getY());
         }
+        return true;
+    }
+    else {
+        return false;
     }
 }
 
