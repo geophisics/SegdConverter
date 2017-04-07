@@ -7,7 +7,7 @@ class SegyWorkerOnline : public SegyWorker
 {
     Q_OBJECT
 public:
-    explicit SegyWorkerOnline(CountedAttributes *attr) : SegyWorker(attr) {
+    explicit SegyWorkerOnline(volatile bool *running,CountedAttributes *attr) : SegyWorker(running,attr) {
         watcher  = new QFileSystemWatcher(this);
         connect(watcher,SIGNAL(directoryChanged(QString)),this,SLOT(segdDirChanged(QString)),Qt::DirectConnection);
     }

@@ -7,11 +7,11 @@ void CstWorker::Converting()
 {
     QFileInfo fInfo(segdPath);
     QDir segdDir;
-    logFile = new QFile(outPath+"_log.txt");
-    logFile->open(QIODevice::Text|QIODevice::WriteOnly);
-    logStream = new QTextStream(logFile);
-    logStream->setCodec("UTF8");
-    *logStream << QString("%1 Начало конвертации\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss"));
+    logFile.setFileName(outPath+"_log.txt");
+    //logFile->open(QIODevice::Text|QIODevice::WriteOnly);
+    logStream.setDevice(&logFile);
+    logStream.setCodec("UTF8");
+    logStream << QString("%1 Начало конвертации\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss"));
     int fileForConvertingNum;
     QFile cstFile;
     cstFile.setFileName(outPath);
@@ -56,18 +56,18 @@ void CstWorker::Converting()
     {
         if (mode)
         {
-            *logStream << QString ("Не найдена директория %1\n").arg(segdPath);
+            logStream << QString ("Не найдена директория %1\n").arg(segdPath);
             emit sendSomeError(QString ("Не найдена директория %1").arg(segdPath));
         }
         else
         {
-            *logStream << QString ("Не найден файл %1\n").arg(segdPath);
+            logStream << QString ("Не найден файл %1\n").arg(segdPath);
             emit sendSomeError(QString ("Не найден файл %1").arg(segdPath));
         }
-        *logStream << QString("%1 Завершение конвертации\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss"));
-        delete logStream;
-        logFile->close();
-        delete logFile;
+        logStream << QString("%1 Завершение конвертации\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss"));
+        //delete logStream;
+        logFile.close();
+        //delete logFile;
         emit finished();
         return;
     }
@@ -79,11 +79,11 @@ void CstWorker::Converting()
         if (convertOneFile(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath()))
         {
             fileCount++;
-            *logStream << QString("%1 Выполнена конвертация файла %2\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(segdFilesInDir.value(fileForConvertingNum).fileName());
+            logStream << QString("%1 Выполнена конвертация файла %2\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(segdFilesInDir.value(fileForConvertingNum).fileName());
             emit sendInfoMessage("Выполнена конвертация файла "+segdFilesInDir.value(fileForConvertingNum).fileName(),Qt::darkGreen);
         }
         else {
-            *logStream << QString("%1 Ошибка чтения файла %2. Переход к следующему файлу ").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(segdFilesInDir.value(fileForConvertingNum).fileName());
+            logStream << QString("%1 Ошибка чтения файла %2. Переход к следующему файлу ").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(segdFilesInDir.value(fileForConvertingNum).fileName());
             emit sendSomeError(QString ("Ошибка чтения файла %1. Переход к следующему файлу").arg(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath()));
         }
         if (limitMaxFiles && fileCount >= maxFilesValue)
@@ -91,14 +91,14 @@ void CstWorker::Converting()
             fileCount=0;
             outPath.insert(outPath.lastIndexOf('/')+1,'_');
             outAuxesPath.insert(outAuxesPath.lastIndexOf('/')+1,'_');
-            createFileForMissedTraces();
+            //createFileForMissedTraces();
         }
         fileForConvertingNum++;
     }
-    *logStream << QString("%1 Завершение конвертации\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm:ss"));
-    delete logStream;
-    logFile->close();
-    delete logFile;
+    logStream << QString("%1 Завершение конвертации\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm:ss"));
+    //delete logStream;
+    logFile.close();
+    //delete logFile;
     emit finished();
 }
 
@@ -109,16 +109,16 @@ void CstWorker::countAttributes(CstFile *cst)
 
     for (int i=0; i<windows.count();++i)
     {
-        *logStream << QString("%1 Расчет атрибутов в окне Min Offset = %2; Max Offset = %3; Min Time = %4мс; Max Time = %5мс\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(windows.at(i).minOffset).arg(windows.at(i).maxOffset).arg(windows.at(i).minTime).arg(windows.at(i).maxTime);
+        logStream << QString("%1 Расчет атрибутов в окне Min Offset = %2; Max Offset = %3; Min Time = %4мс; Max Time = %5мс\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(windows.at(i).minOffset).arg(windows.at(i).maxOffset).arg(windows.at(i).minTime).arg(windows.at(i).maxTime);
         switch (exType) {
         case exclusionType::txtExcl:
-            tracesInWindow = cst->getDataInWindow(logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl,exclPoints);
+            tracesInWindow = cst->getDataInWindow(&logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl,exclPoints);
             break;
         case exclusionType::mesaExcl:
-            tracesInWindow = cst->getDataInWindow(logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl,exclusions);
+            tracesInWindow = cst->getDataInWindow(&logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl,exclusions);
             break;
         default:
-            tracesInWindow = cst->getDataInWindow(logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl);
+            tracesInWindow = cst->getDataInWindow(&logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl);
             break;
         }
         /*
@@ -158,10 +158,10 @@ bool CstWorker::convertOneFile(const QString &filePath)
     SegdFile *segd;
     CstFile *cst;
     fileAttributes.clear();
-    *logStream << QString("%1 Начало обработки файла %2\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(filePath);
+    logStream << QString("%1 Начало обработки файла %2\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(filePath);
     if (backup)
     {
-        *logStream << QString("%1 Копирование файла %2\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(filePath);
+        logStream << QString("%1 Копирование файла %2\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(filePath);
         emit sendInfoMessage("Копирование файла " + filePath,Qt::black);
         fileForWork = BackupFolder +"/"+filePath.mid(filePath.lastIndexOf('/')+1);// segdFilesInDir.value(fileForConvertingNum).fileName();
         if (QFile::exists(fileForWork))
@@ -172,14 +172,14 @@ bool CstWorker::convertOneFile(const QString &filePath)
         {
             backup = false;
             fileForWork = filePath;
-            *logStream << QString("%1 Ошибка создания резервной копии. Копирование файлов не производится").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss"));
+            logStream << QString("%1 Ошибка создания резервной копии. Копирование файлов не производится").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss"));
             emit sendSomeError("Ошибка создания резервной копии \n Копирование файлов не производится");
         }
     }
     else {
         fileForWork = filePath;
     }
-    *logStream << QString("%1 Конвертация файла %2\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(fileForWork);
+    logStream << QString("%1 Конвертация файла %2\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(fileForWork);
     emit sendInfoMessage("Обработка файла " +fileForWork,Qt::black);
     if (SercelMpFactor)
     {
@@ -195,10 +195,10 @@ bool CstWorker::convertOneFile(const QString &filePath)
 
         if (useExternalXps)
         {
-            QQueue<QString>* templates = findTemplates(cst->getFfid());
-            if (!templates->isEmpty())
+            QQueue<QString> templates = findTemplates(cst->getFfid());
+            if (!templates.isEmpty())
             {
-                XFile *xF = new XFile(*templates);
+                XFile *xF = new XFile(templates);
                 if (xF->checkTemplates())
                 {
                     if (!cst->setTemplates(xF))

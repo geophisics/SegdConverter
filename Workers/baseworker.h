@@ -46,7 +46,9 @@ public:
     enum exclusionType {mesaExcl, txtExcl, noExcl};
     enum readMode{fromDir,fromFile};
     enum writeAuxesMode {write,writeInNewFile,noWrite};
-    explicit BaseWorker(CountedAttributes *attr);
+
+    explicit BaseWorker(volatile bool *stopped,
+                        CountedAttributes *attr);
 
 protected:
 
@@ -55,16 +57,16 @@ protected:
     QString segdPath;
     QString outPath;
     QString outAuxesPath;
+    QString BackupFolder;
     QString attrFilePath;
-    //QString spsPath;
-    //QString rpsPath;
-    //QString xpsPath;
-
+    readMode rMode;
 
 
     bool SercelMpFactor;
-    //readMode rMode;
     bool mode; // true - Dir, false - File
+
+    bool online;
+
     bool writeMutedChannels;
     bool writeMissedChannels;
     bool analysisAuxes;
@@ -87,7 +89,8 @@ protected:
     int maxFilesValue;
     int waitingTime;
     bool *run;
-    QString BackupFolder;
+    volatile bool *p_running;
+
     QMap<QString, Point> pp;
     QMap<QString, Point> pv;
 
@@ -103,15 +106,16 @@ protected:
     uint energyMaxFreq, energyMinFreq, widthLvl;
     bool widthByEnergy,rmsSpectrum;
 
-    QFile *logFile;
-    QTextStream *logStream;
+    QFile logFile;
+    QTextStream logStream;
 
-    //QVector <QVariant> *ffidAttributes;
 
+    int fileForConvertingNum; // порядковый номер файла в папке для конвертации
+    int fileCount; // счетчик файлов в сводном файле
 
     CountedAttributes* attributes;
     AttributesFromFile fileAttributes;
-
+    QFileSystemWatcher *watcher;
 public:
     void setSegdPath(const QString &path);
     void setOutPath(const QString &path);
@@ -119,6 +123,7 @@ public:
     void setXpsPath(const QString &path);
 
     void setMode (const bool &md);
+    void setOnline (const bool &b);
     void setUseExternalSps(const bool &use);
     void setUseExternalRps(const bool &use);
     void setUseExternalXps(const bool &use);
@@ -126,12 +131,14 @@ public:
     void readSps(const QString &path);
     void readSettings();
 
+
+
 protected:
 
 
     void setExclusions(const QString &exclFileName);
     void setReceiversInExclusions(const QString &exclFileName);
-    void createFileForMissedTraces();
+    //void createFileForMissedTraces();
 
     //функции расчета атрибутов
     void countAttriburesInWindow(QVector<QVector<float> > &traces, const int &winNb, const int &sInt, const int &ffid, QMap<QString,float> *ampls); //
@@ -140,6 +147,7 @@ protected:
     float getRms(QVector <QVector<float> > &tracesData); //среднеквадратическая амплитуда
     double countFreq(QVector<QVector<float> > &tracesData, const int &sRate); // доминантная частота в окне
     double countFreqByTrace(QVector<float> &trace, const int &sRate); // доминантная частота одной трассы
+
 
     std::vector<double> getSpectrum(QVector<QVector<float> > tracesData); // спектр в окне
     std::vector<double> getSpectrumByTrace(std::vector<float> traceData);
@@ -158,7 +166,10 @@ protected:
     bool checkTimeBreak(QVector<float> traceData, const int &sInt);
     bool checkConfirmedTimeBreak (QVector<float> traceData, const int &sInt);
 
-    QQueue<QString>* findTemplates(const int &ffid);
+    QQueue<QString> findTemplates(const int &ffid);
+
+    //для отправки ошибок/информационных сообщений
+    void messaging(const QString &message,const QColor &color = Qt::black);
 
 signals:
     void finished();

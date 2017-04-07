@@ -6,7 +6,7 @@ class CstWorkerOnline : public CstWorker
 {
     Q_OBJECT
 public:
-     explicit CstWorkerOnline(CountedAttributes *attr) : CstWorker(attr) {
+     explicit CstWorkerOnline(volatile bool *running, CountedAttributes *attr) : CstWorker(running,attr) {
         watcher  = new QFileSystemWatcher(this);
         connect(watcher,SIGNAL(directoryChanged(QString)),this,SLOT(segdDirChanged(QString)),Qt::DirectConnection);
     }

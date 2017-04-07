@@ -12,7 +12,7 @@
 
 QT_CHARTS_USE_NAMESPACE
 
-BaseWorker::BaseWorker(CountedAttributes *attr):attributes(attr)
+BaseWorker::BaseWorker(volatile bool *running, CountedAttributes *attr):p_running(running),attributes(attr)
 {
     settings = new QSettings(QCoreApplication::applicationDirPath()+QDir::separator()+"config.ini",QSettings::IniFormat,this);
 }
@@ -31,9 +31,6 @@ void BaseWorker::setOutPath(const QString &path)
     paths.insert("OutPath",newPath);
     paths.insert("SpectrumsPath",newPath.left(newPath.lastIndexOf(QDir::separator())+1)+"spectrums"+QDir::separator());
     paths.insert("AuxPath",newPath.insert(newPath.lastIndexOf('.'),"_auxes"));
-    qDebug()<<paths.value("OutPath");
-    qDebug()<<paths.value("SpectrumsPath");
-    qDebug()<<paths.value("AuxPath");
     //paths.insert( path.lastIndexOf(QDir::separator()))
     //outPath = path;
     //QString tmp=path;
@@ -46,19 +43,6 @@ void BaseWorker::setAttrFilePath(const QString &path)
     attrFilePath = path;
 }
 
-//устанавливаем откуда будем читать r-файл
-//void BaseWorker::setRpsPath(const QString &path)
-//{
-//    paths.insert("RpsPath",QDir::toNativeSeparators(path));
-//    //rpsPath = path;
-//}
-
-//устанавливаем откуда будем читать s-файл
-//void BaseWorker::setSpsPath(const QString &path)
-//{
-//    paths.insert("SpsPath",QDir::toNativeSeparators(path));
-//    //spsPath = path;
-//}
 
 void BaseWorker::setXpsPath(const QString &path)
 {
@@ -69,13 +53,17 @@ void BaseWorker::setXpsPath(const QString &path)
 //чтение настроек конвертации
 void BaseWorker::readSettings()
 {
+    logFile.setFileName(paths.value("OutPath")+"_log.txt");
+    logFile.open(QIODevice::Text|QIODevice::WriteOnly);
+    logStream.setDevice(&logFile);
+    logStream.setCodec("UTF8");
     settings->beginGroup("/ConvertSettings");
     SercelMpFactor = settings->value("/UseHeaderMpFactor",1).toBool();
     analysisAuxes = settings->value("/AnalisysAuxes",false).toBool();
 
     checkTests = settings->value("/CheckTests",false).toBool();
     testsPercent = settings->value("/TestPercent",2).toInt();
-
+    online = settings->value("/OnLine",false).toBool();
     if (!SercelMpFactor)
     {
         if (settings->value("/NotUseMpFactor",true).toBool())
@@ -99,19 +87,6 @@ void BaseWorker::readSettings()
     {
         exType = exclusionType::noExcl;
     }
-    /*
-
-    useExclusions = settings->value("/Exclusions",false).toBool();
-
-    if (settings->value("/TxtExclusion",false).toBool())
-    {
-        exType = exclusionType::txtExcl;
-    }
-    else
-    {
-        exType = exclusionType::mesaExcl;
-    }*/
-
     if (exType!=exclusionType::noExcl)
     {
         QString exclPath =settings->value("/ExclusionsPath","").toString();
@@ -126,7 +101,11 @@ void BaseWorker::readSettings()
     }
     writeMutedChannels = settings->value("/MuteChannels",true).toBool();
     writeMissedChannels = settings->value("/MissedChannels",false).toBool();
-    if (settings->value("/WriteAuxes",false).toBool())
+    if (settings->value("/NoWriteAuxes",true).toBool())
+    {
+        auxMode = writeAuxesMode::noWrite;
+    }
+    else
     {
         if (settings->value("/WriteAuxesInNewFile",false).toBool()) {
             auxMode = writeAuxesMode::writeInNewFile;
@@ -134,20 +113,12 @@ void BaseWorker::readSettings()
         else{
             auxMode = writeAuxesMode::write;
         }
-
-
     }
-    else
-    {
-        auxMode = writeAuxesMode::noWrite;
-    }
-//    writeAuxes=(settings->value("/WriteAuxes",0).toBool());
-//    writeAuxesNewFile = settings->value("/WriteAuxesInNewFile",0).toBool();
     backup = settings->value("/Backup",false).toBool();
     if (backup)
     {
 
-        BackupFolder = settings->value("/BackupFolder","").toString();
+        QString BackupFolder = settings->value("/BackupFolder","").toString();
         QDir backupSegdPath(BackupFolder);
         if (!backupSegdPath.exists())
         {
@@ -156,9 +127,10 @@ void BaseWorker::readSettings()
             if (!succes)
             {
                 backup=false;
-                emit sendSomeError(QString("Ошибка создания директории %1. Создание резервной копии файлов segd не выполняется").arg(BackupFolder));
+                messaging(QString("Ошибка создания директории %1. Создание резервной копии файлов segd не выполняется").arg(BackupFolder),Qt::red);
             }
         }
+        paths.insert("BackupFolder",BackupFolder);
     }
     limitMaxFiles = settings->value("/MaxFiles",false).toBool();
     if (limitMaxFiles)
@@ -167,12 +139,9 @@ void BaseWorker::readSettings()
     }
     settings->endGroup();
     settings->beginGroup("/WindowsSettings");
-
     notUseMutedTraces = settings->value("/MutedTraces",true).toBool();
     badTests = settings->value("/CheckTests",false).toBool();
     minAmpl = settings->value("/MinAmplValue",0.0).toFloat();
-
-
     int size = settings->beginReadArray("/Windows");
     AttributeWindow window;
     for (int i=0; i<size; ++i)
@@ -193,23 +162,6 @@ void BaseWorker::readSettings()
         window.countEnergy=settings->value("/CountEnergy",false).toBool();
         window.countDfr=settings->value("/CountDfr",false).toBool();
         window.writeSpectrum=settings->value("/WriteSpectrum",false).toBool();
-        //AttributeWindow window; //= new AttributeWindow(this);
-
-        /*window->setMinTime(settings->value("/MinTime","0").toInt());
-        window->setMaxTime(settings->value("/MaxTime","0").toInt());
-        window->setMinOffset(settings->value("/MinOffset","0").toInt());
-        window->setMaxOffset(settings->value("/MaxOffset","0").toInt());
-        window->setMinAmpl(settings->value("/MinAmpl","0.0").toFloat());
-        window->setMinRms(settings->value("/MinRms","0.0").toFloat());
-        window->setMinFreq(settings->value("/MinFreq","0.0").toFloat());
-        window->setMinDfr(settings->value("/MinDfr","0.0").toFloat());
-        window->setMinEnergy(settings->value("/MinEnergy","0.0").toFloat());
-        window->setCountAmpl(settings->value("/CountAmpl",false).toBool());
-        window->setCountRms(settings->value("/CountRms",false).toBool());
-        window->setCountFreq(settings->value("/CountFreq",false).toBool());
-        window->setCountEnergy(settings->value("/CountEnergy",false).toBool());
-        window->setCountDfr(settings->value("/CountDfr",false).toBool());
-        window->setWriteSpectrum(settings->value("/WriteSpectrum",false).toBool());*/
         windows.append(AttributeWindow(window));
     }
     settings->endArray();
@@ -368,7 +320,8 @@ void BaseWorker::setExclusions(const QString &exclFileName)
         tmp=xclFile.readLine();
         if (tmp!="# Version Number\n")
         {
-            emit sendSomeError(QString("Файл %1 не является файлом эксклюзивных зон Mesa").arg(exclFileName));
+            //emit sendSomeError(QString("Файл %1 не является файлом эксклюзивных зон Mesa").arg(exclFileName));
+            messaging(QString("Файл %1 не является файлом эксклюзивных зон Mesa").arg(exclFileName),Qt::red);
             exType = exclusionType::noExcl;
             return;
         }
@@ -438,7 +391,6 @@ void BaseWorker::setExclusions(const QString &exclFileName)
         exType = exclusionType::noExcl;;
         return;
     }
-
 }
 
 void BaseWorker::setReceiversInExclusions(const QString &exclFileName)
@@ -469,9 +421,22 @@ void BaseWorker::setReceiversInExclusions(const QString &exclFileName)
 //устанавливаем режим чтения
 void BaseWorker::setMode(const bool &md)
 {
-    mode =md; // режим чтения из папки или начиная с файла
+    mode = md; // режим чтения из папки или начиная с файла
+    if (md)
+    {
+        rMode = readMode::fromDir;
+    }
+    else
+    {
+        rMode = readMode::fromFile;
+    }
 }
 
+
+/*void BaseWorker::setOnline(const bool &b)
+{
+    online=b;
+}*/
 // устанавливаем откуда брать координаты пв
 
 /*void BaseWorker::setUseExternalSps(const bool &use)
@@ -509,15 +474,15 @@ void BaseWorker::readRps(const QString &path)
     }
     else
     {
-        emit sendSomeError(QString("Ошибка открытия файла %1. Координаты ПП будут взяты из заголовков SEGD файла.").arg(path));
+        messaging(QString(" Ошибка открытия файла %1. Координаты ПП будут взяты из заголовков SEGD файла.").arg(path),Qt::red);
     }
     if (pp.isEmpty())
     {
-        emit sendSomeError(QString("В файле %1 не содержится R-записей. Координаты ПВ будут взяты из заголовков SEGD файла.").arg(path));
+        messaging(QString(" В файле %1 не содержится R-записей. Координаты ПВ будут взяты из заголовков SEGD файла.").arg(path),Qt::red);
     }
     else
     {
-        emit sendInfoMessage(QString("В файле %1 содержится %2 R-записей").arg(path).arg(pp.count()),Qt::darkGray);
+        messaging(QString(" В файле %1 содержится %2 R-записей").arg(path).arg(pp.count()),Qt::darkGray);
     }
 }
 //читаем s-файл
@@ -539,67 +504,62 @@ void BaseWorker::readSps(const QString &path)
     }
     else
     {
-        emit sendSomeError(QString("Ошибка открытия файла %1. Координаты ПВ будут взяты из заголовков SEGD файла.").arg(path));
+        //emit sendSomeError(QString(" Ошибка открытия файла %1. Координаты ПВ будут взяты из заголовков SEGD файла.").arg(path));
+        messaging(QString(" Ошибка открытия файла %1. Координаты ПВ будут взяты из заголовков SEGD файла.").arg(path),Qt::red);
     }
     if (pv.isEmpty())
     {
-        emit sendSomeError(QString("В файле %1 не содержится S-записей. Координаты ПВ будут взяты из заголовков SEGD файла.").arg(path));
+        messaging(QString(" В файле %1 не содержится S-записей. Координаты ПВ будут взяты из заголовков SEGD файла.").arg(path),Qt::red);
+
     }
     else
     {
-        emit sendInfoMessage(QString("В файле %1 содержится %2 S-записей").arg(path).arg(pv.count()),Qt::darkGray);
+        messaging(QString(" В файле %1 содержится %2 S-записей").arg(path).arg(pv.count()),Qt::darkGray);
     }
 }
 
 //останавливаем конвертацию
 void BaseWorker::stopRunning()
 {
-    qDebug()<<QString("stopped");
-    if (*run)
-    {
-        *run=false;
-    }
-    else {
-        emit finished();
-    }
+    if (logFile.isOpen()){
+    //logStream << QString("%1 Завершение конвертации\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss"));
+    messaging(" Завершение конвертации");
+    logFile.close();
+    emit finished();}
 }
 
 //создаем файл отчета для трасс не участвующих в рассчете атрибутов
-void BaseWorker::createFileForMissedTraces()
+/*void BaseWorker::createFileForMissedTraces()
 {
-    QFile* missedTraces= new QFile(outPath+"_missedTraces.txt");
-    if (missedTraces->open(QIODevice::WriteOnly|QIODevice::Text))
+    QFile missedTraces;//= new QFile(outPath+"_missedTraces.txt");
+    missedTraces.setFileName(QString(paths.value("OutPath")).append("_missedTraces.txt"));
+    if (missedTraces.open(QIODevice::WriteOnly|QIODevice::Text))
     {
-        QTextStream *missedStream = new QTextStream(missedTraces);
-        *missedStream<<"FFID\t"<<"LinePoint\t"<<"Receiver X\t"<<"Receiver Y\t"<<"Receiver Z\n";
-        missedTraces->close();
-        delete missedStream;
-        delete missedTraces;
+        QTextStream missedStream;
+        missedStream.setDevice(&missedTraces);
+        missedStream<<"FFID\t"<<"LinePoint\t"<<"Receiver X\t"<<"Receiver Y\t"<<"Receiver Z\n";
+        missedTraces.close();
     }
     else
     {
-        emit sendSomeError("Ошибка открытия файла отчета трасс, попадающих в эксклюзивные зоны \n"
-                           "Отчет не сохраняется");
-
+        messaging(QString("Ошибка открытия файла отчета трасс, попадающих в эксклюзивные зоны %1. Отчет не сохраняется").arg(missedTraces.fileName()),Qt::red);
     }
-}
+}*/
 
-QQueue<QString> *BaseWorker::findTemplates(const int &ffid)
+QQueue<QString> BaseWorker::findTemplates(const int &ffid)
 {
-    QQueue<QString> *result = new QQueue<QString>();
-    //QFile xps(xpsPath);
+    QQueue<QString> result;// = new QQueue<QString>();
     QFile xps(paths.value("XpsPath"));
     if (xps.open(QIODevice::ReadOnly|QIODevice::Text))
     {
         QString line;
         while (!xps.atEnd()) {
-
             line = xps.readLine();
             if (line.mid(7,4).toInt()==ffid)
             {
                 while(line.mid(7,4).toInt()==ffid)
                 {
-                    result->enqueue(QString(line));
+                    result.enqueue(QString(line));
                     line = xps.readLine();
                 }
                 break;
@@ -1037,6 +997,12 @@ bool BaseWorker::checkConfirmedTimeBreak(QVector<float> traceData, const int &sI
 
 }
 
+
+void BaseWorker::messaging(const QString &message, const QColor &color)
+{
+    logStream <<QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm:ss").append(message)<<"\n";
+    emit sendInfoMessage(QDateTime::currentDateTime().toString("hh:mm:ss").append(message),color);
+}
 
 TimeBreakSettings::TimeBreakSettings()
 {
