@@ -54,19 +54,16 @@ protected:
 
 
     Paths paths;
-    QString segdPath;
-    QString outPath;
-    QString outAuxesPath;
-    QString BackupFolder;
-    QString attrFilePath;
+   // QString segdPath;
+   // QString outPath;
+   // QString outAuxesPath;
+   // QString BackupFolder;
+   // QString attrFilePath;
     readMode rMode;
 
 
     bool SercelMpFactor;
-    bool mode; // true - Dir, false - File
-
     bool online;
-
     bool writeMutedChannels;
     bool writeMissedChannels;
     bool analysisAuxes;
@@ -141,7 +138,7 @@ protected:
     //void createFileForMissedTraces();
 
     //функции расчета атрибутов
-    void countAttriburesInWindow(QVector<QVector<float> > &traces, const int &winNb, const int &sInt, const int &ffid, QMap<QString,float> *ampls); //
+    void countAttributesInWindow(QVector<QVector<float> > &traces, const int &winNb, const int &sInt, const int &ffid, QMap<QString,float> *ampls); //
     void countRelations(QMap<QString,float> ampls);
     float getAbsAvg(QVector<QVector<float> > &tracesData); //абсолютная амплитуда
     float getRms(QVector <QVector<float> > &tracesData); //среднеквадратическая амплитуда

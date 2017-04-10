@@ -88,7 +88,7 @@ void CstWorker::countAttributes(CstFile *cst)
             tracesInWindow = cst->getDataInWindow(&logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl);
             break;
         }
-        countAttriburesInWindow(tracesInWindow,i,cst->getSampleRate(),cst->getFfid(),&amplitudes);
+        countAttributesInWindow(tracesInWindow,i,cst->getSampleRate(),cst->getFfid(),&amplitudes);
         tracesInWindow.clear();
     }
     countRelations(amplitudes);
@@ -162,14 +162,13 @@ bool CstWorker::convertOneFile(const QString &filePath)
             if (receivers>0){
                 messaging(QString(" В R-файле не содержатся координаты для %1 ПП").arg(receivers),Qt::red);
             }
-
         }
         if (!pv.isEmpty())
         {
             messaging(" Редакция координат ПВ");
             if(!cst->setSourceCoordinats(pv)) {
-                 messaging(QString(" В sps файле не содержатся координаты для ПВ %1_%2. Координаты взяты из заголовков").arg(segy->getSP()).arg(segy->getgetShotPointNum()),Qt::red);
-             }
+                 messaging(QString(" В sps файле не содержатся координаты для ПВ %1_%2. Координаты взяты из заголовков").arg(cst->getLine()).arg(cst->getPoint()),Qt::red);
+            }
         }
         cst->setGeometry();
         fileAttributes.append(qMakePair(cst->getFfid(),true));
@@ -198,7 +197,7 @@ bool CstWorker::convertOneFile(const QString &filePath)
             break;
         }
  
-        cst->writeTraces(outPath,writeMutedChannels,writeMissedChannels);
+        cst->writeTraces(paths.value("OutPath"),writeMutedChannels,writeMissedChannels);
         countAttributes(cst);
         attributes->append(AttributesFromFile(fileAttributes));
         emit attributesCounted();
@@ -214,57 +213,37 @@ bool CstWorker::convertOneFile(const QString &filePath)
 void CstWorker::segdDirChanged(QString string)
 {
        QDir segdDir(string);
-       int w;
        QFileInfoList segdFilesInDir;
        QStringList filter;
        filter << "*.segd";
        segdFilesInDir = segdDir.entryInfoList(filter,QDir::Files,QDir::Name);
-       *run = true;
-       if (fileForConvertingNum < segdFilesInDir.count())
+       int attempt;// = 0;
+       for (;fileForConvertingNum<segdFilesInDir.count();fileForConvertingNum++)
        {
-           logStream << QString("Обнаружен файл %1").arg(segdFilesInDir.value(fileForConvertingNum).fileName());
-           emit sendInfoMessage("Обнаружен файл " + segdFilesInDir.value(fileForConvertingNum).fileName(),Qt::blue);
-       }
-       while (fileForConvertingNum<segdFilesInDir.count() && *run)
-       {
-           w = 0;
-           while (!convertOneFileOnline(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath()) && w<10)
-           {
-               w++;
-               logStream << "Ошибка доступа к файлу. Ожидание.";
-               emit sendSomeError("Ошибка доступа к файлу. Ожидание.");
+           messaging(QString(" Обнаружен файл ").append(segdFilesInDir.value(fileForConvertingNum).fileName()),Qt::blue);
+           attempt=0;
+
+           while(!convertOneFile(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath()) && attempt<10 && *p_running) {
+               attempt++;
+               messaging(QString(" Ошибка доступа к файлу. Ожидание"),Qt::red);
                thread()->sleep(waitingTime);
            }
-
-           if (w<10)
+           if (attempt<10)
            {
-                fileCount++;
-                logStream << QString("Выполнена конвертация файла %1").arg(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath());
-                emit sendInfoMessage(QString("Выполнена конвертация файла %1").arg(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath()),Qt::darkGreen);
-
+               fileCount++;
+               messaging(QString(" Выполнена конвертация файла ").append(segdFilesInDir.value(fileForConvertingNum).fileName()),Qt::darkGreen);
            }
            else {
-               logStream << QString ("Превышено врямя ожидания файла %1. Переход к следующему файлу").arg(segdFilesInDir.value(fileForConvertingNum).fileName());
-               emit sendSomeError(QString ("Превышено врямя ожидания файла %1. Переход к следующему файлу").arg(segdFilesInDir.value(fileForConvertingNum).fileName()));
+               messaging(QString(" Превышено время ожидания файла ").append(segdFilesInDir.value(fileForConvertingNum).fileName()),Qt::red);
            }
-           fileForConvertingNum++;
-           if (limitMaxFiles && fileCount >= maxFilesValue)
+           if (*p_running)
            {
-               fileCount=0;
-               outPath.insert(outPath.lastIndexOf('/')+1,'_');
-               outAuxesPath.insert(outAuxesPath.lastIndexOf('/')+1,'_');
-               //createFileForMissedTraces();
+               segdFilesInDir = segdDir.entryInfoList(filter,QDir::Files,QDir::Name);
            }
-       }
-       if (!(*run))
-       {
-           //delete logStream;
-           logFile.close();
-           //delete logFile;
-           emit finished();
-       }
-       else
-       {
-           *run=false;
+           else
+           {
+               stopRunning();
+               break;
+           }
        }
 }

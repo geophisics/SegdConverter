@@ -89,7 +89,7 @@ void SegyWorker::countAttributesFromFile(SegyFile *sgy)
             tracesInWindow = sgy->getDataInWindow(&logStream,windows.at(i).minOffset,windows.at(i).maxOffset,windows.at(i).minTime,windows.at(i).maxTime,notUseMutedTraces,badTests,minAmpl);
             break;
         }
-        countAttriburesInWindow(tracesInWindow,i,sgy->getSampleInterval(),sgy->getFileNumFirstTrace(),&amplitudes);
+        countAttributesInWindow(tracesInWindow,i,sgy->getSampleInterval(),sgy->getFileNumFirstTrace(),&amplitudes);
         tracesInWindow.clear();
     }
     countRelations(amplitudes);

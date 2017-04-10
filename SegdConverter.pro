@@ -42,8 +42,6 @@ SOURCES += main.cpp\
     Workers/baseworker.cpp \
     Cst/cstfile.cpp \
     Cst/csttrace.cpp \
-    Workers/segyworkeronline.cpp \
-    Workers/cstworkeronline.cpp \
     auxesdialog.cpp \
     auxviewdialog.cpp \
     Models/attributesmodel.cpp \
@@ -79,8 +77,6 @@ HEADERS  += segdconverterwindow.h \
     Workers/baseworker.h \
     Cst/cstfile.h \
     Cst/csttrace.h \
-    Workers/segyworkeronline.h \
-    Workers/cstworkeronline.h \
     auxesdialog.h \
     auxviewdialog.h \
     Models/attributesmodel.h \

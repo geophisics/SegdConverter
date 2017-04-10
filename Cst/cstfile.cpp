@@ -129,10 +129,31 @@ void CstFile::setReceiverCoordinats(QMap<QString, Point> coordinates)
            }
     }
 }
-void CstFile::setReceiverCoordinats(QTextStream *logStr, QMap<QString, Point> coordinates)
+int CstFile::setReceiverCoordinats(QTextStream *logStr, QMap<QString, Point> coordinates)
 {
     QVector<CstTrace*>::iterator traceIt = traces.begin();
-    CstTrace ;
+    CstTrace *trace;
+    int notInRps=0;
+    QString linePoint;
+    for (; traceIt!=traces.end();++traceIt)
+    {
+        trace = *traceIt;
+        if (trace->getTraceNb()!=0 && trace->getReceiverLinePoint()!=0)
+        {
+            linePoint = QString::number(trace->getReceiverLinePoint());
+            if (coordinates.contains(linePoint))
+            {
+                trace->setReceiverX(coordinates.value(linePoint).getX());
+                trace->setReceiverY(coordinates.value(linePoint).getY());
+            }
+            else
+            {
+                notInRps++;
+                *logStr<<QString("В R файле не содержится координата для ПП %1 \n").arg(trace->getReceiverLinePoint());
+            }
+        }
+    }
+    return notInRps;
 }
 
 bool CstFile::setSourceCoordinats(QMap<QString, Point> coordinates)
@@ -142,6 +163,9 @@ bool CstFile::setSourceCoordinats(QMap<QString, Point> coordinates)
     QString linePoint = QString::number(line)+QString::number(point);
     if (coordinates.contains(linePoint))
     {
+        easting = coordinates.value(linePoint).getX();
+        northing = coordinates.value(linePoint).getY();
+        elevation = coordinates.value(linePoint).getZ();
         for (; traceIt!=traces.end();++traceIt)
         {
             trace = *traceIt;
@@ -486,6 +510,8 @@ bool CstFile::setTemplates(XFile *xps)
         for (currentTrace=0; currentTrace<numOfAuxes;++currentTrace)
         {
             traces.value(currentTrace)->setSourceLinePoint(xps->getLine()*10000+xps->getPoint());
+            line=xps->getLine();
+            point = xps->getPoint();
         }
         while (!xps->getTemplates()->isEmpty()) {
             templ = xps->getTemplates()->dequeue();
@@ -505,7 +531,7 @@ bool CstFile::setTemplates(XFile *xps)
                 currentReceiver++;
             }
         }
-        for(;currentTrace<numOfAuxes;++currentTrace)
+        for(;currentTrace<numOfAuxes+numOfSeis;++currentTrace)
         {
             traces.value(currentTrace)->setSourceLinePoint(xps->getLine()*10000+xps->getPoint());
             traces.value(currentTrace)->setReceiverLinePoint(0);

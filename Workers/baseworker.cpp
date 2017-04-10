@@ -8,7 +8,7 @@
 #include <complex>
 #include <cmath>
 #include <Segd/segdfile.h>
-
+#include <QDir>
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -21,7 +21,7 @@ BaseWorker::BaseWorker(volatile bool *running, CountedAttributes *attr):p_runnin
 void BaseWorker::setSegdPath(const QString &path)
 {
     paths.insert("SegdPath",QDir::toNativeSeparators(path));
-    segdPath = path;
+    //segdPath = path;
 }
 
 // устанавливаем куда будем писать выходной файл
@@ -30,24 +30,19 @@ void BaseWorker::setOutPath(const QString &path)
     QString newPath = QDir::toNativeSeparators(path);
     paths.insert("OutPath",newPath);
     paths.insert("SpectrumsPath",newPath.left(newPath.lastIndexOf(QDir::separator())+1)+"spectrums"+QDir::separator());
-    paths.insert("AuxPath",newPath.insert(newPath.lastIndexOf('.'),"_auxes"));
-    //paths.insert( path.lastIndexOf(QDir::separator()))
-    //outPath = path;
-    //QString tmp=path;
-    //outAuxesPath = tmp.insert(tmp.lastIndexOf('.'),"_auxes");
-}
 
-//устанавливаем куда будем писать файл атрибутов
-void BaseWorker::setAttrFilePath(const QString &path)
-{
-    attrFilePath = path;
+    paths.insert("AuxPath",newPath.insert(newPath.lastIndexOf('.'),"_auxes"));
+    QDir dir(paths.value("SpectrumsPath"));
+    if (!dir.exists())
+    {
+        dir.mkdir(paths.value("SpectrumsPath"));
+    }
 }
 
 
 void BaseWorker::setXpsPath(const QString &path)
 {
     paths.insert("XpsPath",QDir::toNativeSeparators(path));
-    //xpsPath = path;
 }
 
 //чтение настроек конвертации
@@ -218,96 +213,6 @@ void BaseWorker::readSettings()
 }
 
 
-//формирование заголовков файла атрибутов
-
-/*void BaseWorker::writeXlsxHeaders()
-{
-
-    xlsx.write(1,1,QString("Рассчет атрибутов"));
-    xlsx.write(2,1,QString("Количество окон: %1").arg(windows.count()));
-    xlsx.write(3,1,QString("Парметры окон:"));
-    currentRow = 3;
-    for (int i=0; i<windows.count();++i)
-    {
-        xlsx.write(4+i,1,QString("Окно#%1: Мин. удаление: %2; Макс удаление: %3; Мин. время: %4; Макс. время: %5").arg(i+1).arg(windows.value(i)->getMinOffset()).arg(windows.value(i)->getMaxOffset()).arg(windows.value(i)->getMinTime()).arg(windows.value(i)->getMaxTime()));
-        currentRow++;
-    }
-    currentRow=currentRow+7;
-    xlsxFormat.setHorizontalAlignment(QXlsx::Format::AlignHCenter);
-    xlsxFormat.setPatternBackgroundColor(Qt::white);
-    xlsx.write(currentRow,1,"FFID",xlsxFormat);
-    xlsx.write(currentRow,2,"Line Nb",xlsxFormat);
-    xlsx.write(currentRow,3, "Point Nb",xlsxFormat);
-    xlsx.write(currentRow,4,"SourceX",xlsxFormat);
-    xlsx.write(currentRow,5,"SourceY",xlsxFormat);
-    xlsx.write(currentRow,6,"SourceZ",xlsxFormat);
-    currentColumn = 7;
-
-    if (checkTests)
-    {
-        xlsx.write(currentRow,currentColumn,"Test Status",xlsxFormat);
-        currentColumn++;
-    }
-    if (analysisAuxes)
-    {
-        xlsx.write(currentRow,currentColumn,"Aux Status",xlsxFormat);
-        currentColumn++;
-    }
-
-    for (int i=0; i<windows.count();++i)
-    {
-        if (windows.value(i)->getCountAmpl())
-        {
-            xlsx.write(currentRow, currentColumn, QString("Ampl%1").arg(i+1),xlsxFormat);
-            currentColumn++;
-        }
-        if (windows.value(i)->getCountRms())
-        {
-            xlsx.write(currentRow, currentColumn, QString("RMS%1").arg(i+1),xlsxFormat);
-            currentColumn++;
-        }
-        if (windows.value(i)->getCountFreq())
-        {
-            xlsx.write(currentRow, currentColumn, QString("Freq%1").arg(i+1),xlsxFormat);
-            currentColumn++;
-        }
-        if (windows.value(i)->getCountEnergy())
-        {
-            xlsx.write(currentRow, currentColumn, QString("Energy%1").arg(i+1),xlsxFormat);
-            currentColumn++;
-        }
-        if (windows.value(i)->getCountDfr())
-        {
-            xlsx.write(currentRow,currentColumn,QString("DFR%1").arg(i+1),xlsxFormat);
-            currentColumn++;
-        }
-    }
-    currentColumn++;
-    QString tmp;
-    for (int i=0; i<relations.count();++i)
-    {
-        tmp = relations.value(i);
-        tmp = tmp.left(tmp.lastIndexOf(">"));
-        xlsx.write(currentRow,currentColumn,tmp,xlsxFormat);
-        currentColumn++;
-    }
-
-}*/
-
-//cохранение файла атрибутов
-/*void BaseWorker::saveXlsxFile()
-{
-    *logStream << QString("%1 Сохранение файла атрибутов \n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss"));
-    bool save = xlsx.saveAs(attrFilePath);
-    QString newName;
-    while (!save)
-    {
-        qDebug()<<QString(attrFilePath.left(attrFilePath.size()-5)+ QDateTime::currentDateTime().toString("_dd_MM_yy_hh_mm_ss")+".xlsx");
-        newName = QString(attrFilePath.left(attrFilePath.size()-5)+ QDateTime::currentDateTime().toString("_dd_MM_yy_hh_mm_ss")+".xlsx");
-        save = xlsx.saveAs(newName);
-    }
-    *logStream << QString("%1 Файл атрибутов %2 сохранен успешно!\n").arg(QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm::ss")).arg(newName);
-}*/
 
 //чтение эксклюзивных зон
 
@@ -421,7 +326,6 @@ void BaseWorker::setReceiversInExclusions(const QString &exclFileName)
 //устанавливаем режим чтения
 void BaseWorker::setMode(const bool &md)
 {
-    mode = md; // режим чтения из папки или начиная с файла
     if (md)
     {
         rMode = readMode::fromDir;
@@ -431,25 +335,6 @@ void BaseWorker::setMode(const bool &md)
         rMode = readMode::fromFile;
     }
 }
-
-
-/*void BaseWorker::setOnline(const bool &b)
-{
-    online=b;
-}*/
-// устанавливаем откуда брать координаты пв
-
-/*void BaseWorker::setUseExternalSps(const bool &use)
-{
-    useExternalSps = use;
-}
-
-// устанавливаем откуда брать координаты пп
-
-void BaseWorker::setUseExternalRps(const bool &use)
-{
-    useExternalRps = use;
-}*/
 
 void BaseWorker::setUseExternalXps(const bool &use)
 {
@@ -528,24 +413,6 @@ void BaseWorker::stopRunning()
     emit finished();}
 }
 
-//создаем файл отчета для трасс не участвующих в рассчете атрибутов
-/*void BaseWorker::createFileForMissedTraces()
-{
-    QFile missedTraces;//= new QFile(outPath+"_missedTraces.txt");
-    missedTraces.setFileName(QString(paths.value("OutPath")).append("_missedTraces.txt"));
-    if (missedTraces.open(QIODevice::WriteOnly|QIODevice::Text))
-    {
-        QTextStream missedStream;
-        missedStream.setDevice(&missedTraces);
-        missedStream<<"FFID\t"<<"LinePoint\t"<<"Receiver X\t"<<"Receiver Y\t"<<"Receiver Z\n";
-        missedTraces.close();
-    }
-    else
-    {
-        messaging(QString("Ошибка открытия файла отчета трасс, попадающих в эксклюзивные зоны %1. Отчет не сохраняется").arg(missedTraces.fileName()),Qt::red);
-    }
-}*/
-
 QQueue<QString> BaseWorker::findTemplates(const int &ffid)
 {
     QQueue<QString> result;// = new QQueue<QString>();
@@ -574,7 +441,7 @@ QQueue<QString> BaseWorker::findTemplates(const int &ffid)
 }
 
 //рассчитываем все атрибуты в окне
-void BaseWorker::countAttriburesInWindow(QVector<QVector<float> > &traces, const int &winNb, const int &sInt, const int &ffid, QMap<QString,float> *ampls)
+void BaseWorker::countAttributesInWindow(QVector<QVector<float> > &traces, const int &winNb, const int &sInt, const int &ffid, QMap<QString,float> *ampls)
 {
     float attribute=0.0;
     bool checkAttribute=true;
@@ -608,7 +475,8 @@ void BaseWorker::countAttriburesInWindow(QVector<QVector<float> > &traces, const
         {
 
             QFile *spectrumFile = new QFile();
-            spectrumFile->setFileName(QString("%1_ffid%2_spectrum_for_attributeWindow#_%3.txt").arg(attrFilePath).arg(ffid).arg(winNb+1));
+            qDebug()<<QString("%1_ffid%2_spectrum_for_attributeWindow#_%3.txt").arg(paths.value("SpectrumsPath")).arg(ffid).arg(winNb+1);
+            spectrumFile->setFileName(QString("%1_ffid%2_spectrum_for_attributeWindow#_%3.txt").arg(paths.value("SpectrumsPath")).arg(ffid).arg(winNb+1));
             if (spectrumFile->open(QIODevice::WriteOnly|QIODevice::Text))
             {
                 QTextStream tStream(spectrumFile);
@@ -737,7 +605,6 @@ double BaseWorker::countFreqByTrace(QVector<float> &trace, const int &sRate)
    }
    double t0 = n0-1 - (akf[n0-1]/(akf[n0]-akf[n0-1]));
    return (1000000.0/sRate)/(4*t0);
-       //std::transform(rmsSpectrum.begin(),rmsSpectrum.end(),rmsSpectrum.begin(), [traces] (double _d) {return sqrt(_d/traces);});
 }
 
 
@@ -745,10 +612,6 @@ std::vector<double> BaseWorker::getSpectrum(QVector<QVector<float> > tracesData)
 {
 
     const std::size_t SIZE = pow(2,ceil(log2(maxSizeOfVectors(tracesData))));
-    /*
-    const std::size_t SIZE = pow(2,ceil(log2(tracesData.value(0).size())));
-
-    const std::size_t TRACES = tracesData.count();*/
     std::size_t TRACES =0;
     std::vector<double> avgSpectrum(SIZE);
     std::vector<double> spectrum(SIZE);
@@ -808,7 +671,6 @@ std::vector<double> BaseWorker::getSpectrumByTrace(std::vector<float> traceData)
 
 std::vector<double> BaseWorker::getSpectrumByTrace(std::vector<float> traceData, const std::size_t &SIZE)
 {
-    //const std::size_t SIZE = pow(2,ceil(log2(traceData.size())));
     std::vector<double> vecD(traceData.begin(),traceData.end());
     vecD.resize(SIZE);
     auto fft = Aquila::FftFactory::getFft(SIZE);

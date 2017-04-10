@@ -5,6 +5,7 @@
 #include <QSettings>
 #include <QThread>
 #include <Workers/segyworker.h>
+#include <Workers/cstworker.h>
 #include <auxviewdialog.h>
 #include <Models/attributesmodel.h>
 namespace Ui {

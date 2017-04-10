@@ -6,12 +6,10 @@
 #include "tableviewdialog.h"
 #include <QDir>
 #include <QFileDialog>
-#include <Segd/segdfile.h>
-#include <Cst/cstfile.h>
-#include <Segy/segyfile.h>
+//#include <Segd/segdfile.h>
+//#include <Cst/cstfile.h>
+//#include <Segy/segyfile.h>
 #include <QHeaderView>
-#include "Workers/segyworkeronline.h"
-#include "Workers/cstworkeronline.h"
 #include "QMessageBox"
 #include "auxesdialog.h"
 #include "auxviewdialog.h"
@@ -296,14 +294,14 @@ void SegdConverterWindow::runActionSlot()
 
     if (ui->outFileLabel->text()=="Файл CST")
     {
-        if (online)
+        /*if (online)
         {
             runCstOnline();
         }
         else
-        {
+        {*/
             runCst();
-        }
+   //     }
     }
     else
     {
@@ -383,25 +381,21 @@ void SegdConverterWindow::runSegy()
     p_segyWorker->setSegdPath(ui->segdLineEdit->text());
     p_segyWorker->setOutPath(ui->outFileLineEdit->text());
     p_segyWorker->readSettings();
-    if (ui->actionOpenRPS->isChecked())
-    {
+    if (ui->actionOpenRPS->isChecked()) {
         p_segyWorker->readRps(rpsFile);
     }
-    if (ui->actionOpenSPS->isChecked())
-    {
+    if (ui->actionOpenSPS->isChecked()) {
         p_segyWorker->readSps(spsFile);
     }
-    if (ui->actionOpenXPS->isChecked())
-    {
+    if (ui->actionOpenXPS->isChecked()) {
         p_segyWorker->setXpsPath(xpsFile);
     }
-    p_segyWorker->setAttrFilePath(ui->attrFileLineEdit->text());
     p_segyWorker->setMode(ui->segdLabel->text()=="Директория Segd");
-    if (ui->actionAuxes->isEnabled())
-    {
+    if (ui->actionAuxes->isEnabled()) {
         setViewAuxesDialog(p_segyWorker);
     }
     connect(p_myThread,SIGNAL(started()),p_segyWorker,SLOT(Converting()));
+    connect(p_segyWorker,SIGNAL(finished()),p_myThread,SLOT(quit()));
     connect(p_segyWorker,SIGNAL(finished()),this,SLOT(convertingEnded()));
     connect(p_segyWorker,SIGNAL(finished()),p_segyWorker,SLOT(deleteLater()));
     connect(p_myThread,SIGNAL(finished()),p_myThread,SLOT(deleteLater()));
@@ -409,59 +403,17 @@ void SegdConverterWindow::runSegy()
     connect(ui->actionStop,SIGNAL(triggered(bool)),p_segyWorker,SLOT(stopRunning()));
     connect(ui->actionStop,SIGNAL(triggered(bool)),this,SLOT(disableStop(bool)));
     p_myThread->start();
-
-}
-
-
-//конвертация в файл segy в режиме онлайн
-void SegdConverterWindow::runSegyOnline()
-{
-    SegyWorker *p_segyWorker = new SegyWorkerOnline(&running,attr_model->getAttributes());
-    connect(p_segyWorker,SIGNAL(sendSomeError(QString)),this,SLOT(receiveSomeError(QString)));
-    p_segyWorker->readSettings();
-    p_segyWorker->setSegdPath(ui->segdLineEdit->text());
-    p_segyWorker->setOutPath(ui->outFileLineEdit->text());
-    p_segyWorker->setAttrFilePath(ui->attrFileLineEdit->text());
-    p_segyWorker->setMode(ui->segdLabel->text()=="Директория Segd");
-    p_segyWorker->moveToThread(p_myThread);
-    if (ui->actionOpenRPS->isChecked())
-    {
-        p_segyWorker->readRps(rpsFile);
-    }
-    if (ui->actionOpenSPS->isChecked())
-    {
-        p_segyWorker->readSps(spsFile);
-    }
-    p_segyWorker->setUseExternalXps(false);
-    if (ui->actionAuxes->isEnabled())
-    {
-        setViewAuxesDialog(p_segyWorker);
-    }
-    ui->logTextEdit->append("Начало конвертации");
-    connect(p_myThread,SIGNAL(started()),p_segyWorker,SLOT(Converting()));
-    connect(p_segyWorker,SIGNAL(finished()),p_myThread,SLOT(quit()));
-    connect(p_segyWorker,SIGNAL(finished()),this,SLOT(convertingEnded()));
-    connect(p_segyWorker,SIGNAL(finished()),p_segyWorker,SLOT(deleteLater()));
-    connect(p_segyWorker,SIGNAL(sendInfoMessage(QString,QColor)),this,SLOT(recieveInfoMessage(QString,QColor)));
-    connect(p_segyWorker,SIGNAL(attributesCounted()),attr_model,SIGNAL(layoutChanged()));
-    connect(p_myThread,SIGNAL(finished()),p_myThread,SLOT(deleteLater()));
-    connect(ui->actionStop,SIGNAL(triggered(bool)),p_segyWorker,SLOT(stopRunning()),Qt::DirectConnection);
-    connect(ui->actionStop,SIGNAL(triggered(bool)),this,SLOT(disableStop(bool)));
-    p_myThread->start();
-
 }
 //конвертация в файл cst
-
 void SegdConverterWindow::runCst()
 {
+    running = true;
     CstWorker *p_cstWorker = new CstWorker(&running,attr_model->getAttributes());
-    connect(p_cstWorker,SIGNAL(sendSomeError(QString)),this,SLOT(receiveSomeError(QString)));
-    p_cstWorker->readSettings();
+    p_cstWorker->moveToThread(p_myThread);
+    connect(p_cstWorker,SIGNAL(sendInfoMessage(QString,QColor)),this,SLOT(recieveInfoMessage(QString,QColor)));
     p_cstWorker->setSegdPath(ui->segdLineEdit->text());
     p_cstWorker->setOutPath(ui->outFileLineEdit->text());
-    p_cstWorker->setAttrFilePath(ui->attrFileLineEdit->text());
-    p_cstWorker->setMode(ui->segdLabel->text()=="Директория Segd");
-    p_cstWorker->moveToThread(p_myThread);
+    p_cstWorker->readSettings();
     if (ui->actionOpenRPS->isChecked()) {
         p_cstWorker->readRps(rpsFile);
     }
@@ -470,61 +422,20 @@ void SegdConverterWindow::runCst()
     }
     if (ui->actionOpenXPS->isChecked())
     {
-        p_cstWorker->setUseExternalXps(true);
         p_cstWorker->setXpsPath(xpsFile);
     }
-    else
-    {
-        p_cstWorker->setUseExternalXps(false);
-    }
-    if (ui->actionAuxes->isEnabled())
-    {
-        setViewAuxesDialog(p_cstWorker);
-    }
-    ui->logTextEdit->append("Начало конвертации");
-    connect(p_myThread,SIGNAL(started()),p_cstWorker,SLOT(Converting()));
-    connect(p_cstWorker,SIGNAL(finished()),p_myThread,SLOT(quit()));
-    connect(p_cstWorker,SIGNAL(finished()),this,SLOT(convertingEnded()));
-    connect(p_cstWorker,SIGNAL(finished()),p_cstWorker,SLOT(deleteLater()));
-    connect(p_cstWorker,SIGNAL(sendInfoMessage(QString,QColor)),this,SLOT(recieveInfoMessage(QString,QColor)));
-    connect(p_cstWorker,SIGNAL(attributesCounted()),attr_model,SIGNAL(layoutChanged()));
-    connect(p_myThread,SIGNAL(finished()),p_myThread,SLOT(deleteLater()));
-    connect(ui->actionStop,SIGNAL(triggered(bool)),p_cstWorker,SLOT(stopRunning()),Qt::DirectConnection);
-    connect(ui->actionStop,SIGNAL(triggered(bool)),this,SLOT(disableStop(bool)));
-    p_myThread->start();
-}
-
-void SegdConverterWindow::runCstOnline()
-{
-    CstWorkerOnline *p_cstWorker = new CstWorkerOnline(&running,attr_model->getAttributes());
-    connect(p_cstWorker,SIGNAL(sendSomeError(QString)),this,SLOT(receiveSomeError(QString)));
-    p_cstWorker->readSettings();
-    p_cstWorker->setSegdPath(ui->segdLineEdit->text());
-    p_cstWorker->setOutPath(ui->outFileLineEdit->text());
-    p_cstWorker->setAttrFilePath(ui->attrFileLineEdit->text());
     p_cstWorker->setMode(ui->segdLabel->text()=="Директория Segd");
-    p_cstWorker->moveToThread(p_myThread);
-    if (ui->actionOpenRPS->isChecked())    {
-        p_cstWorker->readRps(rpsFile);
-    }
-    if (ui->actionOpenSPS->isChecked()) {
-        p_cstWorker->readSps(spsFile);
-    }
-    p_cstWorker->setUseExternalXps(false);
-    if (ui->actionAuxes->isEnabled())
-    {
+    if (ui->actionAuxes->isEnabled())  {
         setViewAuxesDialog(p_cstWorker);
     }
-    ui->logTextEdit->append("Начало конвертации");
     connect(p_myThread,SIGNAL(started()),p_cstWorker,SLOT(Converting()));
     connect(p_cstWorker,SIGNAL(finished()),p_myThread,SLOT(quit()));
     connect(p_cstWorker,SIGNAL(finished()),this,SLOT(convertingEnded()));
     connect(p_cstWorker,SIGNAL(finished()),p_cstWorker,SLOT(deleteLater()));
-    connect(p_cstWorker,SIGNAL(sendInfoMessage(QString,QColor)),this,SLOT(recieveInfoMessage(QString,QColor)));
-    connect(p_cstWorker,SIGNAL(attributesCounted()),attr_model,SIGNAL(layoutChanged()));
     connect(p_myThread,SIGNAL(finished()),p_myThread,SLOT(deleteLater()));
-    connect(ui->actionStop,SIGNAL(triggered(bool)),p_cstWorker,SLOT(stopRunning()),Qt::DirectConnection);
+    connect(p_cstWorker,SIGNAL(attributesCounted()),attr_model,SIGNAL(layoutChanged()));
     connect(ui->actionStop,SIGNAL(triggered(bool)),this,SLOT(disableStop(bool)));
+    connect(ui->actionStop,SIGNAL(triggered(bool)),p_cstWorker,SLOT(stopRunning()));
     p_myThread->start();
 }
 
