@@ -167,6 +167,7 @@
     <addaction name="actionOpenSegd"/>
     <addaction name="actionSaveSeisData"/>
     <addaction name="actionSaveAttributes"/>
+    <addaction name="actionSaveAsAttributes"/>
     <addaction name="separator"/>
     <addaction name="actionOpenRPS"/>
     <addaction name="actionOpenSPS"/>
@@ -206,6 +207,7 @@
    <addaction name="actionOpenSegd"/>
    <addaction name="actionSaveSeisData"/>
    <addaction name="actionSaveAttributes"/>
+   <addaction name="actionSaveAsAttributes"/>
    <addaction name="separator"/>
    <addaction name="actionOpenRPS"/>
    <addaction name="actionOpenSPS"/>
@@ -214,8 +216,12 @@
    <addaction name="actionBinPreferences"/>
    <addaction name="actionAttributesPreferences"/>
    <addaction name="actionConvertParameters"/>
+   <addaction name="separator"/>
    <addaction name="actionAttributeTable"/>
+   <addaction name="actionFilter"/>
+   <addaction name="separator"/>
    <addaction name="actionAuxes"/>
+   <addaction name="actionAuxesDisplay"/>
    <addaction name="separator"/>
    <addaction name="actionRun"/>
    <addaction name="actionStop"/>
@@ -235,7 +241,7 @@
   <action name="actionSaveSeisData">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/icons/imgs/funneling-data.png</normaloff>:/icons/imgs/funneling-data.png</iconset>
+     <normaloff>:/icons/imgs/save.png</normaloff>:/icons/imgs/save.png</iconset>
    </property>
    <property name="text">
     <string>Выбрать файл CST</string>
@@ -244,7 +250,7 @@
   <action name="actionSaveAttributes">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/icons/imgs/file.png</normaloff>:/icons/imgs/file.png</iconset>
+     <normaloff>:/icons/imgs/xlsx.png</normaloff>:/icons/imgs/xlsx.png</iconset>
    </property>
    <property name="text">
     <string>Выбрать файл атрибутов</string>
@@ -383,6 +389,42 @@
    </property>
    <property name="text">
     <string>Настройки служебных каналов</string>
+   </property>
+  </action>
+  <action name="actionSaveAsAttributes">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/imgs/xlsxSaveAs.png</normaloff>:/icons/imgs/xlsxSaveAs.png</iconset>
+   </property>
+   <property name="text">
+    <string>Сохранить атрибуты как...</string>
+   </property>
+   <property name="toolTip">
+    <string>Сохранить атрибуты как...</string>
+   </property>
+  </action>
+  <action name="actionAuxesDisplay">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/imgs/waveDisplay.png</normaloff>:/icons/imgs/waveDisplay.png</iconset>
+   </property>
+   <property name="text">
+    <string>Служебные каналы</string>
+   </property>
+   <property name="toolTip">
+    <string>Отобразить окно служебных каналов</string>
+   </property>
+  </action>
+  <action name="actionFilter">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/imgs/filter.png</normaloff>:/icons/imgs/filter.png</iconset>
+   </property>
+   <property name="text">
+    <string>Фильтрация атрибутов</string>
+   </property>
+   <property name="toolTip">
+    <string>Отобразить параметры фильтрации атрибутов</string>
    </property>
   </action>
  </widget>

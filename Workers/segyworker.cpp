@@ -28,7 +28,6 @@ void SegyWorker::Converting()
     if (online) {
         numOfFilesInDir--;
     }
-
     while (fileForConvertingNum<numOfFilesInDir && *p_running)
     {
         if (convertOneFile(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath()))
@@ -40,16 +39,16 @@ void SegyWorker::Converting()
         else {
             messaging(QString (" Ошибка чтения файла %1. Переход к следующему файлу").arg(segdFilesInDir.value(fileForConvertingNum).fileName()),Qt::red);
         }
-
         if (limitMaxFiles && fileCount >= maxFilesValue)
         {
-            fileCount=0;
+            /*fileCount=0;
             QString newPath = paths.value("OutPath");
             newPath.insert(newPath.lastIndexOf(QDir::separator())+1,'_');
             paths.insert("OutPath",QString(newPath));
             newPath = paths.value("AuxPath");
             newPath.insert(newPath.lastIndexOf(QDir::separator())+1,'_');
-            paths.insert("AuxPath",QString(newPath));
+            paths.insert("AuxPath",QString(newPath));*/
+            maxNumOfFilesReached();
             writeFileHeaders = true;
         }
         if (online){
@@ -245,6 +244,7 @@ void SegyWorker::segdDirChanged(QString string)
         else {
             messaging(QString(" Превышено время ожидания файла ").append(segdFilesInDir.value(fileForConvertingNum).fileName()),Qt::red);
         }
+
         if (*p_running)
         {
            segdFilesInDir = segdDir.entryInfoList(filter,QDir::Files,QDir::Name);
@@ -253,6 +253,11 @@ void SegyWorker::segdDirChanged(QString string)
         {
             stopRunning();
             break;
+        }
+        if (limitMaxFiles && fileCount >= maxFilesValue)
+        {
+            maxNumOfFilesReached();
+            writeFileHeaders=true;
         }
     }
 }

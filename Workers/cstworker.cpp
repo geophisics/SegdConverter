@@ -42,13 +42,7 @@ void CstWorker::Converting()
         }
         if (limitMaxFiles && fileCount >= maxFilesValue)
         {
-            fileCount=0;
-            QString newPath = paths.value("OutPath");
-            newPath.insert(newPath.lastIndexOf(QDir::separator())+1,'_');
-            paths.insert("OutPath",QString(newPath));
-            newPath = paths.value("AuxPath");
-            newPath.insert(newPath.lastIndexOf(QDir::separator())+1,'_');
-            paths.insert("AuxPath",QString(newPath));
+            maxNumOfFilesReached();
         }
         if (online){
             segdFilesInDir = segdDir.entryInfoList(QStringList()<<"*.segd",QDir::Files,QDir::Name);
@@ -244,6 +238,10 @@ void CstWorker::segdDirChanged(QString string)
            {
                stopRunning();
                break;
+           }
+           if (limitMaxFiles && fileCount >= maxFilesValue)
+           {
+               maxNumOfFilesReached();
            }
        }
 }

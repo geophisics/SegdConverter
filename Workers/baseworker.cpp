@@ -21,7 +21,6 @@ BaseWorker::BaseWorker(volatile bool *running, CountedAttributes *attr):p_runnin
 void BaseWorker::setSegdPath(const QString &path)
 {
     paths.insert("SegdPath",QDir::toNativeSeparators(path));
-    //segdPath = path;
 }
 
 // устанавливаем куда будем писать выходной файл
@@ -177,17 +176,11 @@ void BaseWorker::readSettings()
     {
         settings->beginGroup("/VibAuxSettings");
         akf.traceNb =settings->value("/AkfTrace",2).toUInt();
-        //akfTraceNb = settings->value("/AkfTrace",2).toUInt();
         akf.maxTime = settings->value("/PeakTime",500).toUInt();
-        //akfMaxTime = settings->value("/PeakTime",500).toUInt();
         akf.frqLvl = settings->value("/FreqLvl",-50).toInt();
-        //akfFrqLvl = settings->value("/FreqLvl",-50).toInt();
         akf.minFrq = settings->value("/MinFreq",7).toUInt();
-        //akfMinFrq = settings->value("/MinFreq",7).toUInt();
         akf.maxFrq = settings->value("/MaxFreq",100).toUInt();
-        //akfMaxFrq =settings->value("/MaxFreq",100).toUInt();
         akf.maxAmpl = settings->value("/AkfMaxAmpl",0.0).toDouble();
-        //akfMaxAmpl = settings->value("/AkfMaxAmpl",0.0).toDouble();
         settings->endGroup();
 
         settings->beginGroup("/ExplAuxSettings");
@@ -211,6 +204,7 @@ void BaseWorker::readSettings()
         settings->endGroup();
     }
 }
+
 
 
 
@@ -864,6 +858,17 @@ void BaseWorker::messaging(const QString &message, const QColor &color)
 {
     logStream <<QDateTime::currentDateTime().toString("ddd dd.MMMM.yyyy hh:mm:ss").append(message)<<"\n";
     emit sendInfoMessage(QDateTime::currentDateTime().toString("hh:mm:ss").append(message),color);
+}
+
+void BaseWorker::maxNumOfFilesReached()
+{
+    fileCount=0;
+    QString newPath = paths.value("OutPath");
+    newPath.insert(newPath.lastIndexOf(QDir::separator())+1,'_');
+    paths.insert("OutPath",QString(newPath));
+    newPath = paths.value("AuxPath");
+    newPath.insert(newPath.lastIndexOf(QDir::separator())+1,'_');
+    paths.insert("AuxPath",QString(newPath));
 }
 
 TimeBreakSettings::TimeBreakSettings()

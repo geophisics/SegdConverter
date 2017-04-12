@@ -6,9 +6,6 @@
 #include "tableviewdialog.h"
 #include <QDir>
 #include <QFileDialog>
-//#include <Segd/segdfile.h>
-//#include <Cst/cstfile.h>
-//#include <Segy/segyfile.h>
 #include <QHeaderView>
 #include "QMessageBox"
 #include "auxesdialog.h"
@@ -23,17 +20,19 @@ SegdConverterWindow::SegdConverterWindow(QWidget *parent) :
     ui->setupUi(this);
     settings = new QSettings(QCoreApplication::applicationDirPath()+QDir::separator()+"config.ini",QSettings::IniFormat,this);
     ui->actionStop->setEnabled(false);
+    ui->actionAuxesDisplay->setEnabled(false);
     readSettings();
     readConvertParamsSettings();
-//    qRegisterMetaType<FfidData>();
-//    qRegisterMetaType<SeisAttributes>();
     attr_model=new AttributesModel(this);
-
-    ui->attributesTableView->setModel(attr_model);
-   // ui->attributesTableView->horizontalHeader()->setVisible(true);
-   // ui->attributesTableView->verticalHeader()->setVisible(true);
-    attr_model->setHeaders();
-    //ui->attributesTableView->horizontalHeader()->setSectionsMovable(true);
+    attr_model->setHeaders(settings);
+    attr_sortFilterModel = new AttributesSortFilterProxyModel(this);
+    attr_sortFilterModel->setSourceModel(attr_model);
+    attr_sortFilterModel->setVisibleColumns(settings);
+    ui->attributesTableView->setModel(attr_sortFilterModel);
+    ui->attributesTableView->setSortingEnabled(true);
+    connect(attr_model,SIGNAL(modelReset()),attr_sortFilterModel,SLOT(resetVisibleColumns()));
+    connect(attr_model,SIGNAL(modelReset()),this,SLOT(resetTableViewPositions()));
+    connect(ui->actionSaveAsAttributes,SIGNAL(triggered(bool)),this,SLOT(saveAsAttributesSlot()));
     connect(ui->actionOpenSegd,SIGNAL(triggered(bool)),this,SLOT(openDataSlot()));
     connect(ui->actionSaveSeisData,SIGNAL(triggered(bool)),this,SLOT(saveDataSlot()));
     connect(ui->actionSaveAttributes,SIGNAL(triggered(bool)),this,SLOT(saveAttributesFileSlot()));
@@ -61,7 +60,7 @@ void SegdConverterWindow::openConvertParametersDialog()
     if (dialogResult==1)
     {
         readConvertParamsSettings();
-        attr_model->setHeaders();
+        attr_model->setHeaders(settings);
     }
 }
 //вызываем диалог параметров бинирования
@@ -77,18 +76,22 @@ void SegdConverterWindow::openWindowsParametersDialog()
     int dialogResult = dialog->exec();
     if (dialogResult==1)
     {
-        attr_model->setHeaders();
+        attr_model->setHeaders(settings);
     }
 }
 void SegdConverterWindow::openTableViewParametersDialog()
 {
-    TableViewDialog *dialog = new TableViewDialog();
-    connect(dialog,SIGNAL(sendTableColumns(QStringList)),this,SLOT(setColumnsForView(QStringList)));
+    TableViewDialog *dialog = new TableViewDialog(attr_model->getHeaders(),attr_sortFilterModel->getVisibleColumns());
+    connect(dialog,SIGNAL(accepted()),attr_sortFilterModel,SLOT(invalidate()));
+    connect(dialog,SIGNAL(accepted()),this,SLOT(resetTableViewPositions()));
+
+    //connect(dialog,SIGNAL(sendTableColumns(QStringList)),this,SLOT(setColumnsForView(QStringList)));
     dialog->exec();
 }
 //загружаем настройки
 void SegdConverterWindow::readSettings()
 {
+
     settings->beginGroup("/MainSettings");
     ui->segdLineEdit->setText(settings->value("/SegdPath","").toString());
     ui->outFileLineEdit->setText(settings->value("/OutFile","").toString());
@@ -98,7 +101,6 @@ void SegdConverterWindow::readSettings()
     settings->endGroup();
     settings->beginGroup("/ViewSettings");
     int size = settings->beginReadArray("/ColumnForView");
-    //ui->attributesTableView->setColumnCount(size);
     int i=0;
     for ( ;i<size;i++)
     {
@@ -112,9 +114,8 @@ void SegdConverterWindow::readSettings()
     settings->beginGroup("/ConvertSettings");
     online = settings->value("/OnLine",false).toBool();
     settings->endGroup();
-    //ui->attributesTableView->setHorizontalHeaderLabels(AttributeColumns);
     ui->attributesTableView->horizontalHeader()->restoreState(MyArray);
-    //ui->attributesTableView->setHorizontalHeader();
+
 }
 
 //сохраняем настройки
@@ -125,18 +126,17 @@ void SegdConverterWindow::saveSettings()
     settings->setValue("/OutFile",ui->outFileLineEdit->text());
     settings->setValue("/AttrPath",ui->attrFileLineEdit->text());
     settings->setValue("/WorkDir",WorkDir);
-    /*settings->beginWriteArray("/columns");
-    for (int i=0; i< ui->attributesTableView->columnCount();++i)
+    settings->beginWriteArray("/VisibleColumns");
+    for (int i=0; i< attr_sortFilterModel->getVisibleColumns()->count();++i)
     {
         settings->setArrayIndex(i);
-        settings->setValue("/columnNb",ui->attributesTableView->visualColumn(i));
+        settings->setValue("/columnNb",attr_sortFilterModel->getVisibleColumns()->values().value(i));
     }
-    settings->endArray();*/
+    settings->endArray();
     QByteArray MyArray = ui->attributesTableView->horizontalHeader()->saveState();
     settings->setValue("/TableState",MyArray);
     //ui->attributesTableView->columnViewportPosition()
     settings->endGroup();
-
 }
 
 //читаем настройки конвертирования
@@ -283,6 +283,17 @@ void SegdConverterWindow::saveAttributesFileSlot()
     }
 }
 
+void SegdConverterWindow::saveAsAttributesSlot()
+{
+    QString str = ui->attrFileLineEdit->text().isEmpty() ? WorkDir : QFileInfo(ui->attrFileLineEdit->text()).path() ;
+    str = QFileDialog::getSaveFileName(this,"Выберите файл *.xlsx для сохранения",str,"Excel files(*.xlsx *.XLSX)");
+    if (!str.isEmpty())
+    {
+        saveAttributes(str);
+        //WorkDir = QFileInfo(str).absolutePath();
+    }
+}
+
 void SegdConverterWindow::runActionSlot()
 {
 
@@ -294,38 +305,33 @@ void SegdConverterWindow::runActionSlot()
 
     if (ui->outFileLabel->text()=="Файл CST")
     {
-        /*if (online)
-        {
-            runCstOnline();
-        }
-        else
-        {*/
-            runCst();
-   //     }
+        CstWorker *p_cstWorker = new CstWorker(&running,attr_model->getAttributes());
+        startThread(p_cstWorker);
     }
     else
     {
- /*       if (online)
-        {
-            runSegyOnline();
-        }*/
-        //else
-       // {
-            runSegy();
-       // }
+        SegyWorker *p_segyWorker = new SegyWorker(&running,attr_model->getAttributes());
+        startThread(p_segyWorker);
     }
 }
 void SegdConverterWindow::disableStop(bool disable)
 {
     Q_UNUSED(disable);
     running = false;
- //   BaseWorker.stopRunning();
     ui->actionStop->setEnabled(false);
 }
 
 void SegdConverterWindow::convertingEnded()
 {
-     attr_model->saveDataInXlsx(ui->attrFileLineEdit->text());
+//     if (attr_model->saveDataInXlsx(ui->attrFileLineEdit->text()))
+//     {
+//         QMessageBox::information(this,"Сохранено",QString("Рассчитанные атрибуты успешно сохранены в файл\n").append(ui->attrFileLineEdit->text()));
+//     }
+//     else
+//     {
+//         QMessageBox::critical(this,"Ошибка сохранения",QString("Ошибка сохранения атрибутов в файл\n").append(ui->attrFileLineEdit->text()));
+//     }
+     saveAttributes(ui->attrFileLineEdit->text());
      ui->actionRun->setEnabled(true);
      ui->actionExit->setEnabled(true);
      ui->actionStop->setEnabled(false);
@@ -370,6 +376,39 @@ void SegdConverterWindow::recieveInfoMessage(const QString &message, const QColo
     AttributeColumns = columns;
 }*/
 
+void SegdConverterWindow::startThread(BaseWorker *worker)
+{
+    running = true;
+    worker->moveToThread(p_myThread);
+    connect(worker,SIGNAL(sendInfoMessage(QString,QColor)),this,SLOT(recieveInfoMessage(QString,QColor)));
+    worker->setSegdPath(ui->segdLineEdit->text());
+    worker->setOutPath(ui->outFileLineEdit->text());
+    worker->readSettings();
+    if (ui->actionOpenRPS->isChecked()) {
+        worker->readRps(rpsFile);
+    }
+    if (ui->actionOpenSPS->isChecked()) {
+        worker->readSps(spsFile);
+    }
+    if (ui->actionOpenXPS->isChecked()) {
+        worker->setXpsPath(xpsFile);
+    }
+    worker->setMode(ui->segdLabel->text()=="Директория Segd");
+    if (ui->actionAuxes->isEnabled()) {
+        setViewAuxesDialog(worker);
+    }
+    connect(p_myThread,SIGNAL(started()),worker,SLOT(Converting()));
+    connect(worker,SIGNAL(finished()),p_myThread,SLOT(quit()));
+    connect(worker,SIGNAL(finished()),this,SLOT(convertingEnded()));
+    connect(worker,SIGNAL(finished()),worker,SLOT(deleteLater()));
+    connect(p_myThread,SIGNAL(finished()),p_myThread,SLOT(deleteLater()));
+    connect(worker,SIGNAL(attributesCounted()),attr_model,SIGNAL(layoutChanged()));
+    connect(attr_model,SIGNAL(layoutChanged()),ui->attributesTableView,SLOT(scrollToBottom()));
+    connect(ui->actionStop,SIGNAL(triggered(bool)),worker,SLOT(stopRunning()));
+    connect(ui->actionStop,SIGNAL(triggered(bool)),this,SLOT(disableStop(bool)));
+    p_myThread->start();
+}
+
 
 //конвертация в файл segy
 void SegdConverterWindow::runSegy()
@@ -404,6 +443,7 @@ void SegdConverterWindow::runSegy()
     connect(ui->actionStop,SIGNAL(triggered(bool)),this,SLOT(disableStop(bool)));
     p_myThread->start();
 }
+
 //конвертация в файл cst
 void SegdConverterWindow::runCst()
 {
@@ -445,12 +485,23 @@ void SegdConverterWindow::setViewAuxesDialog(BaseWorker *worker)
     {
         viewDialog = new AuxViewDialog(this);
     }
+    connect (ui->actionAuxesDisplay,SIGNAL(triggered(bool)),viewDialog.data(),SLOT(show()));
     connect (worker,SIGNAL(sendVectors(QVector<QPointF>*,bool,QVector<QPointF>*,bool,int)),viewDialog,SLOT(receiveVectors(QVector<QPointF>*,bool,QVector<QPointF>*,bool,int)));
     connect (worker,SIGNAL(sendExplAuxes(QVector<QPointF>*,bool,QVector<QPointF>*,bool,QVector<QPointF>*,bool)),viewDialog,SLOT(receiveExplAuxes(QVector<QPointF>*,bool,QVector<QPointF>*,bool,QVector<QPointF>*,bool)));
     viewDialog.data()->show();
-
+    ui->actionAuxesDisplay->setEnabled(true);
 }
-
+void SegdConverterWindow::saveAttributes(const QString &path)
+{
+    if (attr_model->saveDataInXlsx(path))
+    {
+        QMessageBox::information(this,"Сохранено",QString("Рассчитанные атрибуты успешно сохранены в файл\n").append(ui->attrFileLineEdit->text()));
+    }
+    else
+    {
+        QMessageBox::critical(this,"Ошибка сохранения",QString("Ошибка сохранения атрибутов в файл\n").append(ui->attrFileLineEdit->text()));
+    }
+}
 /*void SegdConverterWindow::receiveFfidDataSlot(const FfidData &data)
 {
      ui->attributesTableView->setRowCount(ui->attributesTableView->rowCount()+1);
@@ -606,6 +657,21 @@ void SegdConverterWindow::closeEvent(QCloseEvent *event)
     {
         QMessageBox::warning(0,"Дождитесь завершения","Дождитесь завершения процедуры конвертации",QMessageBox::Ok);
         event->ignore();
+        return;
+    }
+    if (!attr_model->dataStatus())
+    {
+        //QMessageBox::warning(this,"Рассчитанные атрибуты не сохранены")
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::question(this,"Атрибуты","Рассчитанные атрибуты не были сохранены\nПродолжить?",QMessageBox::Yes|QMessageBox::No|QMessageBox::Save);
+        if (reply==QMessageBox::No)
+        {
+            event->ignore();
+        }
+        if (reply==QMessageBox::Save)
+        {
+            saveAsAttributesSlot();
+        }
     }
 }
 void SegdConverterWindow::aboutQtSlot()
@@ -626,9 +692,28 @@ void SegdConverterWindow::aboutSlot()
 
 }
 
+void SegdConverterWindow::resetTableViewPositions()
+{
+    /*int j = ui->attributesTableView->horizontalHeader()->count();
+    for (int i=0; i<j;i++)
+    {
+        ui->attributesTableView->horizontalHeader()->setOffsetToSectionPosition(i);
+    }*/
+    for (int i=0 ; i<ui->attributesTableView->horizontalHeader()->count();i++)
+    {
+        ui->attributesTableView->horizontalHeader()->moveSection(ui->attributesTableView->horizontalHeader()->visualIndex(i),i);
+    }
+
+}
+
 // открывыем настройки служебных каналов
 void SegdConverterWindow::openAuxParametersDialog()
 {
     AuxesDialog *dialog = new AuxesDialog(this);
     dialog->exec();
+}
+
+void SegdConverterWindow::slot1()
+{
+    qDebug()<<"ModelChanged";
 }

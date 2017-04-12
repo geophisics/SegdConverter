@@ -167,7 +167,8 @@ protected:
 
     //для отправки ошибок/информационных сообщений
     void messaging(const QString &message,const QColor &color = Qt::black);
-
+    //при достижении максимального числа файлов создаем новые
+    void maxNumOfFilesReached();
 signals:
     void finished();
     void sendInfoMessage(QString, QColor);

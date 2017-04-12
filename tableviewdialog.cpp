@@ -1,9 +1,8 @@
 #include "tableviewdialog.h"
 #include "ui_tableviewdialog.h"
-#include "QSettings"
-#include "QDir"
 #include "QCheckBox"
-TableViewDialog::TableViewDialog(QWidget *parent) :
+#include <QDebug>
+/*TableViewDialog::TableViewDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::TableViewDialog)
 {
@@ -29,14 +28,41 @@ TableViewDialog::TableViewDialog(QWidget *parent) :
     setCheckedRows(rowsNames);
     connect(ui->buttonBox,SIGNAL(accepted()),this,SLOT(okClicked()));
     ui->tableWidget->setTabKeyNavigation(false);
-}
+}*/
+TableViewDialog::TableViewDialog(QStringList *rows, QSet<int> *checked, QWidget *parent):
+    QDialog(parent),
+    ui(new Ui::TableViewDialog)
+{
+    ui->setupUi(this);
+    this->setAttribute(Qt::WA_DeleteOnClose);
+    ui->tableWidget->setColumnCount(1);
+    ui->tableWidget->horizontalHeader()->setVisible(false);
+    ui->tableWidget->setRowCount(rows->count());
+    ui->tableWidget->setVerticalHeaderLabels(*rows);
+    checkedRows = checked;
+    QCheckBox *pCheckBox ;
+    for (int i=0; i<ui->tableWidget->rowCount();++i)
+    {
+        pCheckBox = new QCheckBox();
+        ui->tableWidget->setCellWidget(i,0,pCheckBox);
+        ui->tableWidget->cellWidget(i,0)->setStyleSheet("margin-left:50%;margin-right:50%");
+        if (checkedRows->contains(i)) {
+            pCheckBox->setChecked(true);
+        }
 
+    }
+    //this->geometry().setSize(this->sizeHint());
+    //this->setMaximumHeight(ui->tableWidget->rowCount()*30+40);
+    connect(ui->selectAllPushButton,SIGNAL(clicked(bool)),this,SLOT(selectAllSlot()));
+    connect(ui->diselectAllPushButton,SIGNAL(clicked(bool)),this,SLOT(diselectAllSlot()));
+    connect(ui->buttonBox,SIGNAL(accepted()),this,SLOT(okClicked()));
+}
 TableViewDialog::~TableViewDialog()
 {
     delete ui;
 }
 
-QStringList TableViewDialog::readSettings()
+/*QStringList TableViewDialog::readSettings()
 {
     settings->beginGroup("/WindowsSettings");
     QStringList rowsNames;
@@ -87,26 +113,42 @@ QStringList TableViewDialog::readSettings()
     settings->endGroup();
     return rowsNames;
 
-}
+}*/
 
 void TableViewDialog::okClicked()
 {
-    QStringList tableForView;
+    checkedRows->clear();
     QCheckBox *pCheckBox;
     for (int i=0; i<ui->tableWidget->rowCount();++i)
     {
         pCheckBox = qobject_cast<QCheckBox*> (ui->tableWidget->cellWidget(i,0));
         if (pCheckBox->isChecked())
         {
-            tableForView.append(ui->tableWidget->verticalHeaderItem(i)->text());
+            checkedRows->insert(i);
         }
     }
-    emit sendTableColumns(tableForView);
-    saveSettings(tableForView);
     accept();
 }
+void TableViewDialog::selectAllSlot()
+{
+    QCheckBox *pCheckBox;
+    for (int i=0; i<ui->tableWidget->rowCount();++i)
+    {
+        pCheckBox = qobject_cast<QCheckBox*> (ui->tableWidget->cellWidget(i,0));
+        pCheckBox->setChecked(true);
+    }
+}
+void TableViewDialog::diselectAllSlot()
+{
+    QCheckBox *pCheckBox;
+    for (int i=0; i<ui->tableWidget->rowCount();++i)
+    {
+        pCheckBox = qobject_cast<QCheckBox*> (ui->tableWidget->cellWidget(i,0));
+        pCheckBox->setChecked(false);
+    }
+}
 
-void TableViewDialog::saveSettings(const QStringList checkedRows)
+/*void TableViewDialog::saveSettings(const QStringList checkedRows)
 {
     settings->beginGroup("ViewSettings");
     settings->beginWriteArray("/ColumnForView");
@@ -117,9 +159,9 @@ void TableViewDialog::saveSettings(const QStringList checkedRows)
     }
     settings->endArray();
     settings->endGroup();
-}
+}*/
 
-void TableViewDialog::setCheckedRows(QStringList rows)
+/*void TableViewDialog::setCheckedRows(QStringList rows)
 {
     settings->beginGroup("/ViewSettings");
     int size = settings->beginReadArray("/ColumnForView");
@@ -140,4 +182,4 @@ void TableViewDialog::setCheckedRows(QStringList rows)
     }
     settings->endArray();
     settings->endGroup();
-}
+}*/

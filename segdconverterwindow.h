@@ -35,6 +35,7 @@ private:
     QString spsFile, rpsFile, xpsFile;
     QPointer<AuxViewDialog> viewDialog;
     AttributesModel *attr_model;
+    AttributesSortFilterProxyModel *attr_sortFilterModel;
 
     volatile bool running;
 
@@ -54,6 +55,7 @@ private slots:
     void openDataSlot();
     void saveDataSlot();
     void saveAttributesFileSlot();
+    void saveAsAttributesSlot();
     void runActionSlot();
     void disableStop(bool disable);
     //void stopActionSlot();
@@ -69,14 +71,15 @@ private slots:
     void receiveSomeError(const QString &err);
     void aboutQtSlot();
     void aboutSlot();
-    //void slot1();
+    void resetTableViewPositions();
+    void slot1();
 
 private:
     void runSegy();
-    void runSegyOnline();
     void runCst();
-    void runCstOnline();
+    void startThread(BaseWorker *worker);
     void setViewAuxesDialog(BaseWorker *worker);
+    void saveAttributes(const QString &path);
 };
 
 #endif // SEGDCONVERTERWINDOW_H
