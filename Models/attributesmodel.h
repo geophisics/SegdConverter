@@ -23,6 +23,8 @@ public:
     QStringList* getHeaders();
     CountedAttributes* getAttributes();
     bool dataStatus();
+    float getMaxValueInColumn(const int &column);
+    float getMinValueInColumn(const int &column);
 
 private:
     //QSettings *settings;
@@ -31,24 +33,49 @@ private:
     QStringList headers;
     CountedAttributes attributes;
     bool dataSaved;
+
     //QVector<segdAttributes> attributes;
 public slots:
     void receiveFfidData();
     bool saveDataInXlsx(const QString &path);
+
 };
 
 class AttributesSortFilterProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
+
+
 public:
+    //friend void SegdConverterWindow::filtersEnabled(const bool &);
+    const float EPS = 0.00000000001;
     AttributesSortFilterProxyModel(QObject *parent =0);
     bool filterAcceptsColumn(int source_column, const QModelIndex &source_parent) const;
+    bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const;
     QSet<int>* getVisibleColumns();
     void setVisibleColumns(QSettings *settings);
+    AttributesRange getFirstFilterRange();
+    AttributesRange getSecondFilterRange();
+    AttributesRange getThirdFilterRange();
 private:
     QSet<int> visibleColumns;
+    int firstFilterColumn;
+    int secondFilterColumn;
+    int thirdFilterColumn;
+
+    AttributesRange firstRange;
+    AttributesRange secondRange;
+    AttributesRange thirdRange;
+
+    bool dataInRange(const float &f, const AttributesRange &range) const;
 public slots:
     void resetVisibleColumns();
+    void setFirstFilterColumn(const int &i);
+    void setSecondFilterColumn(const int &i);
+    void setThirdFilterColumn(const int &i);
+    void setFirstRange(const float &min,const float &max);
+    void setSecondRange(const float &min,const float &max);
+    void setThirdRange (const float &min,const float &max);
 
 };
 

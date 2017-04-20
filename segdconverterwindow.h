@@ -36,9 +36,10 @@ private:
     QPointer<AuxViewDialog> viewDialog;
     AttributesModel *attr_model;
     AttributesSortFilterProxyModel *attr_sortFilterModel;
-
     volatile bool running;
 
+
+    QSignalMapper *mapper;
 
 signals:
     void stopSignal();
@@ -62,17 +63,24 @@ private slots:
     void convertingEnded();
     void openAuxParametersDialog();
     void recieveInfoMessage(const QString &message,const QColor &color);
-   // void setColumnsForView (const QStringList &columns);
-   // void receiveFfidDataSlot (const FfidData &data);
-   // void receiveSeisAttributes(SeisAttributes *attr, const int &winNb);
-   // void receiveRelation(QString name, float value, bool correct);
-   //  void receiveAuxStatus (const bool &status);
-   //  void receiveTestStatus(const float &percent, const QColor &color);
+
+    void firstFilterComboItemChanged(const int &i);
+    void secondFilterComboItemChanged(const int &i);
+    void thirdFilterComboItemChanged(const int &i);
+
     void receiveSomeError(const QString &err);
     void aboutQtSlot();
     void aboutSlot();
     void resetTableViewPositions();
-    void slot1();
+
+    void slot1(const int &i);
+    void setColumnsForFiltering();
+
+    void firstRangeChanged();
+    void secondRangeChanged();
+    void thirdRangeChanged();
+    void filtersEnabled(const bool &b);
+     void enableSorting(const bool &b);
 
 private:
     void runSegy();
@@ -80,6 +88,8 @@ private:
     void startThread(BaseWorker *worker);
     void setViewAuxesDialog(BaseWorker *worker);
     void saveAttributes(const QString &path);
+    void setValidators();
+    void filtersConnecting();
 };
 
 #endif // SEGDCONVERTERWINDOW_H

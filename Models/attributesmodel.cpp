@@ -136,6 +136,31 @@ void AttributesModel::receiveFfidData(/*QVector<QVariant> *data*/)
 {
     emit layoutChanged();
 }
+float AttributesModel::getMaxValueInColumn(const int &column)
+{
+    float max = attributes.value(0).value(column).first.toFloat();
+    for (int i=1; i<attributes.count();++i)
+    {
+        if (max<attributes.value(i).value(column).first.toFloat())
+        {
+            max = attributes.value(i).value(column).first.toFloat();
+        }
+    }
+    return max;
+}
+float AttributesModel::getMinValueInColumn(const int &column)
+{
+    float min = attributes.value(0).value(column).first.toFloat();
+    for (int i=1; i<attributes.count();++i)
+    {
+        if (min > attributes.value(i).value(column).first.toFloat())
+        {
+            min = attributes.value(i).value(column).first.toFloat();
+        }
+    }
+    return min;
+}
+
 
 bool AttributesModel::saveDataInXlsx(const QString &path)
 {
@@ -175,28 +200,91 @@ bool AttributesModel::saveDataInXlsx(const QString &path)
     }
 }
 
+void AttributesSortFilterProxyModel::setFirstFilterColumn(const int &i)
+{
+    firstFilterColumn =i-1;
+}
+
+void AttributesSortFilterProxyModel::setSecondFilterColumn(const int &i)
+{
+    secondFilterColumn =i-1;
+}
+void AttributesSortFilterProxyModel::setThirdFilterColumn(const int &i)
+{
+    thirdFilterColumn =i-1;
+}
+
+void AttributesSortFilterProxyModel::setFirstRange(const float &min, const float &max)
+{
+    firstRange = qMakePair(min,max);
+    invalidateFilter();
+}
+
+void AttributesSortFilterProxyModel::setSecondRange(const float &min, const float &max)
+{
+    secondRange = qMakePair(min,max);
+    invalidateFilter();
+}
+void AttributesSortFilterProxyModel::setThirdRange(const float &min, const float &max)
+{
+    thirdRange = qMakePair(min,max);
+    invalidateFilter();
+}
 
 
 
 //--------------------------------------------------------------------------
 AttributesSortFilterProxyModel::AttributesSortFilterProxyModel(QObject *parent) :QSortFilterProxyModel(parent)
 {
-  /*  for (int i=0;i<3;i++)
-    {
-        visibleColumns.append(i);
-    }
-    visibleColumns.append(7);*/
+    firstFilterColumn = -1;
+    secondFilterColumn = -1;
+    thirdFilterColumn = -1;
 }
 
 bool AttributesSortFilterProxyModel::filterAcceptsColumn(int source_column, const QModelIndex &source_parent) const
 {
+    Q_UNUSED(source_parent);
     return visibleColumns.contains(source_column);
 }
+bool AttributesSortFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
+{
+    bool firstCondition=true;
+    bool secondCondition=true;
+    bool thirdCondition=true;
+    QModelIndex index;
+    qDebug()<<"First Filter"<<"Column "<<firstFilterColumn<<"Min "<<firstRange.first<<"Max "<<firstRange.second;
+    qDebug()<<"Second Filter"<<"Column "<<secondFilterColumn<<"Min "<<secondRange.first<<"Max "<<secondRange.second;
+    qDebug()<<"Third Filter"<<"Column "<<thirdFilterColumn<<"Min "<<thirdRange.first<<"Max "<<thirdRange.second;
+    if (firstFilterColumn>=0)
+    {
 
+        index = sourceModel()->index(source_row, firstFilterColumn, source_parent);
+        firstCondition = dataInRange(sourceModel()->data(index).toFloat(),firstRange);
+    }
+    if (secondFilterColumn>=0)
+    {
+
+        index = sourceModel()->index(source_row, secondFilterColumn, source_parent);
+        secondCondition = dataInRange(sourceModel()->data(index).toFloat(),secondRange);
+    }
+    if (thirdFilterColumn>=0)
+    {
+
+        index = sourceModel()->index(source_row, thirdFilterColumn, source_parent);
+        thirdCondition = dataInRange(sourceModel()->data(index).toFloat(),thirdRange);
+    }
+    return (firstCondition && secondCondition && thirdCondition);
+}
+
+bool AttributesSortFilterProxyModel::dataInRange(const float &f,const AttributesRange &range) const
+{
+    return (range.first-f <EPS && f-range.second < EPS);
+}
 QSet<int>* AttributesSortFilterProxyModel::getVisibleColumns()
 {
     return &visibleColumns;
 }
+
 
 void AttributesSortFilterProxyModel::setVisibleColumns(QSettings *settings)
 {
@@ -210,6 +298,22 @@ void AttributesSortFilterProxyModel::setVisibleColumns(QSettings *settings)
     settings->endArray();
     settings->endGroup();
 }
+
+AttributesRange AttributesSortFilterProxyModel::getFirstFilterRange()
+{
+    return firstRange;
+}
+
+AttributesRange AttributesSortFilterProxyModel::getSecondFilterRange()
+{
+    return secondRange;
+}
+
+AttributesRange AttributesSortFilterProxyModel::getThirdFilterRange()
+{
+    return thirdRange;
+}
+
 void AttributesSortFilterProxyModel::resetVisibleColumns()
 {
     visibleColumns.clear();

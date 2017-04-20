@@ -11,6 +11,7 @@
 #include "auxesdialog.h"
 #include "auxviewdialog.h"
 #include "SUB/general.h"
+#include <mydoublevalidator.h>
 
 
 SegdConverterWindow::SegdConverterWindow(QWidget *parent) :
@@ -20,6 +21,7 @@ SegdConverterWindow::SegdConverterWindow(QWidget *parent) :
     ui->setupUi(this);
     settings = new QSettings(QCoreApplication::applicationDirPath()+QDir::separator()+"config.ini",QSettings::IniFormat,this);
     ui->actionStop->setEnabled(false);
+    ui->filterGroupBox->setVisible(false);
     ui->actionAuxesDisplay->setEnabled(false);
     readSettings();
     readConvertParamsSettings();
@@ -29,9 +31,17 @@ SegdConverterWindow::SegdConverterWindow(QWidget *parent) :
     attr_sortFilterModel->setSourceModel(attr_model);
     attr_sortFilterModel->setVisibleColumns(settings);
     ui->attributesTableView->setModel(attr_sortFilterModel);
-    ui->attributesTableView->setSortingEnabled(true);
+    ui->attributesTableView->setSortingEnabled(false);
+
+    filtersConnecting();
+    setColumnsForFiltering();
+    setValidators();
+
+
+
     connect(attr_model,SIGNAL(modelReset()),attr_sortFilterModel,SLOT(resetVisibleColumns()));
     connect(attr_model,SIGNAL(modelReset()),this,SLOT(resetTableViewPositions()));
+    connect(attr_model,SIGNAL(modelReset()),this,SLOT(setColumnsForFiltering()));
     connect(ui->actionSaveAsAttributes,SIGNAL(triggered(bool)),this,SLOT(saveAsAttributesSlot()));
     connect(ui->actionOpenSegd,SIGNAL(triggered(bool)),this,SLOT(openDataSlot()));
     connect(ui->actionSaveSeisData,SIGNAL(triggered(bool)),this,SLOT(saveDataSlot()));
@@ -44,6 +54,9 @@ SegdConverterWindow::SegdConverterWindow(QWidget *parent) :
     connect(ui->actionAboutQt,SIGNAL(triggered(bool)),this,SLOT(aboutQtSlot()));
     connect(ui->actionAbout,SIGNAL(triggered(bool)),this,SLOT(aboutSlot()));
     connect(ui->actionAuxes,SIGNAL(triggered(bool)),this,SLOT(openAuxParametersDialog()));
+    //connect(ui->actionFilter,SIGNAL(triggered(bool)),ui->filterGroupBox,SLOT(setVisible(bool)));
+    connect(ui->actionFilter,SIGNAL(triggered(bool)),this,SLOT(filtersEnabled(bool)));
+    connect(ui->actionSorting,SIGNAL(triggered(bool)),this,SLOT(enableSorting(bool)));
 }
 
 SegdConverterWindow::~SegdConverterWindow()
@@ -502,6 +515,42 @@ void SegdConverterWindow::saveAttributes(const QString &path)
         QMessageBox::critical(this,"Ошибка сохранения",QString("Ошибка сохранения атрибутов в файл\n").append(ui->attrFileLineEdit->text()));
     }
 }
+
+void SegdConverterWindow::setValidators()
+{
+    MyDoubleValidator *doubleVal = new MyDoubleValidator(0,100000,10,ui->firstFilterFromLineEdit);
+    doubleVal->setNotation(QDoubleValidator::StandardNotation);
+    ui->firstFilterFromLineEdit->setValidator(doubleVal);
+    doubleVal = new MyDoubleValidator(0,100000,10,ui->firstFilterToLineEdit);
+    doubleVal->setNotation(QDoubleValidator::StandardNotation);
+    ui->firstFilterToLineEdit->setValidator(doubleVal);
+    doubleVal = new MyDoubleValidator(0,100000,10,ui->secondFilterFromLineEdit);
+    doubleVal->setNotation(QDoubleValidator::StandardNotation);
+    ui->secondFilterFromLineEdit->setValidator(doubleVal);
+    doubleVal = new MyDoubleValidator(0,100000,10,ui->secondFilterToLineEdit);
+    doubleVal->setNotation(QDoubleValidator::StandardNotation);
+    ui->secondFilterToLineEdit->setValidator(doubleVal);
+    doubleVal = new MyDoubleValidator(0,100000,10,ui->thirdFilterFromLineEdit);
+    doubleVal->setNotation(QDoubleValidator::StandardNotation);
+    ui->thirdFilterFromLineEdit->setValidator(doubleVal);
+    doubleVal = new MyDoubleValidator(0,100000,10,ui->thirdFilterToLineEdit);
+    doubleVal->setNotation(QDoubleValidator::StandardNotation);
+    ui->thirdFilterToLineEdit->setValidator(doubleVal);
+}
+
+void SegdConverterWindow::filtersConnecting()
+{
+    connect(ui->firstFilterFromLineEdit,SIGNAL(textChanged(QString)),this,SLOT(firstRangeChanged()));
+    connect(ui->firstFilterToLineEdit,SIGNAL(textChanged(QString)),this,SLOT(firstRangeChanged()));
+    connect(ui->secondFilterFromLineEdit,SIGNAL(textChanged(QString)),this,SLOT(secondRangeChanged()));
+    connect(ui->secondFilterToLineEdit,SIGNAL(textChanged(QString)),this,SLOT(secondRangeChanged()));
+    connect(ui->thirdFilterFromLineEdit,SIGNAL(textChanged(QString)),this,SLOT(thirdRangeChanged()));
+    connect(ui->thirdFilterToLineEdit,SIGNAL(textChanged(QString)),this,SLOT(thirdRangeChanged()));
+
+    connect (ui->firstFilterComboBox,SIGNAL(currentIndexChanged(int)),this,SLOT(firstFilterComboItemChanged(int)));
+    connect (ui->secondFilterComboBox,SIGNAL(currentIndexChanged(int)),this,SLOT(secondFilterComboItemChanged(int)));
+    connect (ui->thirdFilterComboBox,SIGNAL(currentIndexChanged(int)),this,SLOT(thirdFilterComboItemChanged(int)));
+}
 /*void SegdConverterWindow::receiveFfidDataSlot(const FfidData &data)
 {
      ui->attributesTableView->setRowCount(ui->attributesTableView->rowCount()+1);
@@ -713,7 +762,151 @@ void SegdConverterWindow::openAuxParametersDialog()
     dialog->exec();
 }
 
-void SegdConverterWindow::slot1()
+void SegdConverterWindow::slot1(const int &i)
 {
-    qDebug()<<"ModelChanged";
+    //qDebug()<<"ModelChanged";
+    QObject *obj=sender();
+    //QComboBox* combobox = qobject_cast<QComboBox*>(sender());
+    QMessageBox::warning(0,QString::number(i),obj->objectName());
 }
+
+void SegdConverterWindow::setColumnsForFiltering()
+{
+    ui->firstFilterComboBox->clear();
+    ui->secondFilterComboBox->clear();
+    ui->thirdFilterComboBox->clear();
+
+    ui->firstFilterComboBox->addItem("None");
+    ui->secondFilterComboBox->addItem("None");
+    ui->thirdFilterComboBox->addItem("None");
+
+    ui->firstFilterComboBox->addItems(*(attr_model->getHeaders()));
+    ui->secondFilterComboBox->addItems(*(attr_model->getHeaders()));
+    ui->thirdFilterComboBox->addItems(*(attr_model->getHeaders()));
+
+
+
+}
+
+void SegdConverterWindow::firstRangeChanged()
+{
+    float f1;
+    float f2;
+    f1=ui->firstFilterFromLineEdit->text().replace(locale().decimalPoint(),'.').toFloat();
+    f2=ui->firstFilterToLineEdit->text().replace(locale().decimalPoint(),'.').toFloat();
+    attr_sortFilterModel->setFirstRange(f1,f2);
+}
+
+void SegdConverterWindow::secondRangeChanged()
+{
+    float f1;
+    float f2;
+    f1=ui->secondFilterFromLineEdit->text().replace(locale().decimalPoint(),'.').toFloat();
+    f2=ui->secondFilterToLineEdit->text().replace(locale().decimalPoint(),'.').toFloat();
+    attr_sortFilterModel->setSecondRange(f1,f2);
+
+}
+
+void SegdConverterWindow::thirdRangeChanged()
+{
+    float f1;
+    float f2;
+    f1=ui->thirdFilterFromLineEdit->text().replace(locale().decimalPoint(),'.').toFloat();
+    f2=ui->thirdFilterToLineEdit->text().replace(locale().decimalPoint(),'.').toFloat();
+    attr_sortFilterModel->setThirdRange(f1,f2);
+
+}
+
+void SegdConverterWindow::filtersEnabled(const bool &b)
+{
+    if (b) {
+        ui->filterGroupBox->setVisible(true);
+        attr_sortFilterModel->setFirstFilterColumn(ui->firstFilterComboBox->currentIndex());
+        attr_sortFilterModel->setSecondFilterColumn(ui->secondFilterComboBox->currentIndex());
+        attr_sortFilterModel->setThirdFilterColumn(ui->thirdFilterComboBox->currentIndex());
+
+    }
+    else
+    {
+        ui->filterGroupBox->setVisible(false);
+        attr_sortFilterModel->setFirstFilterColumn(0);
+        attr_sortFilterModel->setSecondFilterColumn(0);
+        attr_sortFilterModel->setThirdFilterColumn(0);
+    }
+    attr_sortFilterModel->invalidate();
+}
+
+
+void SegdConverterWindow::enableSorting(const bool &b)
+{
+    ui->attributesTableView->setSortingEnabled(b);
+    if (!b)
+    {
+        attr_sortFilterModel->setSortRole(Qt::InitialSortOrderRole);
+        attr_sortFilterModel->invalidate();
+    }
+    else
+    {
+        attr_sortFilterModel->setSortRole(Qt::DisplayRole);
+    }
+}
+
+void SegdConverterWindow::firstFilterComboItemChanged(const int &i)
+{
+    attr_sortFilterModel->setFirstFilterColumn(i);
+    if (i==0)
+    {
+        attr_sortFilterModel->setFirstRange(0,100000);
+    }
+    else
+    {
+        attr_sortFilterModel->setFirstRange(attr_model->getMinValueInColumn(i-1),attr_model->getMaxValueInColumn(i-1));
+    }
+    ui->firstFilterFromLineEdit->blockSignals(true);
+    ui->firstFilterToLineEdit->blockSignals(true);
+    ui->firstFilterFromLineEdit->setText(QString::number(attr_sortFilterModel->getFirstFilterRange().first));
+    ui->firstFilterToLineEdit->setText(QString::number(attr_sortFilterModel->getFirstFilterRange().second));
+    ui->firstFilterFromLineEdit->blockSignals(false);
+    ui->firstFilterToLineEdit->blockSignals(false);
+
+}
+
+void SegdConverterWindow::secondFilterComboItemChanged(const int &i)
+{
+    attr_sortFilterModel->setSecondFilterColumn(i);
+    if (i==0)
+    {
+        attr_sortFilterModel->setSecondRange(0,100000);
+    }
+    else
+    {
+        attr_sortFilterModel->setSecondRange(attr_model->getMinValueInColumn(i-1),attr_model->getMaxValueInColumn(i-1));
+    }
+    ui->secondFilterFromLineEdit->blockSignals(true);
+    ui->secondFilterToLineEdit->blockSignals(true);
+    ui->secondFilterFromLineEdit->setText(QString::number(attr_sortFilterModel->getSecondFilterRange().first));
+    ui->secondFilterToLineEdit->setText(QString::number(attr_sortFilterModel->getSecondFilterRange().second));
+    ui->secondFilterFromLineEdit->blockSignals(false);
+    ui->secondFilterToLineEdit->blockSignals(false);
+}
+
+
+void SegdConverterWindow::thirdFilterComboItemChanged(const int &i)
+{
+    attr_sortFilterModel->setThirdFilterColumn(i);
+    if (i==0)
+    {
+        attr_sortFilterModel->setThirdRange(0,100000);
+    }
+    else
+    {
+        attr_sortFilterModel->setThirdRange(attr_model->getMinValueInColumn(i-1),attr_model->getMaxValueInColumn(i-1));
+    }
+    ui->thirdFilterFromLineEdit->blockSignals(true);
+    ui->thirdFilterToLineEdit->blockSignals(true);
+    ui->thirdFilterFromLineEdit->setText(QString::number(attr_sortFilterModel->getThirdFilterRange().first));
+    ui->thirdFilterToLineEdit->setText(QString::number(attr_sortFilterModel->getThirdFilterRange().second));
+    ui->thirdFilterFromLineEdit->blockSignals(false);
+    ui->thirdFilterToLineEdit->blockSignals(false);
+}
+

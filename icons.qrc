@@ -19,6 +19,7 @@
         <file>imgs/xlsxSaveAs.png</file>
         <file>imgs/filter.png</file>
         <file>imgs/waveDisplay.png</file>
+        <file>imgs/sort-by-numeric-order.png</file>
     </qresource>
     <qresource prefix="/sound">
         <file>whistle8.wav</file>

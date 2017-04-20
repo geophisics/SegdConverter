@@ -6,15 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>987</width>
-    <height>481</height>
+    <width>1033</width>
+    <height>559</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>SegdConverterWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QGridLayout" name="gridLayout_2">
+   <layout class="QGridLayout" name="gridLayout_3">
     <item row="0" column="0">
      <widget class="QGroupBox" name="mainPreferencesGroupBox">
       <property name="title">
@@ -141,10 +141,107 @@
       <property name="orientation">
        <enum>Qt::Vertical</enum>
       </property>
-      <widget class="QTextEdit" name="logTextEdit">
-       <property name="readOnly">
-        <bool>true</bool>
-       </property>
+      <widget class="QWidget" name="layoutWidget">
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QTextEdit" name="logTextEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="filterGroupBox">
+          <property name="title">
+           <string>Параметры фильтрации</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_2">
+           <item row="0" column="0">
+            <widget class="QComboBox" name="firstFilterComboBox"/>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>От</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QLineEdit" name="firstFilterFromLineEdit"/>
+           </item>
+           <item row="0" column="3">
+            <widget class="QLabel" name="label_4">
+             <property name="text">
+              <string>До</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="4">
+            <widget class="QLineEdit" name="firstFilterToLineEdit"/>
+           </item>
+           <item row="1" column="0">
+            <widget class="QComboBox" name="secondFilterComboBox"/>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLabel" name="label_2">
+             <property name="text">
+              <string>От</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QLineEdit" name="secondFilterFromLineEdit"/>
+           </item>
+           <item row="1" column="3">
+            <widget class="QLabel" name="label_5">
+             <property name="text">
+              <string>До</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="4">
+            <widget class="QLineEdit" name="secondFilterToLineEdit"/>
+           </item>
+           <item row="1" column="5">
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>628</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="2" column="0">
+            <widget class="QComboBox" name="thirdFilterComboBox"/>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLabel" name="label_3">
+             <property name="text">
+              <string>От</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="2">
+            <widget class="QLineEdit" name="thirdFilterFromLineEdit"/>
+           </item>
+           <item row="2" column="3">
+            <widget class="QLabel" name="label_6">
+             <property name="text">
+              <string>До</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="4">
+            <widget class="QLineEdit" name="thirdFilterToLineEdit"/>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
       </widget>
       <widget class="QTableView" name="attributesTableView"/>
      </widget>
@@ -156,7 +253,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>987</width>
+     <width>1033</width>
      <height>18</height>
     </rect>
    </property>
@@ -219,6 +316,7 @@
    <addaction name="separator"/>
    <addaction name="actionAttributeTable"/>
    <addaction name="actionFilter"/>
+   <addaction name="actionSorting"/>
    <addaction name="separator"/>
    <addaction name="actionAuxes"/>
    <addaction name="actionAuxesDisplay"/>
@@ -416,6 +514,9 @@
    </property>
   </action>
   <action name="actionFilter">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset resource="icons.qrc">
      <normaloff>:/icons/imgs/filter.png</normaloff>:/icons/imgs/filter.png</iconset>
@@ -425,6 +526,21 @@
    </property>
    <property name="toolTip">
     <string>Отобразить параметры фильтрации атрибутов</string>
+   </property>
+  </action>
+  <action name="actionSorting">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/imgs/sort-by-numeric-order.png</normaloff>:/icons/imgs/sort-by-numeric-order.png</iconset>
+   </property>
+   <property name="text">
+    <string>Включить Сортировку</string>
+   </property>
+   <property name="toolTip">
+    <string>Включить Сортировку</string>
    </property>
   </action>
  </widget>
