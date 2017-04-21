@@ -10,6 +10,17 @@
 #include <Segd/segdtrace.h>
 #include <QSound>
 
+struct AuxData{
+
+    //QVector<QPointF> *akfTraceData;
+    //QVector<QPointF> *akfTraceSpectrum;
+    //bool correctTrace;
+    //bool correctSpectrum;
+    QVector<QVector<QPointF>* > auxData;
+    QVector<bool> checkData;
+};
+
+
 namespace Ui {
 class AuxViewDialog;
 }
@@ -21,6 +32,7 @@ class AuxViewDialog : public QDialog
 public:
     explicit AuxViewDialog(QWidget *parent = 0);
     ~AuxViewDialog();
+    bool showAuxesByFfid(const int &fileNum);
 
 
 private:
@@ -35,7 +47,9 @@ private:
     QtCharts::QChartView *thirdView;
     QtCharts::QChart *firstChart, *secondChart, *thirdChart;
     QtCharts::QLineSeries *firstSeries,*secondSeries,*thirdSeries;
-
+    QMap<int,AuxData> auxes;
+    QMap<int,AuxData>::iterator auxIterator;
+    //QMapIterator<int,AuxData> auxIterator;
 
 
     void readSettings();
@@ -43,7 +57,14 @@ private:
 
 public slots:
     void receiveVectors(QVector<QPointF> *trace, const bool &traceStatus, QVector<QPointF> *spectrum, const bool &spectrumStatus, const int &ffid);
-    void receiveExplAuxes(QVector<QPointF> *timeBreakTrace, const bool &timeBreakStatus, QVector<QPointF> *confirmedTimeBreakTrace, const bool &confirmedTimeBreakStatus,QVector<QPointF> *upholeTimeTrace, const bool &uphleTimeStatus);
+
+    //void receiveExplAuxes(QVector<QPointF> *timeBreakTrace, const bool &timeBreakStatus, QVector<QPointF> *confirmedTimeBreakTrace, const bool &confirmedTimeBreakStatus,QVector<QPointF> *upholeTimeTrace, const bool &uphleTimeStatus);
+    void receiveExplAuxes(const int &ffid, QVector<QPointF> *timeBreakTrace, const bool &timeBreakStatus, QVector<QPointF> *confirmedTimeBreakTrace, const bool &confirmedTimeBreakStatus, QVector<QPointF> *upholeTimeTrace, const bool &uphleTimeStatus);
+
+    void showAuxes();
+private slots:
+    void previousButtonClicked();
+    void nextButtonClicked();
 };
 
 #endif // AUXVIEWDIALOG_H

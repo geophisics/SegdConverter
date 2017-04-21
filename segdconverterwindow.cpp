@@ -57,6 +57,8 @@ SegdConverterWindow::SegdConverterWindow(QWidget *parent) :
     //connect(ui->actionFilter,SIGNAL(triggered(bool)),ui->filterGroupBox,SLOT(setVisible(bool)));
     connect(ui->actionFilter,SIGNAL(triggered(bool)),this,SLOT(filtersEnabled(bool)));
     connect(ui->actionSorting,SIGNAL(triggered(bool)),this,SLOT(enableSorting(bool)));
+
+    connect(ui->attributesTableView,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(tableViewItemDoubleClicked(QModelIndex)));
 }
 
 SegdConverterWindow::~SegdConverterWindow()
@@ -314,6 +316,9 @@ void SegdConverterWindow::runActionSlot()
     p_myThread = new QThread();
     ui->actionRun->setEnabled(false);
     ui->actionExit->setEnabled(false);
+    ui->actionBinPreferences->setEnabled(false);
+    ui->actionAttributesPreferences->setEnabled(false);
+    ui->actionConvertParameters->setEnabled(false);
     ui->actionStop->setEnabled(true);
 
     if (ui->outFileLabel->text()=="Файл CST")
@@ -336,16 +341,11 @@ void SegdConverterWindow::disableStop(bool disable)
 
 void SegdConverterWindow::convertingEnded()
 {
-//     if (attr_model->saveDataInXlsx(ui->attrFileLineEdit->text()))
-//     {
-//         QMessageBox::information(this,"Сохранено",QString("Рассчитанные атрибуты успешно сохранены в файл\n").append(ui->attrFileLineEdit->text()));
-//     }
-//     else
-//     {
-//         QMessageBox::critical(this,"Ошибка сохранения",QString("Ошибка сохранения атрибутов в файл\n").append(ui->attrFileLineEdit->text()));
-//     }
      saveAttributes(ui->attrFileLineEdit->text());
      ui->actionRun->setEnabled(true);
+     ui->actionBinPreferences->setEnabled(true);
+     ui->actionAttributesPreferences->setEnabled(true);
+     ui->actionConvertParameters->setEnabled(true);
      ui->actionExit->setEnabled(true);
      ui->actionStop->setEnabled(false);
 }
@@ -500,7 +500,7 @@ void SegdConverterWindow::setViewAuxesDialog(BaseWorker *worker)
     }
     connect (ui->actionAuxesDisplay,SIGNAL(triggered(bool)),viewDialog.data(),SLOT(show()));
     connect (worker,SIGNAL(sendVectors(QVector<QPointF>*,bool,QVector<QPointF>*,bool,int)),viewDialog,SLOT(receiveVectors(QVector<QPointF>*,bool,QVector<QPointF>*,bool,int)));
-    connect (worker,SIGNAL(sendExplAuxes(QVector<QPointF>*,bool,QVector<QPointF>*,bool,QVector<QPointF>*,bool)),viewDialog,SLOT(receiveExplAuxes(QVector<QPointF>*,bool,QVector<QPointF>*,bool,QVector<QPointF>*,bool)));
+    connect (worker,SIGNAL(sendExplAuxes(int, QVector<QPointF>*,bool,QVector<QPointF>*,bool,QVector<QPointF>*,bool)),viewDialog,SLOT(receiveExplAuxes(int,QVector<QPointF>*,bool,QVector<QPointF>*,bool,QVector<QPointF>*,bool)));
     viewDialog.data()->show();
     ui->actionAuxesDisplay->setEnabled(true);
 }
@@ -848,6 +848,23 @@ void SegdConverterWindow::enableSorting(const bool &b)
     else
     {
         attr_sortFilterModel->setSortRole(Qt::DisplayRole);
+    }
+}
+
+void SegdConverterWindow::tableViewItemDoubleClicked(QModelIndex index)
+{
+    if (viewDialog.isNull())
+    {
+        return;
+    }
+    int ffid = attr_model->getFirstColumnValue(index);
+    if (viewDialog.data()->showAuxesByFfid(ffid))
+    {
+        viewDialog.data()->setVisible(true);
+    }
+    else
+    {
+        QMessageBox::warning(this, "Внимание",QString("Не найдены служебные каналы для файла %1").arg(ffid));
     }
 }
 

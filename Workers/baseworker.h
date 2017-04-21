@@ -12,7 +12,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QFileSystemWatcher>
-
+#include <QPair>
 typedef QMap<QString,QString> Paths;
 
 
@@ -178,9 +178,11 @@ signals:
     void sendVibroAux(QVector<float>*,QVector<float>*,int,int);
     void sendSeries(QtCharts::QLineSeries *trace, QtCharts::QLineSeries *spectrum);
     void sendVectors(QVector<QPointF> *trace,bool,QVector<QPointF> *spectrum,bool,int);
-    void sendExplAuxes(QVector<QPointF>* , bool,QVector<QPointF>* , bool,QVector<QPointF>* , bool );
+    void sendExplAuxes(int, QVector<QPointF>* , bool,QVector<QPointF>* , bool,QVector<QPointF>* , bool );
     void attributesCounted();
 
+
+    //void sendAuxPairs(QPair<bool,int> auxAkfTrace,QPair<bool,int> spectrum);
 public slots:
     void stopRunning();
 };

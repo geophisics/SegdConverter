@@ -36,6 +36,7 @@ AuxViewDialog::AuxViewDialog(QWidget *parent) :
     firstChart->setMargins(QMargins(0,0,0,0));
     firstChart->axisX()->setVisible(false);
     firstChart->axisY()->setReverse(true);
+    thirdChart->axisY()->setReverse(true);
     firstView = new QChartView(firstChart);
     firstView->setFrameStyle(QFrame::NoFrame);
     firstView->setRubberBand(QChartView::NoRubberBand);
@@ -56,6 +57,9 @@ AuxViewDialog::AuxViewDialog(QWidget *parent) :
 
     ui->horizontalLayout->setContentsMargins(0,0,0,0);
     ui->horizontalLayout->setSpacing(0);
+
+    connect(ui->prevPushButton,SIGNAL(clicked(bool)),this,SLOT(previousButtonClicked()));
+    connect(ui->nextPushButton,SIGNAL(clicked(bool)),this,SLOT(nextButtonClicked()));
     //ui->horizontalLayout->setStretch(1,0);
 }
 
@@ -87,8 +91,167 @@ void AuxViewDialog::saveSettings()
     settings->setValue("/SoundAlert",ui->soundCheckBox->isChecked());
     settings->endGroup();
 }
-
 void AuxViewDialog::receiveVectors(QVector<QPointF> *trace, const bool &traceStatus, QVector<QPointF> *spectrum, const bool &spectrumStatus, const int &ffid)
+{
+    AuxData data;
+    data.auxData.append(trace);
+    data.auxData.append(spectrum);
+    data.checkData.append(traceStatus);
+    data.checkData.append(spectrumStatus);
+    auxIterator = auxes.insert(ffid,data);
+    showAuxes();
+}
+void AuxViewDialog::receiveExplAuxes(const int &ffid, QVector<QPointF> *timeBreakTrace, const bool &timeBreakStatus, QVector<QPointF> *confirmedTimeBreakTrace, const bool &confirmedTimeBreakStatus, QVector<QPointF> *upholeTimeTrace, const bool &uphleTimeStatus)
+{
+    AuxData data;
+    data.auxData.append(timeBreakTrace);
+    data.auxData.append(confirmedTimeBreakTrace);
+    data.auxData.append(upholeTimeTrace);
+    data.checkData.append(timeBreakStatus);
+    data.checkData.append(confirmedTimeBreakStatus);
+    data.checkData.append(uphleTimeStatus);
+    auxIterator = auxes.insert(ffid,data);
+    showAuxes();
+}
+
+void AuxViewDialog::showAuxes()
+{
+    AuxData data = auxIterator.value();
+    if (data.auxData.count()==2)
+    {
+        ui->horizontalLayout->itemAt(2)->widget()->setVisible(false);
+        ui->horizontalLayout->setStretch(1,1);
+        firstChart->setTitle(QString("AКФ файла №%1").arg(auxIterator.key()));
+        secondChart->setTitle(QString("Спектр АКФ файла №%1").arg(auxIterator.key()));
+        firstSeries->replace(*data.auxData.at(0));
+        secondSeries->replace(*data.auxData.at(1));
+        if (data.checkData.at(0))
+        {
+            firstChart->setTheme((QChart::ChartTheme)ui->correctAuxThemeComboBox->currentIndex());
+        }
+        else
+        {
+            firstChart->setTheme((QChart::ChartTheme)ui->incorrectAuxThemeComboBox->currentIndex());
+            if (ui->soundCheckBox->isChecked())
+            {
+                alert->play();
+            }
+        }
+        if (data.checkData.at(1))
+        {
+            secondChart->setTheme((QChart::ChartTheme)ui->correctAuxThemeComboBox->currentIndex());
+        }
+        else
+        {
+            secondChart->setTheme((QChart::ChartTheme)ui->incorrectAuxThemeComboBox->currentIndex());
+            if (ui->soundCheckBox->isChecked())
+            {
+                alert->play();
+            }
+        }
+        //масштабируем шкалы
+        QRectF brect = QPolygonF(*data.auxData.at(1)).boundingRect();
+        //график спектра
+        int maxAxisValue = ceil(brect.bottom());
+        int minAxisValue = ceil(brect.top()/25-1)*25;
+        QValueAxis *axis = qobject_cast<QValueAxis*>(secondChart->axisY());
+        axis->setRange(minAxisValue,maxAxisValue);
+        axis->setTickCount((maxAxisValue-minAxisValue)/25+1);
+        secondChart->axisY()->setReverse(false);
+        secondChart->axisX()->setRange(brect.left(),brect.right());
+        //--------------------------------
+        //график трассы
+        brect = QPolygonF(*data.auxData.at(0)).boundingRect();
+        firstChart->axisY()->setRange(brect.top(),brect.bottom());
+        firstChart->axisX()->setRange(brect.right()*-1.1,brect.right()*1.1);
+    }
+    else
+    {
+        ui->horizontalLayout->itemAt(2)->widget()->setVisible(true);
+        ui->horizontalLayout->setStretch(1,0);
+        firstChart->setTitle(QString("Time Break FFID #%1").arg(auxIterator.key()));
+        secondChart->setTitle(QString("Confirmed Time Break FFID#%1").arg(auxIterator.key()));
+        thirdChart->setTitle(QString("Uphole Time FFID#%1").arg(auxIterator.key()));
+        firstSeries->replace(*data.auxData.at(0));
+        secondSeries->replace(*data.auxData.at(1));
+        thirdSeries->replace(*data.auxData.at(2));
+        if (data.checkData.at(0))
+        {
+            firstChart->setTheme((QChart::ChartTheme)ui->correctAuxThemeComboBox->currentIndex());
+        }
+        else
+        {
+            firstChart->setTheme((QChart::ChartTheme)ui->incorrectAuxThemeComboBox->currentIndex());
+            if (ui->soundCheckBox->isChecked())
+            {
+                alert->play();
+            };
+        }
+        if (data.checkData.at(1))
+        {
+            secondChart->setTheme((QChart::ChartTheme)ui->correctAuxThemeComboBox->currentIndex());
+        }
+        else
+        {
+            secondChart->setTheme((QChart::ChartTheme)ui->incorrectAuxThemeComboBox->currentIndex());
+            if (ui->soundCheckBox->isChecked())
+            {
+                alert->play();
+            }
+        }
+        if (data.checkData.at(2))
+        {
+            thirdChart->setTheme((QChart::ChartTheme)ui->correctAuxThemeComboBox->currentIndex());
+        }
+        else
+        {
+            thirdChart->setTheme((QChart::ChartTheme)ui->incorrectAuxThemeComboBox->currentIndex());
+            if (ui->soundCheckBox->isChecked())
+            {
+                alert->play();
+            }
+        }
+        QRectF brect;
+        brect = QPolygonF(*data.auxData.at(0)).boundingRect();
+        firstChart->axisY()->setRange(brect.top(),brect.bottom());
+        firstChart->axisX()->setRange(brect.right()*-1.1,brect.right()*1.1);
+        brect = QPolygonF(*data.auxData.at(1)).boundingRect();
+        secondChart->axisY()->setRange(brect.top(),brect.bottom());
+        secondChart->axisX()->setRange(brect.right()*-1.1,brect.right()*1.1);
+        secondChart->axisY()->setReverse(true);
+        brect = QPolygonF(*data.auxData.at(2)).boundingRect();
+        thirdChart->axisY()->setRange(brect.top(),brect.bottom());
+        thirdChart->axisX()->setRange(brect.right()*-1.1,brect.right()*1.1);
+
+    }
+}
+
+void AuxViewDialog::previousButtonClicked()
+{
+    if (auxIterator == auxes.begin())
+    {
+        auxIterator = auxes.end();
+
+    }
+
+    auxIterator--;
+
+
+    showAuxes();
+}
+
+void AuxViewDialog::nextButtonClicked()
+{
+    auxIterator++;
+    if (auxIterator ==auxes.end())
+    {
+        auxIterator = auxes.begin();
+    }
+    showAuxes();
+}
+
+
+/*void AuxViewDialog::receiveVectors(QVector<QPointF> *trace, const bool &traceStatus, QVector<QPointF> *spectrum, const bool &spectrumStatus, const int &ffid)
 {
     ui->horizontalLayout->itemAt(2)->widget()->setVisible(false);
     ui->horizontalLayout->setStretch(1,1);
@@ -122,9 +285,6 @@ void AuxViewDialog::receiveVectors(QVector<QPointF> *trace, const bool &traceSta
     {
         secondChart->setTheme((QChart::ChartTheme)ui->correctAuxThemeComboBox->currentIndex());
     }
-
-    //secondChart->axisX()->setRange(0,250.0);
-    //secondChart->axisY()->setRange(-100,0);
     //масштабируем шкалы
     QRectF brect = QPolygonF(*spectrum).boundingRect();
     //график спектра
@@ -142,9 +302,9 @@ void AuxViewDialog::receiveVectors(QVector<QPointF> *trace, const bool &traceSta
     //---------------------------------
     delete trace;
     delete spectrum;
-}
+}*/
 
-void AuxViewDialog::receiveExplAuxes(QVector<QPointF> *timeBreakTrace, const bool &timeBreakStatus, QVector<QPointF> *confirmedTimeBreakTrace, const bool &confirmedTimeBreakStatus, QVector<QPointF> *upholeTimeTrace, const bool &uphleTimeStatus)
+/*void AuxViewDialog::receiveExplAuxes(QVector<QPointF> *timeBreakTrace, const bool &timeBreakStatus, QVector<QPointF> *confirmedTimeBreakTrace, const bool &confirmedTimeBreakStatus, QVector<QPointF> *upholeTimeTrace, const bool &uphleTimeStatus)
 {
     ui->horizontalLayout->itemAt(2)->widget()->setVisible(true);
     ui->horizontalLayout->setStretch(1,0);
@@ -201,4 +361,16 @@ void AuxViewDialog::receiveExplAuxes(QVector<QPointF> *timeBreakTrace, const boo
     delete confirmedTimeBreakTrace;
     delete timeBreakTrace;
     delete upholeTimeTrace;
+}*/
+
+bool AuxViewDialog::showAuxesByFfid(const int &fileNum)
+{
+    auxIterator = auxes.find(fileNum);
+    if (auxIterator==auxes.end()) {
+        return false;
+    }
+    else {
+        showAuxes();
+    }
+    return true;
 }

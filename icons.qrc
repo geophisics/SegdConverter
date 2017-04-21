@@ -20,6 +20,9 @@
         <file>imgs/filter.png</file>
         <file>imgs/waveDisplay.png</file>
         <file>imgs/sort-by-numeric-order.png</file>
+        <file>imgs/geophis.png</file>
+        <file>imgs/next.png</file>
+        <file>imgs/previous.png</file>
     </qresource>
     <qresource prefix="/sound">
         <file>whistle8.wav</file>

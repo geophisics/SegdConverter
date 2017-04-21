@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>SegdConverterWindow</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="icons.qrc">
+    <normaloff>:/icons/imgs/geophis.png</normaloff>:/icons/imgs/geophis.png</iconset>
+  </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout_3">
     <item row="0" column="0">

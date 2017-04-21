@@ -25,16 +25,15 @@ public:
     bool dataStatus();
     float getMaxValueInColumn(const int &column);
     float getMinValueInColumn(const int &column);
+    int getFirstColumnValue(QModelIndex &index);
 
 private:
-    //QSettings *settings;
     int rows;
     int columns;
     QStringList headers;
     CountedAttributes attributes;
     bool dataSaved;
 
-    //QVector<segdAttributes> attributes;
 public slots:
     void receiveFfidData();
     bool saveDataInXlsx(const QString &path);

@@ -80,7 +80,10 @@ private slots:
     void secondRangeChanged();
     void thirdRangeChanged();
     void filtersEnabled(const bool &b);
-     void enableSorting(const bool &b);
+    void enableSorting(const bool &b);
+
+
+    void tableViewItemDoubleClicked(QModelIndex index);
 
 private:
     void runSegy();

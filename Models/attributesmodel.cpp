@@ -161,6 +161,10 @@ float AttributesModel::getMinValueInColumn(const int &column)
     return min;
 }
 
+int AttributesModel::getFirstColumnValue(QModelIndex &index)
+{
+    return attributes.value(index.row()).at(0).first.toInt();
+}
 
 bool AttributesModel::saveDataInXlsx(const QString &path)
 {
@@ -252,9 +256,9 @@ bool AttributesSortFilterProxyModel::filterAcceptsRow(int source_row, const QMod
     bool secondCondition=true;
     bool thirdCondition=true;
     QModelIndex index;
-    qDebug()<<"First Filter"<<"Column "<<firstFilterColumn<<"Min "<<firstRange.first<<"Max "<<firstRange.second;
-    qDebug()<<"Second Filter"<<"Column "<<secondFilterColumn<<"Min "<<secondRange.first<<"Max "<<secondRange.second;
-    qDebug()<<"Third Filter"<<"Column "<<thirdFilterColumn<<"Min "<<thirdRange.first<<"Max "<<thirdRange.second;
+   // qDebug()<<"First Filter"<<"Column "<<firstFilterColumn<<"Min "<<firstRange.first<<"Max "<<firstRange.second;
+   // qDebug()<<"Second Filter"<<"Column "<<secondFilterColumn<<"Min "<<secondRange.first<<"Max "<<secondRange.second;
+   // qDebug()<<"Third Filter"<<"Column "<<thirdFilterColumn<<"Min "<<thirdRange.first<<"Max "<<thirdRange.second;
     if (firstFilterColumn>=0)
     {
 

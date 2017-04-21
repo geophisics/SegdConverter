@@ -715,7 +715,7 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
         maxAmpl = maxAmpl/segd->getExtendedHeader().getDumpStackingFold();
         float amplKoef=0.0;
         amplKoef = (maxAmpl-akf.maxAmpl)/akf.maxAmpl;
-         QVector<QPointF> *spectrumPoints = new QVector<QPointF>;
+        QVector<QPointF> *spectrumPoints = new QVector<QPointF>;
         QVector<QPointF> *tracePoints = new QVector<QPointF>;
         float frqStep = 1000000.0/segd->getExtendedHeader().getSampleRate()/spectrum.count();
         bool checkAkfTrace=false;
@@ -754,6 +754,9 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
             fileAttributes.append(qMakePair(QString("bad!"),false));
         }
         emit sendVectors(tracePoints,checkAkfTrace,spectrumPoints,checkSpectrum,segd->getGeneralThree().getExtendedFileNumber());
+
+
+
     }
     else if (segd->getExtendedHeader().getTypeOfSource()==1)
     {
@@ -783,9 +786,16 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
             confirmedTimeBreakPoints->append(QPointF(segd->getTrace(confirmedTimeBreak.traceNb-1)->getTraceData().value(i/sampleInt),i));
             upholeTimePoints->append(QPointF(segd->getTrace(upholeTime.traceNb-1)->getTraceData().value(i/sampleInt),i));
         }
-        emit sendExplAuxes(timeBreakPoints,correctTimeBreak,confirmedTimeBreakPoints,correctConfrimedTimeBreak,upholeTimePoints,correctUpholeTime);
+        if (correctTimeBreak && correctConfrimedTimeBreak &&correctUpholeTime)
+        {
+            fileAttributes.append(qMakePair(QString("ok!"),true));
+        }
+        else
+        {
+            fileAttributes.append(qMakePair(QString("bad!"),false));
+        }
+        emit sendExplAuxes(segd->getGeneralThree().getExtendedFileNumber(), timeBreakPoints,correctTimeBreak,confirmedTimeBreakPoints,correctConfrimedTimeBreak,upholeTimePoints,correctUpholeTime);
     }
-
 }
 
 void BaseWorker::checkingTests(SegdFile *segd)
