@@ -1,7 +1,6 @@
 #include "exclusion.h"
 #include "math.h"
 #include "float.h"
-#include <QDebug>
 #include <QPolygonF>
 Exclusion::Exclusion()
 {

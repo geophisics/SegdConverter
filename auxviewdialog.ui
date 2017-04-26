@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Служебные трассы</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,1">
    <item row="0" column="0" colspan="2">

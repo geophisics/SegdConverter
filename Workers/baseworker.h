@@ -162,6 +162,7 @@ protected:
 
     bool checkTimeBreak(QVector<float> traceData, const int &sInt);
     bool checkConfirmedTimeBreak (QVector<float> traceData, const int &sInt);
+    int  countUpholeTime(QVector<float> traceData);
 
     QQueue<QString> findTemplates(const int &ffid);
 
@@ -178,7 +179,7 @@ signals:
     void sendVibroAux(QVector<float>*,QVector<float>*,int,int);
     void sendSeries(QtCharts::QLineSeries *trace, QtCharts::QLineSeries *spectrum);
     void sendVectors(QVector<QPointF> *trace,bool,QVector<QPointF> *spectrum,bool,int);
-    void sendExplAuxes(int, QVector<QPointF>* , bool,QVector<QPointF>* , bool,QVector<QPointF>* , bool );
+    void sendExplAuxes(int, QVector<QPointF>* , bool,QVector<QPointF>* , bool,QVector<QPointF>* , bool, float, float);
     void attributesCounted();
 
 

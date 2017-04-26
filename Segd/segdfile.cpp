@@ -388,7 +388,6 @@ float SegdFile::checkTests()
         {
             continue;
         }
-        //qDebug()<<trace->getExtensionThree()->getResistanceValue();
         if (trace->getExtensionThree()->getResistanceError()==1 || std::isnan(trace->getExtensionThree()->getResistanceValue()))
         {
             incorrectTraces++;
@@ -593,7 +592,6 @@ void SegdFile::deleteUnworkedTraces()
         if (tr->getExtensionThree()->getResistanceValue()==9999.0)
         {
             traceIt=tracesOfSegd.erase(traceIt);
-            //qDebug()<<QString("Udalena Trassa %1 Resistance = 9999.0").arg(tr->getExtensionOne().getLinePointNum());
             --traceIt;
         }
     }
@@ -609,7 +607,6 @@ void SegdFile::deleteMuteTraces()
         if (tr->getTraceHeader()->getTraceEdit()==2)
         {
             traceIt=tracesOfSegd.erase(traceIt);
-            //qDebug()<<QString("Udalena Trassa %1  (trace intentionally zeroed)").arg(tr->getExtensionOne().getLinePointNum());
             --traceIt;
         }
     }
@@ -631,7 +628,6 @@ void SegdFile::deleteMuteTraces(const QString &logFile)
               <<QString::number(this->getGeneralThree().getPointNumber())<<"\t"<<QString::number(tr->getExtensionOne()->getReceiverLineNum())<<"\t"
              <<QString::number(tr->getExtensionOne()->getReceiverPointNum())<<"\t"<<tr->getTraceHeader()->getTraceNumber()<<"\t"<<"Trace intentionally zeroed"<<"\n";
             traceIt=tracesOfSegd.erase(traceIt);
-            //qDebug()<<QString("Udalena Trassa %1  (trace intentionally zeroed)").arg(tr->getExtensionOne().getLinePointNum());
             --traceIt;
         }
     }
@@ -645,9 +641,6 @@ void SegdFile::deleteUnworkedTraces(const QString &logFile)
     lFile.setFileName(logFile);
     lFile.open(QIODevice::Append|QIODevice::Text);
     QTextStream out(&lFile);
-    //out << "FFID\t" << "Source Line\t" <<"Source Point\t"<<"Receiver Line\t"<<"Reseiver Poing\t"<<"Reason\t";
-    //logFile.close();
-
     for (; traceIt!=tracesOfSegd.end();++traceIt)
     {
         tr=*traceIt;
@@ -657,7 +650,6 @@ void SegdFile::deleteUnworkedTraces(const QString &logFile)
               <<QString::number(this->getGeneralThree().getPointNumber())<<"\t"<<QString::number(tr->getExtensionOne()->getReceiverLineNum())<<"\t"
              <<QString::number(tr->getExtensionOne()->getReceiverPointNum())<<"\t"<<tr->getTraceHeader()->getTraceNumber()<<"\t"<<"Incorrect Tests"<<"\n";
             traceIt=tracesOfSegd.erase(traceIt);
-            //qDebug()<<QString("Udalena Trassa %1 Resistance = 9999.0").arg(tr->getExtensionOne().getLinePointNum());
             --traceIt;
         }
     }

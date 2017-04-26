@@ -183,16 +183,10 @@ void AuxesDialog::getSpectrum(std::vector<float> vec, const int &sampleRate, con
     for (std::size_t i=0;i<SPECTRUM_SIZE;++i)
     {
         spectrumdB[i]= Aquila::dB(ampls[i],max);
-        //qDebug()<<spectrumdB[i];
     }
-    //float frqStep = 500000.0/sampleRate/SPECTRUM_SIZE;
-    //qDebug()<<"\n";
-    //qDebug()<<frqStep;
     int freqCount =std::round(ui->minFreqSpinBox->value()/frqStep);
-    //qDebug()<<freqCount;
     float minFreqLevel = spectrumdB[freqCount];
     freqCount =std::round(ui->maxFreqSpinBox->value()/frqStep);
-    //qDebug()<<freqCount;
     float maxFreqLevel = spectrumdB[freqCount];
     if (fabs(minFreqLevel-maxFreqLevel)<5)
     {

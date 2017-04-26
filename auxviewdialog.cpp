@@ -26,10 +26,16 @@ AuxViewDialog::AuxViewDialog(QWidget *parent) :
     firstSeries = new QLineSeries;
     secondSeries = new QLineSeries;
     thirdSeries = new QLineSeries;
-
+    countedUpholeSeries = new QLineSeries;
+    headerUpholeSeries = new QLineSeries;
+    //
     firstChart->addSeries(firstSeries);
     secondChart->addSeries(secondSeries);
     thirdChart->addSeries(thirdSeries);
+    thirdChart->addSeries(countedUpholeSeries);
+    thirdChart->addSeries(headerUpholeSeries);
+
+
     firstChart->createDefaultAxes();
     secondChart->createDefaultAxes();
     thirdChart->createDefaultAxes();
@@ -110,10 +116,29 @@ void AuxViewDialog::receiveExplAuxes(const int &ffid, QVector<QPointF> *timeBrea
     data.checkData.append(timeBreakStatus);
     data.checkData.append(confirmedTimeBreakStatus);
     data.checkData.append(uphleTimeStatus);
+    data.countedUphole = 800.0 + 10.0;
+    data.headerUphole = 800.0 + 20.0;
     auxIterator = auxes.insert(ffid,data);
     showAuxes();
 }
 
+void AuxViewDialog::receiveExplAuxes(const int &ffid,
+                                     QVector<QPointF> *timeBreakTrace, const bool &timeBreakStatus,
+                                     QVector<QPointF> *confirmedTimeBreakTrace, const bool &confirmedTimeBreakStatus,
+                                     QVector<QPointF> *upholeTimeTrace,const bool &upholeTimeStatus, const float &countUphole, const float &headUphole)
+{
+    AuxData data;
+    data.auxData.append(timeBreakTrace);
+    data.auxData.append(confirmedTimeBreakTrace);
+    data.auxData.append(upholeTimeTrace);
+    data.checkData.append(timeBreakStatus);
+    data.checkData.append(confirmedTimeBreakStatus);
+    data.checkData.append(upholeTimeStatus);
+    data.countedUphole = 800.0 +countUphole;
+    data.headerUphole = 800.0 + headUphole;
+    auxIterator = auxes.insert(ffid,data);
+    showAuxes();
+}
 void AuxViewDialog::showAuxes()
 {
     AuxData data = auxIterator.value();
@@ -164,6 +189,7 @@ void AuxViewDialog::showAuxes()
         brect = QPolygonF(*data.auxData.at(0)).boundingRect();
         firstChart->axisY()->setRange(brect.top(),brect.bottom());
         firstChart->axisX()->setRange(brect.right()*-1.1,brect.right()*1.1);
+
     }
     else
     {
@@ -219,10 +245,43 @@ void AuxViewDialog::showAuxes()
         secondChart->axisY()->setRange(brect.top(),brect.bottom());
         secondChart->axisX()->setRange(brect.right()*-1.1,brect.right()*1.1);
         secondChart->axisY()->setReverse(true);
+
+
         brect = QPolygonF(*data.auxData.at(2)).boundingRect();
+
+
+        //QLineSeries *countedUpholeSeries = new QLineSeries;
+        //QLineSeries *headerUpholeSeries = new QLineSeries;
+
+        qDebug()<<brect.right()<<brect.left()<<brect.top()<<brect.bottom();
+
+
+        //qDebug()<<data.countedUphole;
+        countedUpholeSeries->clear();
+        headerUpholeSeries->clear();
+        countedUpholeSeries->append(brect.right()*0.5, data.countedUphole);
+        countedUpholeSeries->append(brect.left()*0.5, data.countedUphole);
+
+        headerUpholeSeries->append(brect.right()*0.5, data.headerUphole);
+        headerUpholeSeries->append(brect.left()*0.5, data.headerUphole);
+
+
+        //qDebug()<<countedUpholeSeries->at(0);
+        //qDebug()<<countedUpholeSeries->at(1);
+        //countedUpholeSeries->setPointsVisible(true);
+        //countedUpholeSeries->setPointLabelsColor(Qt::red);
+
+        //countedUpholeSeries->append(data.headerUphole,brect.right());
+        //countedUpholeSeries->append(data.headerUphole,brect.left());
+        //headerUpholeSeries->append(brect.right(),data.headerUphole);
+        //headerUpholeSeries->append(brect.left(),data.headerUphole);
+        //thirdChart->addSeries(countedUpholeSeries);
+        //countedUpholeSeries->attachAxis(thirdChart->axisX());
+        //countedUpholeSeries->attachAxis(thirdChart->axisY());
+        //thirdChart->addSeries(headerUpholeSeries);
+
         thirdChart->axisY()->setRange(brect.top(),brect.bottom());
         thirdChart->axisX()->setRange(brect.right()*-1.1,brect.right()*1.1);
-
     }
 }
 

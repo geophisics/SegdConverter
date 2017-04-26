@@ -12,12 +12,10 @@
 
 struct AuxData{
 
-    //QVector<QPointF> *akfTraceData;
-    //QVector<QPointF> *akfTraceSpectrum;
-    //bool correctTrace;
-    //bool correctSpectrum;
     QVector<QVector<QPointF>* > auxData;
     QVector<bool> checkData;
+    float headerUphole;
+    float countedUphole;
 };
 
 
@@ -46,11 +44,9 @@ private:
     QtCharts::QChartView *secondView;
     QtCharts::QChartView *thirdView;
     QtCharts::QChart *firstChart, *secondChart, *thirdChart;
-    QtCharts::QLineSeries *firstSeries,*secondSeries,*thirdSeries;
+    QtCharts::QLineSeries *firstSeries,*secondSeries,*thirdSeries, *countedUpholeSeries, *headerUpholeSeries;
     QMap<int,AuxData> auxes;
     QMap<int,AuxData>::iterator auxIterator;
-    //QMapIterator<int,AuxData> auxIterator;
-
 
     void readSettings();
     void saveSettings();
@@ -60,7 +56,7 @@ public slots:
 
     //void receiveExplAuxes(QVector<QPointF> *timeBreakTrace, const bool &timeBreakStatus, QVector<QPointF> *confirmedTimeBreakTrace, const bool &confirmedTimeBreakStatus,QVector<QPointF> *upholeTimeTrace, const bool &uphleTimeStatus);
     void receiveExplAuxes(const int &ffid, QVector<QPointF> *timeBreakTrace, const bool &timeBreakStatus, QVector<QPointF> *confirmedTimeBreakTrace, const bool &confirmedTimeBreakStatus, QVector<QPointF> *upholeTimeTrace, const bool &uphleTimeStatus);
-
+    void receiveExplAuxes(const int &ffid, QVector<QPointF> *timeBreakTrace, const bool &timeBreakStatus, QVector<QPointF> *confirmedTimeBreakTrace, const bool &confirmedTimeBreakStatus, QVector<QPointF> *upholeTimeTrace,const bool &upholeTimeStatus, const float &countUphole, const float &headUphole);
     void showAuxes();
 private slots:
     void previousButtonClicked();

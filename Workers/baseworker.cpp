@@ -117,7 +117,6 @@ void BaseWorker::readSettings()
         if (!backupSegdPath.exists())
         {
             bool succes = backupSegdPath.mkdir(BackupFolder);
-            qDebug()<<succes;
             if (!succes)
             {
                 backup=false;
@@ -469,7 +468,6 @@ void BaseWorker::countAttributesInWindow(QVector<QVector<float> > &traces, const
         {
 
             QFile *spectrumFile = new QFile();
-            qDebug()<<QString("%1_ffid%2_spectrum_for_attributeWindow#_%3.txt").arg(paths.value("SpectrumsPath")).arg(ffid).arg(winNb+1);
             spectrumFile->setFileName(QString("%1_ffid%2_spectrum_for_attributeWindow#_%3.txt").arg(paths.value("SpectrumsPath")).arg(ffid).arg(winNb+1));
             if (spectrumFile->open(QIODevice::WriteOnly|QIODevice::Text))
             {
@@ -518,7 +516,6 @@ void BaseWorker::countRelations(QMap<QString, float> ampls)
     float attribute =0.0;
     bool checkAttribute = true;
     foreach (Relation r, relations) {
-        qDebug()<<ampls.value(r.dividend) << ampls.value(r.devider);
         attribute = ampls.value(r.dividend)/ampls.value(r.devider);
         checkAttribute = attribute>r.minValue ? true:false;
         fileAttributes.append(qMakePair(attribute,checkAttribute));
@@ -529,7 +526,7 @@ void BaseWorker::countRelations(QMap<QString, float> ampls)
 float BaseWorker::getAbsAvg(QVector<QVector<float> > &tracesData)
 {
     int count  = 0;
-    float sum=0.0;
+    float sum = 0.0;
     foreach (QVector<float> fVec, tracesData) {
         for (int i=0; i<fVec.count(); ++i )
         {
@@ -565,7 +562,6 @@ double BaseWorker::countFreq(QVector<QVector<float> > &tracesData, const int &sR
         count++;
         }
     }
-    //return freq/tracesData.count();
     if (count!=0) {
         return freq/count;
     }
@@ -775,7 +771,15 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
         else{
             correctConfrimedTimeBreak = true;
         }
-        correctUpholeTime = true;
+        int countedUphole = countUpholeTime(segd->getTrace(upholeTime.traceNb-1)->getTraceData().mid(800/sampleInt+1,200/sampleInt))*sampleInt;
+        if (abs(countedUphole*1000 - segd->getExtendedHeader().getUpholeTime())<segd->getExtendedHeader().getSampleRate())
+        {
+            correctUpholeTime = true;
+        }
+        else
+        {
+            correctUpholeTime =false;
+        }
         QVector<QPointF> *timeBreakPoints = new QVector<QPointF>;
         QVector<QPointF> *confirmedTimeBreakPoints = new QVector<QPointF>;
         QVector<QPointF> *upholeTimePoints = new QVector<QPointF>;
@@ -784,17 +788,20 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
         {
             timeBreakPoints->append(QPointF(segd->getTrace(timeBreak.traceNb-1)->getTraceData().value(i/sampleInt),i));
             confirmedTimeBreakPoints->append(QPointF(segd->getTrace(confirmedTimeBreak.traceNb-1)->getTraceData().value(i/sampleInt),i));
+            if (i >= 800)
+            {
             upholeTimePoints->append(QPointF(segd->getTrace(upholeTime.traceNb-1)->getTraceData().value(i/sampleInt),i));
+            }
         }
         if (correctTimeBreak && correctConfrimedTimeBreak &&correctUpholeTime)
         {
-            fileAttributes.append(qMakePair(QString("ok!"),true));
+            fileAttributes.append(qMakePair(countedUphole,true));
         }
         else
         {
-            fileAttributes.append(qMakePair(QString("bad!"),false));
+            fileAttributes.append(qMakePair(countedUphole,false));
         }
-        emit sendExplAuxes(segd->getGeneralThree().getExtendedFileNumber(), timeBreakPoints,correctTimeBreak,confirmedTimeBreakPoints,correctConfrimedTimeBreak,upholeTimePoints,correctUpholeTime);
+        emit sendExplAuxes(segd->getGeneralThree().getExtendedFileNumber(), timeBreakPoints,correctTimeBreak,confirmedTimeBreakPoints,correctConfrimedTimeBreak,upholeTimePoints,correctUpholeTime,countedUphole,segd->getExtendedHeader().getUpholeTime()/1000.0);
     }
 }
 
@@ -861,6 +868,22 @@ bool BaseWorker::checkConfirmedTimeBreak(QVector<float> traceData, const int &sI
     }
     return true;
 
+}
+
+int BaseWorker::countUpholeTime(QVector<float> traceData)
+{
+    float noise =fabs(traceData.at(0)*1.5);
+    int i=0;
+    float maxElement =fabs(*std::max_element(traceData.begin(),traceData.end(),[](float a, float b) {return fabs(a)<fabs(b);}))/6.0;
+    while (fabs(traceData.at(i))<maxElement)
+    {
+        i++;
+    }
+    while(fabs(i>0 && traceData.at(i)/traceData.at(i-1)) > 1.4 && fabs(traceData.at(i)) > noise)
+    {
+        i--;
+    }
+    return i;
 }
 
 

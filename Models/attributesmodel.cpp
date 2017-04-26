@@ -2,9 +2,9 @@
 #include <QSettings>
 #include <QCoreApplication>
 #include <QDir>
-#include <QDebug>
 #include <QBrush>
 #include <QtXlsx>
+
 AttributesModel::AttributesModel(QObject *parent):QAbstractTableModel(parent)
 {
     headers<<"FFID"<<"Line"<<"Point"<<"Source X"<<"Source Y"<<"Source Z";
@@ -26,11 +26,9 @@ int AttributesModel::columnCount(const QModelIndex &parent) const
 
 void AttributesModel::setHeaders(QSettings *settings)
 {
- //   emit beginResetModel();
-    attributes.clear();
+     attributes.clear();
     headers =headers.mid(0,6);
     columns =6;
-   // QSettings *settings = new QSettings(QCoreApplication::applicationDirPath()+QDir::separator()+"config.ini",QSettings::IniFormat,this);
     settings->beginGroup("/ConvertSettings");
     if (settings->value("/AnalisysAuxes",false).toBool())
     {
@@ -85,7 +83,6 @@ void AttributesModel::setHeaders(QSettings *settings)
     settings->endArray();
     settings->endGroup();
     endResetModel();
-   // emit headerDataChanged(Qt::Horizontal,0,headers.count());
 }
 
 QVariant AttributesModel::data(const QModelIndex &index, int role) const
@@ -256,9 +253,6 @@ bool AttributesSortFilterProxyModel::filterAcceptsRow(int source_row, const QMod
     bool secondCondition=true;
     bool thirdCondition=true;
     QModelIndex index;
-   // qDebug()<<"First Filter"<<"Column "<<firstFilterColumn<<"Min "<<firstRange.first<<"Max "<<firstRange.second;
-   // qDebug()<<"Second Filter"<<"Column "<<secondFilterColumn<<"Min "<<secondRange.first<<"Max "<<secondRange.second;
-   // qDebug()<<"Third Filter"<<"Column "<<thirdFilterColumn<<"Min "<<thirdRange.first<<"Max "<<thirdRange.second;
     if (firstFilterColumn>=0)
     {
 

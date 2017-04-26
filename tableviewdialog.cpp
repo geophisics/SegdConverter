@@ -2,33 +2,7 @@
 #include "ui_tableviewdialog.h"
 #include "QCheckBox"
 #include <QDebug>
-/*TableViewDialog::TableViewDialog(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::TableViewDialog)
-{
-    ui->setupUi(this);
-    ui->tableWidget->setColumnCount(1);
-    QStringList columnNames;
-    columnNames << "Параметр" << "Отображение";
-    ui->tableWidget->setHorizontalHeaderLabels(columnNames);
-    settings = new QSettings(QCoreApplication::applicationDirPath()+QDir::separator()+"config.ini",QSettings::IniFormat,this);
-    QStringList rowsNames;
-    rowsNames = readSettings();
-    ui->tableWidget->setRowCount(rowsNames.count());
-    ui->tableWidget->setVerticalHeaderLabels(rowsNames);
-    QCheckBox *pCheckBox ;
-    for (int i=0; i<ui->tableWidget->rowCount();++i)
-    {
-        pCheckBox = new QCheckBox();
-        ui->tableWidget->setCellWidget(i,0,pCheckBox);
-        ui->tableWidget->cellWidget(i,0)->setStyleSheet("margin-left:50%;margin-right:50%");
 
-    }
-
-    setCheckedRows(rowsNames);
-    connect(ui->buttonBox,SIGNAL(accepted()),this,SLOT(okClicked()));
-    ui->tableWidget->setTabKeyNavigation(false);
-}*/
 TableViewDialog::TableViewDialog(QStringList *rows, QSet<int> *checked, QWidget *parent):
     QDialog(parent),
     ui(new Ui::TableViewDialog)
@@ -51,8 +25,6 @@ TableViewDialog::TableViewDialog(QStringList *rows, QSet<int> *checked, QWidget 
         }
 
     }
-    //this->geometry().setSize(this->sizeHint());
-    //this->setMaximumHeight(ui->tableWidget->rowCount()*30+40);
     connect(ui->selectAllPushButton,SIGNAL(clicked(bool)),this,SLOT(selectAllSlot()));
     connect(ui->diselectAllPushButton,SIGNAL(clicked(bool)),this,SLOT(diselectAllSlot()));
     connect(ui->buttonBox,SIGNAL(accepted()),this,SLOT(okClicked()));

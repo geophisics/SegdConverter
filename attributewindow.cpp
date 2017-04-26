@@ -2,7 +2,7 @@
 #include <QVector>
 #include <math.h>
 #include <QFile>
-#include <QDebug>
+
 AttributeWindow::AttributeWindow()
 {
     minOffset = 0;

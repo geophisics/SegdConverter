@@ -608,19 +608,16 @@ QVector<QVector<float> > SegyFile::getDataInWindow(QTextStream *logStr,const uin
             {
                 nbOfMuted++;
                 *logStr << trace->getReceiverLinePoint()<<QString("\t Muted\n");
-                //qDebug()<<"Muted"<<trace->getReceiverLinePoint();
                 continue;
             }
             if (tests && trace->getDeviceTraceIdentifier()==1)
             {
                 nbOfTest++;
                 *logStr << trace->getReceiverLinePoint()<<QString("\t Bad Tests\n");
-                //qDebug()<<"test"<<trace->getReceiverLinePoint();
                 continue;
             }
             if (trace->getMaxValue() < minA)
             {
-                //qDebug()<<"minA"<<trace->getReceiverLinePoint();
                 *logStr << trace->getReceiverLinePoint()<<QString("\t Min Ampl\n");
                 nbOfA++;
                 continue;
@@ -629,7 +626,6 @@ QVector<QVector<float> > SegyFile::getDataInWindow(QTextStream *logStr,const uin
         }
     }
     *logStr<<QString("Muted: %1; BadTests: %2; MinA: %3; All Bad: %4; For Count: %5\n").arg(nbOfMuted).arg(nbOfTest).arg(nbOfA).arg(nbOfMuted+nbOfTest+nbOfA).arg(result.size());
-    //qDebug()<<QString("Muted: %1; Bad Tests: %2; Min Ampl: %3; All Bad: %4; For Count: %5\n").arg(nbOfMuted).arg(nbOfTest).arg(nbOfA).arg(nbOfMuted+nbOfTest+nbOfA).arg(result.size());
     return result;
 }
 
@@ -665,19 +661,16 @@ QVector<QVector<float> > SegyFile::getDataInWindow(QTextStream *logStr,const uin
             {
                 nbOfMuted++;
                 *logStr << trace->getReceiverLinePoint()<<QString("\t Muted\n");
-                //qDebug()<<"Muted"<<trace->getReceiverLinePoint();
                 continue;
             }
             if (tests && trace->getDeviceTraceIdentifier()==1)
             {
                 nbOfTest++;
                 *logStr << trace->getReceiverLinePoint()<<QString("\t Bad Tests\n");
-                //qDebug()<<"test"<<trace->getReceiverLinePoint();
                 continue;
             }
             if (trace->getMaxValue() < minA)
             {
-                //qDebug()<<"minA"<<trace->getReceiverLinePoint();
                 *logStr << trace->getReceiverLinePoint()<<QString("\t Min Ampl\n");
                 nbOfA++;
                 continue;
@@ -752,35 +745,9 @@ QVector<QVector<float> > SegyFile::getDataInWindow(const uint &minOffset, const 
     int length;
     QVector< QVector<float> > result;
     segyTrace *trace;
-    qDebug()<<QString("MinOffset %1 MaxOffset %2").arg(minOffset).arg(maxOffset);
     for (; tracesIterator!=segyTraces.end();++tracesIterator)
     {
         trace = *tracesIterator;
-        /*if (v1!=0)
-        {
-            firstPos = (minTime + (trace->getOffset() - minOffset)/v1)/(sampleInterval/1000);
-        }
-        else
-        {
-            firstPos = minTime/(sampleInterval/1000);
-        }
-        qDebug()<<QString("FirstPos= %1").arg(firstPos);
-        if (v2!=0)
-        {
-            lastPos = (maxTime + (trace->getOffset() - minOffset)/v2)/(sampleInterval/1000);
-        }
-        else
-        {
-            lastPos = maxTime/(sampleInterval/1000);
-        }
-        length = lastPos-firstPos+1;
-*/
-
-
-       /* qDebug()<<QString("FirstPos= %1").arg(firstPos);
-        qDebug()<<QString("LastPos = %1").arg(lastPos);
-        qDebug()<<QString("Length = %1").arg(length);
-        qDebug()<<trace->getOffset();*/
         if (trace->getOffset() > minOffset && trace->getOffset()<maxOffset && trace->getTraceIdCode()!=9)
         {
             if (v1!=0)
@@ -802,11 +769,6 @@ QVector<QVector<float> > SegyFile::getDataInWindow(const uint &minOffset, const 
             }
 
             length = lastPos-firstPos+1;
-
-            qDebug()<<QString("FirstPos= %1").arg(firstPos);
-            qDebug()<<QString("LastPos = %1").arg(lastPos);
-            qDebug()<<QString("Length = %1").arg(length);
-            qDebug()<<trace->getOffset();
             if (muted && trace->getTraceIdCode()!=2)
             {
                 result.append(trace->getData().mid(firstPos,length));
@@ -817,23 +779,6 @@ QVector<QVector<float> > SegyFile::getDataInWindow(const uint &minOffset, const 
             }
 
         }
-        /*
-        if (muted && )
-        {
-            if (trace->getOffset() > minOffset && trace->getOffset() < maxOffset &&trace->getTraceIdCode()!=9 && trace->getTraceIdCode()!=2)
-            {
-                result.append(trace->getData().mid(firstPos,length));
-            }
-        }
-        else
-        {
-            if (trace->getOffset() > minOffset && trace->getOffset() < maxOffset &&trace->getTraceIdCode()!=9)
-            {
-                result.append(trace->getData().mid(firstPos,length));
-            }
-        }*/
-
-
     }
     return result;
 }
@@ -844,9 +789,6 @@ QStringList SegyFile::deleteFileInExclusions(QVector<Exclusion*> excl)
     QStringList result;
     QVector<segyTrace*>::iterator traceIterator = segyTraces.begin();
     segyTrace *trace;
-//    QFile fileName("I:/tmp/segdConverter/kutuluk/traces.txt");
-//    fileName.open(QIODevice::WriteOnly|QIODevice::Text);
-//    QTextStream stream(&fileName);
     for (; traceIterator!=segyTraces.end();++traceIterator)
     {
         trace = *traceIterator;
@@ -857,16 +799,11 @@ QStringList SegyFile::deleteFileInExclusions(QVector<Exclusion*> excl)
                 result.append(QString("%1\t%2\t%3\t%4\t\%5\n").arg(trace->getFileNum()).arg(trace->getReceiverLinePoint()).arg(trace->getReceiverX()).arg(trace->getReceiverY()).arg(trace->getReceiverZ()));
                 traceIterator = segyTraces.erase(traceIterator);
                 traceIterator--;
-                /*stream<<trace->getReceiverLinePoint()<<"\t";
-                stream<<QString::number(trace->getReceiverX())<<"\t";
-                stream<<QString::number(trace->getReceiverY())<<"\t";
-                stream<<QString::number(trace->getReceiverZ())<<"\n";*/
                 break;
             }
         }
      }
      return result;
-     //fileName.close();
 
 }
 
@@ -914,29 +851,24 @@ void SegyFile::deleteBadTraces(const bool &muted, const bool &badTests, const do
         trace = *traceIterator;
         if (trace->getTraceIdCode()==9)
         {
-            qDebug() <<"Aux"<<trace->getReceiverLinePoint();
             traceIterator = segyTraces.erase(traceIterator);
             traceIterator--;
             continue;
         }
         if (muted && trace->getTraceIdCode()==2)
         {
-            qDebug() <<"Muted"<<trace->getReceiverLinePoint();
             traceIterator = segyTraces.erase(traceIterator);
             traceIterator--;
             continue;
         }
         if (badTests && (trace->getDeviceTraceIdentifier()==1))
         {
-            qDebug() <<"BadTest"<<trace->getReceiverLinePoint();
             traceIterator = segyTraces.erase(traceIterator);
             traceIterator--;
             continue;
         }
-        //qDebug() <<"MinAmpl"<<trace->getReceiverLinePoint()<<trace->getMaxValue();
         if (trace->getMaxValue()<minAmpl)
         {
-            qDebug() <<"MinAmplRemoved"<<trace->getReceiverLinePoint()<<trace->getMaxValue();
             traceIterator = segyTraces.erase(traceIterator);
             traceIterator--;
             continue;

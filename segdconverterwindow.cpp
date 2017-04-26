@@ -500,7 +500,7 @@ void SegdConverterWindow::setViewAuxesDialog(BaseWorker *worker)
     }
     connect (ui->actionAuxesDisplay,SIGNAL(triggered(bool)),viewDialog.data(),SLOT(show()));
     connect (worker,SIGNAL(sendVectors(QVector<QPointF>*,bool,QVector<QPointF>*,bool,int)),viewDialog,SLOT(receiveVectors(QVector<QPointF>*,bool,QVector<QPointF>*,bool,int)));
-    connect (worker,SIGNAL(sendExplAuxes(int, QVector<QPointF>*,bool,QVector<QPointF>*,bool,QVector<QPointF>*,bool)),viewDialog,SLOT(receiveExplAuxes(int,QVector<QPointF>*,bool,QVector<QPointF>*,bool,QVector<QPointF>*,bool)));
+    connect (worker,SIGNAL(sendExplAuxes(int, QVector<QPointF>*,bool,QVector<QPointF>*,bool,QVector<QPointF>*,bool,float,float)),viewDialog,SLOT(receiveExplAuxes(int,QVector<QPointF>*,bool,QVector<QPointF>*,bool,QVector<QPointF>*,bool,float,float)));
     viewDialog.data()->show();
     ui->actionAuxesDisplay->setEnabled(true);
 }
@@ -764,9 +764,7 @@ void SegdConverterWindow::openAuxParametersDialog()
 
 void SegdConverterWindow::slot1(const int &i)
 {
-    //qDebug()<<"ModelChanged";
     QObject *obj=sender();
-    //QComboBox* combobox = qobject_cast<QComboBox*>(sender());
     QMessageBox::warning(0,QString::number(i),obj->objectName());
 }
 
