@@ -5,6 +5,7 @@
 #include <QBrush>
 #include <QtXlsx>
 
+
 AttributesModel::AttributesModel(QObject *parent):QAbstractTableModel(parent)
 {
     headers<<"FFID"<<"Line"<<"Point"<<"Source X"<<"Source Y"<<"Source Z";
@@ -95,7 +96,15 @@ QVariant AttributesModel::data(const QModelIndex &index, int role) const
         return attributes.value(index.row()).at(index.column()).first;
         break;
     case 8:
+        if (headers[index.column()]=="Check Tests")
+        {
+            return QBrush(attributes.value(index.row()).at(index.column()).second ? Qt::white : Qt::darkGray,Qt::SolidPattern);
+        }
+        else
+        {
         return QBrush(attributes.value(index.row()).at(index.column()).second ? Qt::white : Qt::red,Qt::SolidPattern);
+        }
+        break;
     default:
         return QVariant();
         break;

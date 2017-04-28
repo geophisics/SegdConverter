@@ -807,7 +807,7 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
 
 void BaseWorker::checkingTests(SegdFile *segd)
 {
-    float badTestsPercent = segd->checkTests();
+    float badTestsPercent = segd->checkTests(&logStream);
     bool checkTest = badTestsPercent<testsPercent ? true : false;
     fileAttributes.append(qMakePair(badTestsPercent,checkTest));
 }
