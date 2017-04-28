@@ -883,7 +883,7 @@ int BaseWorker::countUpholeTime(QVector<float> traceData)
     {
         i--;
     }
-    return i;
+    return i-1;
 }
 
 

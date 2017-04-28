@@ -23,6 +23,7 @@ SegdConverterWindow::SegdConverterWindow(QWidget *parent) :
     ui->actionStop->setEnabled(false);
     ui->filterGroupBox->setVisible(false);
     ui->actionAuxesDisplay->setEnabled(false);
+    ui->actionErase->setEnabled(false);
     readSettings();
     readConvertParamsSettings();
     attr_model=new AttributesModel(this);
@@ -43,9 +44,15 @@ SegdConverterWindow::SegdConverterWindow(QWidget *parent) :
     connect(attr_model,SIGNAL(modelReset()),this,SLOT(resetTableViewPositions()));
     connect(attr_model,SIGNAL(modelReset()),this,SLOT(setColumnsForFiltering()));
     connect(ui->actionSaveAsAttributes,SIGNAL(triggered(bool)),this,SLOT(saveAsAttributesSlot()));
+
     connect(ui->actionOpenSegd,SIGNAL(triggered(bool)),this,SLOT(openDataSlot()));
     connect(ui->actionSaveSeisData,SIGNAL(triggered(bool)),this,SLOT(saveDataSlot()));
     connect(ui->actionSaveAttributes,SIGNAL(triggered(bool)),this,SLOT(saveAttributesFileSlot()));
+
+    connect(ui->segdPushButton,SIGNAL(clicked(bool)),this,SLOT(openDataSlot()));
+    connect(ui->outFilePushButton,SIGNAL(clicked(bool)),this,SLOT(saveDataSlot()));
+    connect(ui->attrFilePushButton,SIGNAL(clicked(bool)),this,SLOT(saveAttributesFileSlot()));
+
     connect(ui->actionAttributeTable,SIGNAL(triggered(bool)),this,SLOT(openTableViewParametersDialog()));
     connect(ui->actionOpenRPS,SIGNAL(triggered(bool)),this,SLOT(selectRpsFile(bool)));
     connect(ui->actionOpenSPS,SIGNAL(triggered(bool)),this,SLOT(selectSpsFile(bool)));
@@ -57,7 +64,7 @@ SegdConverterWindow::SegdConverterWindow(QWidget *parent) :
     //connect(ui->actionFilter,SIGNAL(triggered(bool)),ui->filterGroupBox,SLOT(setVisible(bool)));
     connect(ui->actionFilter,SIGNAL(triggered(bool)),this,SLOT(filtersEnabled(bool)));
     connect(ui->actionSorting,SIGNAL(triggered(bool)),this,SLOT(enableSorting(bool)));
-
+    connect(ui->actionErase,SIGNAL(triggered(bool)),this,SLOT(eraseCountedAttributes()));
     connect(ui->attributesTableView,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(tableViewItemDoubleClicked(QModelIndex)));
 }
 
@@ -76,6 +83,10 @@ void SegdConverterWindow::openConvertParametersDialog()
     {
         readConvertParamsSettings();
         attr_model->setHeaders(settings);
+        if (!viewDialog.isNull())
+        {
+            viewDialog.data()->clearData();
+        }
     }
 }
 //вызываем диалог параметров бинирования
@@ -92,6 +103,10 @@ void SegdConverterWindow::openWindowsParametersDialog()
     if (dialogResult==1)
     {
         attr_model->setHeaders(settings);
+        if (!viewDialog.isNull())
+        {
+            viewDialog.data()->clearData();
+        }
     }
 }
 void SegdConverterWindow::openTableViewParametersDialog()
@@ -99,8 +114,6 @@ void SegdConverterWindow::openTableViewParametersDialog()
     TableViewDialog *dialog = new TableViewDialog(attr_model->getHeaders(),attr_sortFilterModel->getVisibleColumns());
     connect(dialog,SIGNAL(accepted()),attr_sortFilterModel,SLOT(invalidate()));
     connect(dialog,SIGNAL(accepted()),this,SLOT(resetTableViewPositions()));
-
-    //connect(dialog,SIGNAL(sendTableColumns(QStringList)),this,SLOT(setColumnsForView(QStringList)));
     dialog->exec();
 }
 //загружаем настройки
@@ -314,11 +327,23 @@ void SegdConverterWindow::runActionSlot()
 
     ui->logTextEdit->clear();
     p_myThread = new QThread();
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this,"Атрибуты","Удалить рассчитанные атрибуты?",QMessageBox::Yes|QMessageBox::No|QMessageBox::Save);
+    if (reply==QMessageBox::Yes)
+    {
+        eraseCountedAttributes();
+    }
+    if (reply==QMessageBox::Save)
+    {
+        saveAsAttributesSlot();
+    }
+
     ui->actionRun->setEnabled(false);
     ui->actionExit->setEnabled(false);
     ui->actionBinPreferences->setEnabled(false);
     ui->actionAttributesPreferences->setEnabled(false);
     ui->actionConvertParameters->setEnabled(false);
+    ui->actionErase->setEnabled(false);
     ui->actionStop->setEnabled(true);
 
     if (ui->outFileLabel->text()=="Файл CST")
@@ -347,6 +372,7 @@ void SegdConverterWindow::convertingEnded()
      ui->actionAttributesPreferences->setEnabled(true);
      ui->actionConvertParameters->setEnabled(true);
      ui->actionExit->setEnabled(true);
+     ui->actionErase->setEnabled(true);
      ui->actionStop->setEnabled(false);
 }
 
@@ -722,6 +748,25 @@ void SegdConverterWindow::closeEvent(QCloseEvent *event)
             saveAsAttributesSlot();
         }
     }
+}
+
+void SegdConverterWindow::eraseCountedAttributes()
+{
+    if (!attr_model->dataStatus())
+    {
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::question(this,"Атрибуты","Рассчитанные атрибуты не были сохранены\nПродолжить?",QMessageBox::Yes|QMessageBox::No);
+        if (reply==QMessageBox::No)
+        {
+            return;
+        }
+    }
+    attr_model->setHeaders(settings);
+    if (!viewDialog.isNull())
+    {
+        viewDialog.data()->clearData();
+    }
+    ui->actionErase->setEnabled(false);
 }
 void SegdConverterWindow::aboutQtSlot()
 {

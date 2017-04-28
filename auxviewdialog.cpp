@@ -5,7 +5,7 @@
 
 QT_CHARTS_USE_NAMESPACE
 
-AuxViewDialog::AuxViewDialog(QWidget *parent) :
+/*AuxViewDialog::AuxViewDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AuxViewDialog)
 {
@@ -39,7 +39,7 @@ AuxViewDialog::AuxViewDialog(QWidget *parent) :
     firstChart->createDefaultAxes();
     secondChart->createDefaultAxes();
     thirdChart->createDefaultAxes();
-    firstChart->setMargins(QMargins(0,0,0,0));
+    //firstChart->setMargins(QMargins(0,0,0,0));
     firstChart->axisX()->setVisible(false);
     firstChart->axisY()->setReverse(true);
     thirdChart->axisY()->setReverse(true);
@@ -47,6 +47,8 @@ AuxViewDialog::AuxViewDialog(QWidget *parent) :
     firstView->setFrameStyle(QFrame::NoFrame);
     firstView->setRubberBand(QChartView::NoRubberBand);
     firstView->setRenderHint(QPainter::Antialiasing,true);
+
+
     ui->horizontalLayout->addWidget(firstView,0);
     firstView = new QChartView(secondChart);
     firstView->setFrameStyle(QFrame::NoFrame);
@@ -67,8 +69,43 @@ AuxViewDialog::AuxViewDialog(QWidget *parent) :
     connect(ui->prevPushButton,SIGNAL(clicked(bool)),this,SLOT(previousButtonClicked()));
     connect(ui->nextPushButton,SIGNAL(clicked(bool)),this,SLOT(nextButtonClicked()));
     //ui->horizontalLayout->setStretch(1,0);
-}
+}*/
 
+
+AuxViewDialog::AuxViewDialog(QWidget *parent) :
+    QDialog(parent),
+    ui(new Ui::AuxViewDialog)
+{
+    ui->setupUi(this);
+    settings = new QSettings(QCoreApplication::applicationDirPath()+QDir::separator()+"config.ini",QSettings::IniFormat,this);
+    readSettings();
+    //звук предупреждения
+    alert = new QSound(":/sound/whistle8.wav",this);
+    alert->setLoops(QSound::Infinite);
+    //-------------------------------------------
+    QChartView *p_chartView;
+    QChart *p_chart;
+    for (int i=0; i<3; i++)
+    {
+        p_chart = new QChart();
+        p_chart->legend()->setVisible(false);
+        p_chart->addSeries(new QLineSeries);
+        if (i==2)
+        {
+            p_chart->addSeries(new QLineSeries);
+            p_chart->addSeries(new QLineSeries);
+        }
+        p_chart->createDefaultAxes();
+        p_chart->axisY()->setReverse(true);
+        p_chartView = new QChartView(p_chart,this);
+        p_chartView->setRubberBand(QChartView::NoRubberBand);
+        p_chartView->setRenderHint(QPainter::Antialiasing,true);
+        p_chartView->setFrameStyle(QFrame::NoFrame);
+        ui->horizontalLayout->addWidget(p_chartView);
+    }
+    connect(ui->prevPushButton,SIGNAL(clicked(bool)),this,SLOT(previousButtonClicked()));
+    connect(ui->nextPushButton,SIGNAL(clicked(bool)),this,SLOT(nextButtonClicked()));
+}
 AuxViewDialog::~AuxViewDialog()
 {
     saveSettings();
@@ -142,11 +179,51 @@ void AuxViewDialog::receiveExplAuxes(const int &ffid,
 void AuxViewDialog::showAuxes()
 {
     AuxData data = auxIterator.value();
+    QChartView *p_chartView;
+    QLineSeries *p_series;
+    QRectF brect;
+    float xR;
     if (data.auxData.count()==2)
     {
         ui->horizontalLayout->itemAt(2)->widget()->setVisible(false);
         ui->horizontalLayout->setStretch(1,1);
-        firstChart->setTitle(QString("AКФ файла №%1").arg(auxIterator.key()));
+        for (int i=0 ; i<2 ;i++ )
+        {
+            p_chartView=qobject_cast<QChartView*>(ui->horizontalLayout->itemAt(i)->widget());
+            if (data.checkData.at(i))
+            {
+                p_chartView->chart()->setTheme((QChart::ChartTheme)ui->correctAuxThemeComboBox->currentIndex());
+                alert->stop();
+            }
+            else
+            {
+                p_chartView->chart()->setTheme((QChart::ChartTheme)ui->incorrectAuxThemeComboBox->currentIndex());
+                if (ui->soundCheckBox->isChecked())
+                {
+                    alert->play();
+                }
+            }
+            p_series =qobject_cast<QLineSeries*>(p_chartView->chart()->series().first());
+            p_series->replace(*data.auxData.at(i));
+            brect = QPolygonF(*data.auxData.at(i)).boundingRect();
+            xR = brect.right()>brect.left() ? brect.right() : brect.left();
+            switch (i) {
+            case 0:
+                p_chartView->chart()->setTitle(QString("AКФ файла №%1").arg(auxIterator.key()));
+                p_chartView->chart()->axisX()->setRange(-1.1*xR,1.1*xR);
+                p_chartView->chart()->axisY()->setRange(brect.top(),brect.bottom());
+                break;
+            case 1:
+                p_chartView->chart()->setTitle(QString("Спектр АКФ файла №%1").arg(auxIterator.key()));
+                p_chartView->chart()->axisX()->setRange(brect.left(),brect.right());
+                p_chartView->chart()->axisY()->setRange(ceil(brect.top()/25-1)*25,brect.bottom());
+                p_chartView->chart()->axisY()->setReverse(false);
+                break;
+            default:
+                break;
+            }
+        }
+        /*firstChart->setTitle(QString("AКФ файла №%1").arg(auxIterator.key()));
         secondChart->setTitle(QString("Спектр АКФ файла №%1").arg(auxIterator.key()));
         firstSeries->replace(*data.auxData.at(0));
         secondSeries->replace(*data.auxData.at(1));
@@ -188,105 +265,67 @@ void AuxViewDialog::showAuxes()
         //график трассы
         brect = QPolygonF(*data.auxData.at(0)).boundingRect();
         firstChart->axisY()->setRange(brect.top(),brect.bottom());
-        firstChart->axisX()->setRange(brect.right()*-1.1,brect.right()*1.1);
+        firstChart->axisX()->setRange(brect.right()*-1.1,brect.right()*1.1);*/
 
     }
     else
     {
         ui->horizontalLayout->itemAt(2)->widget()->setVisible(true);
         ui->horizontalLayout->setStretch(1,0);
-        firstChart->setTitle(QString("Time Break FFID #%1").arg(auxIterator.key()));
-        secondChart->setTitle(QString("Confirmed Time Break FFID#%1").arg(auxIterator.key()));
-        thirdChart->setTitle(QString("Uphole Time FFID#%1").arg(auxIterator.key()));
-        firstSeries->replace(*data.auxData.at(0));
-        secondSeries->replace(*data.auxData.at(1));
-        thirdSeries->replace(*data.auxData.at(2));
-        if (data.checkData.at(0))
+        for (int i=0; i<3; i++)
         {
-            firstChart->setTheme((QChart::ChartTheme)ui->correctAuxThemeComboBox->currentIndex());
-        }
-        else
-        {
-            firstChart->setTheme((QChart::ChartTheme)ui->incorrectAuxThemeComboBox->currentIndex());
-            if (ui->soundCheckBox->isChecked())
+            p_chartView=qobject_cast<QChartView*>(ui->horizontalLayout->itemAt(i)->widget());
+            if (data.checkData.at(i))
             {
-                alert->play();
-            };
-        }
-        if (data.checkData.at(1))
-        {
-            secondChart->setTheme((QChart::ChartTheme)ui->correctAuxThemeComboBox->currentIndex());
-        }
-        else
-        {
-            secondChart->setTheme((QChart::ChartTheme)ui->incorrectAuxThemeComboBox->currentIndex());
-            if (ui->soundCheckBox->isChecked())
+                p_chartView->chart()->setTheme((QChart::ChartTheme)ui->correctAuxThemeComboBox->currentIndex());
+                alert->stop();
+            }
+            else
             {
-                alert->play();
+                p_chartView->chart()->setTheme((QChart::ChartTheme)ui->incorrectAuxThemeComboBox->currentIndex());
+                if (ui->soundCheckBox->isChecked())
+                {
+                    alert->play();
+                }
+            }
+            p_series =qobject_cast<QLineSeries*>(p_chartView->chart()->series().first());
+            p_series->replace(*data.auxData.at(i));
+            brect = QPolygonF(*data.auxData.at(i)).boundingRect();
+            p_chartView->chart()->axisY()->setRange(brect.top(),brect.bottom());
+            xR = brect.right()>brect.left() ? brect.right() : brect.left();
+            p_chartView->chart()->axisX()->setRange(-1.1*xR,1.1*xR);
+            switch (i) {
+            case 0:
+                p_chartView->chart()->setTitle(QString("Time Break FFID #%1").arg(auxIterator.key()));
+                break;
+            case 1:
+                p_chartView->chart()->setTitle(QString("Confirmed Time Break FFID#%1").arg(auxIterator.key()));
+                p_chartView->chart()->axisY()->setReverse(true);
+                break;
+            case 2:
+                p_chartView->chart()->setTitle(QString("Uphole Time FFID#%1").arg(auxIterator.key()));
+                p_series =qobject_cast<QLineSeries*>(p_chartView->chart()->series().at(1));
+                p_series->clear();
+                p_series->append(-0.5*xR,data.countedUphole);
+                p_series->append( 0.5*xR,data.countedUphole);
+                p_series =qobject_cast<QLineSeries*>(p_chartView->chart()->series().at(2));
+                p_series->clear();
+                p_series->append(-0.5*xR,data.headerUphole);
+                p_series->append( 0.5*xR,data.headerUphole);
+                break;
+            default:
+                break;
             }
         }
-        if (data.checkData.at(2))
-        {
-            thirdChart->setTheme((QChart::ChartTheme)ui->correctAuxThemeComboBox->currentIndex());
-        }
-        else
-        {
-            thirdChart->setTheme((QChart::ChartTheme)ui->incorrectAuxThemeComboBox->currentIndex());
-            if (ui->soundCheckBox->isChecked())
-            {
-                alert->play();
-            }
-        }
-        QRectF brect;
-        brect = QPolygonF(*data.auxData.at(0)).boundingRect();
-        firstChart->axisY()->setRange(brect.top(),brect.bottom());
-        firstChart->axisX()->setRange(brect.right()*-1.1,brect.right()*1.1);
-        brect = QPolygonF(*data.auxData.at(1)).boundingRect();
-        secondChart->axisY()->setRange(brect.top(),brect.bottom());
-        secondChart->axisX()->setRange(brect.right()*-1.1,brect.right()*1.1);
-        secondChart->axisY()->setReverse(true);
-
-
-        brect = QPolygonF(*data.auxData.at(2)).boundingRect();
-
-
-        //QLineSeries *countedUpholeSeries = new QLineSeries;
-        //QLineSeries *headerUpholeSeries = new QLineSeries;
-
-        qDebug()<<brect.right()<<brect.left()<<brect.top()<<brect.bottom();
-
-
-        //qDebug()<<data.countedUphole;
-        countedUpholeSeries->clear();
-        headerUpholeSeries->clear();
-        countedUpholeSeries->append(brect.right()*0.5, data.countedUphole);
-        countedUpholeSeries->append(brect.left()*0.5, data.countedUphole);
-
-        headerUpholeSeries->append(brect.right()*0.5, data.headerUphole);
-        headerUpholeSeries->append(brect.left()*0.5, data.headerUphole);
-
-
-        //qDebug()<<countedUpholeSeries->at(0);
-        //qDebug()<<countedUpholeSeries->at(1);
-        //countedUpholeSeries->setPointsVisible(true);
-        //countedUpholeSeries->setPointLabelsColor(Qt::red);
-
-        //countedUpholeSeries->append(data.headerUphole,brect.right());
-        //countedUpholeSeries->append(data.headerUphole,brect.left());
-        //headerUpholeSeries->append(brect.right(),data.headerUphole);
-        //headerUpholeSeries->append(brect.left(),data.headerUphole);
-        //thirdChart->addSeries(countedUpholeSeries);
-        //countedUpholeSeries->attachAxis(thirdChart->axisX());
-        //countedUpholeSeries->attachAxis(thirdChart->axisY());
-        //thirdChart->addSeries(headerUpholeSeries);
-
-        thirdChart->axisY()->setRange(brect.top(),brect.bottom());
-        thirdChart->axisX()->setRange(brect.right()*-1.1,brect.right()*1.1);
     }
 }
 
 void AuxViewDialog::previousButtonClicked()
 {
+    if (auxes.isEmpty())
+    {
+        return;
+    }
     if (auxIterator == auxes.begin())
     {
         auxIterator = auxes.end();
@@ -301,6 +340,10 @@ void AuxViewDialog::previousButtonClicked()
 
 void AuxViewDialog::nextButtonClicked()
 {
+    if (auxes.isEmpty())
+    {
+        return;
+    }
     auxIterator++;
     if (auxIterator ==auxes.end())
     {
@@ -432,4 +475,19 @@ bool AuxViewDialog::showAuxesByFfid(const int &fileNum)
         showAuxes();
     }
     return true;
+}
+
+void AuxViewDialog::clearData()
+{
+    foreach (AuxData data, auxes) {
+        qDeleteAll(data.auxData);
+    }
+    auxes.clear();
+    this->hide();
+    auxIterator = auxes.begin();
+}
+
+AuxData::~AuxData()
+{
+
 }

@@ -38,6 +38,9 @@ public slots:
     void receiveFfidData();
     bool saveDataInXlsx(const QString &path);
 
+private slots:
+    void setDataUnsaved();
+
 };
 
 class AttributesSortFilterProxyModel : public QSortFilterProxyModel

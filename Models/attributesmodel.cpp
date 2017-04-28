@@ -9,7 +9,9 @@ AttributesModel::AttributesModel(QObject *parent):QAbstractTableModel(parent)
 {
     headers<<"FFID"<<"Line"<<"Point"<<"Source X"<<"Source Y"<<"Source Z";
     columns =headers.count();
+    dataSaved = true;
     rows =0;
+    connect(this,SIGNAL(layoutChanged()),this,SLOT(setDataUnsaved()));
 }
 
 int AttributesModel::rowCount(const QModelIndex &parent) const
@@ -26,7 +28,7 @@ int AttributesModel::columnCount(const QModelIndex &parent) const
 
 void AttributesModel::setHeaders(QSettings *settings)
 {
-     attributes.clear();
+    attributes.clear();
     headers =headers.mid(0,6);
     columns =6;
     settings->beginGroup("/ConvertSettings");
@@ -82,6 +84,7 @@ void AttributesModel::setHeaders(QSettings *settings)
     }
     settings->endArray();
     settings->endGroup();
+    dataSaved =true;
     endResetModel();
 }
 
@@ -161,6 +164,10 @@ float AttributesModel::getMinValueInColumn(const int &column)
 int AttributesModel::getFirstColumnValue(QModelIndex &index)
 {
     return attributes.value(index.row()).at(0).first.toInt();
+}
+void AttributesModel::setDataUnsaved()
+{
+    dataSaved = false;
 }
 
 bool AttributesModel::saveDataInXlsx(const QString &path)

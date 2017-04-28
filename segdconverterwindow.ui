@@ -49,13 +49,22 @@
              <property name="alignment">
               <set>Qt::AlignCenter</set>
              </property>
+             <property name="buddy">
+              <cstring>segdLineEdit</cstring>
+             </property>
             </widget>
            </item>
            <item>
             <widget class="QLineEdit" name="segdLineEdit"/>
            </item>
            <item>
-            <widget class="QToolButton" name="segdToolButton">
+            <widget class="QPushButton" name="segdPushButton">
+             <property name="maximumSize">
+              <size>
+               <width>23</width>
+               <height>23</height>
+              </size>
+             </property>
              <property name="text">
               <string>...</string>
              </property>
@@ -85,13 +94,22 @@
              <property name="alignment">
               <set>Qt::AlignCenter</set>
              </property>
+             <property name="buddy">
+              <cstring>outFileLineEdit</cstring>
+             </property>
             </widget>
            </item>
            <item>
             <widget class="QLineEdit" name="outFileLineEdit"/>
            </item>
            <item>
-            <widget class="QToolButton" name="outFileToolButton">
+            <widget class="QPushButton" name="outFilePushButton">
+             <property name="maximumSize">
+              <size>
+               <width>23</width>
+               <height>23</height>
+              </size>
+             </property>
              <property name="text">
               <string>...</string>
              </property>
@@ -121,13 +139,22 @@
              <property name="alignment">
               <set>Qt::AlignCenter</set>
              </property>
+             <property name="buddy">
+              <cstring>attrFileLineEdit</cstring>
+             </property>
             </widget>
            </item>
            <item>
             <widget class="QLineEdit" name="attrFileLineEdit"/>
            </item>
            <item>
-            <widget class="QToolButton" name="attrFileToolButton">
+            <widget class="QPushButton" name="attrFilePushButton">
+             <property name="maximumSize">
+              <size>
+               <width>23</width>
+               <height>23</height>
+              </size>
+             </property>
              <property name="text">
               <string>...</string>
              </property>
@@ -168,6 +195,9 @@
              <property name="text">
               <string>От</string>
              </property>
+             <property name="buddy">
+              <cstring>firstFilterFromLineEdit</cstring>
+             </property>
             </widget>
            </item>
            <item row="0" column="2">
@@ -177,6 +207,9 @@
             <widget class="QLabel" name="label_4">
              <property name="text">
               <string>До</string>
+             </property>
+             <property name="buddy">
+              <cstring>firstFilterToLineEdit</cstring>
              </property>
             </widget>
            </item>
@@ -191,6 +224,9 @@
              <property name="text">
               <string>От</string>
              </property>
+             <property name="buddy">
+              <cstring>secondFilterFromLineEdit</cstring>
+             </property>
             </widget>
            </item>
            <item row="1" column="2">
@@ -200,6 +236,9 @@
             <widget class="QLabel" name="label_5">
              <property name="text">
               <string>До</string>
+             </property>
+             <property name="buddy">
+              <cstring>secondFilterToLineEdit</cstring>
              </property>
             </widget>
            </item>
@@ -227,6 +266,9 @@
              <property name="text">
               <string>От</string>
              </property>
+             <property name="buddy">
+              <cstring>thirdFilterFromLineEdit</cstring>
+             </property>
             </widget>
            </item>
            <item row="2" column="2">
@@ -236,6 +278,9 @@
             <widget class="QLabel" name="label_6">
              <property name="text">
               <string>До</string>
+             </property>
+             <property name="buddy">
+              <cstring>thirdFilterToLineEdit</cstring>
              </property>
             </widget>
            </item>
@@ -321,6 +366,7 @@
    <addaction name="actionAttributeTable"/>
    <addaction name="actionFilter"/>
    <addaction name="actionSorting"/>
+   <addaction name="actionErase"/>
    <addaction name="separator"/>
    <addaction name="actionAuxes"/>
    <addaction name="actionAuxesDisplay"/>
@@ -424,7 +470,7 @@
      <normaloff>:/icons/imgs/circle.png</normaloff>:/icons/imgs/circle.png</iconset>
    </property>
    <property name="text">
-    <string>О прогармме</string>
+    <string>О программе</string>
    </property>
   </action>
   <action name="actionAboutQt">
@@ -545,6 +591,18 @@
    </property>
    <property name="toolTip">
     <string>Включить Сортировку</string>
+   </property>
+  </action>
+  <action name="actionErase">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/imgs/eraser.png</normaloff>:/icons/imgs/eraser.png</iconset>
+   </property>
+   <property name="text">
+    <string>Очистить данные</string>
+   </property>
+   <property name="toolTip">
+    <string>Очистить таблицу рассчитанных атрибутов и служебные трассы</string>
    </property>
   </action>
  </widget>

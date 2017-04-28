@@ -16,6 +16,7 @@ struct AuxData{
     QVector<bool> checkData;
     float headerUphole;
     float countedUphole;
+    ~AuxData();
 };
 
 
@@ -31,6 +32,7 @@ public:
     explicit AuxViewDialog(QWidget *parent = 0);
     ~AuxViewDialog();
     bool showAuxesByFfid(const int &fileNum);
+    void clearData();
 
 
 private:
@@ -43,6 +45,10 @@ private:
     QtCharts::QChartView *firstView;
     QtCharts::QChartView *secondView;
     QtCharts::QChartView *thirdView;
+
+    QList<QtCharts::QChartView*> views;
+
+
     QtCharts::QChart *firstChart, *secondChart, *thirdChart;
     QtCharts::QLineSeries *firstSeries,*secondSeries,*thirdSeries, *countedUpholeSeries, *headerUpholeSeries;
     QMap<int,AuxData> auxes;
@@ -50,6 +56,7 @@ private:
 
     void readSettings();
     void saveSettings();
+
 
 public slots:
     void receiveVectors(QVector<QPointF> *trace, const bool &traceStatus, QVector<QPointF> *spectrum, const bool &spectrumStatus, const int &ffid);

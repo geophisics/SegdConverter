@@ -50,6 +50,7 @@ private slots:
     void openBinningParametersDialog();
     void openWindowsParametersDialog();
     void openTableViewParametersDialog();
+    void eraseCountedAttributes();
     void selectSpsFile(bool checked);
     void selectRpsFile(bool checked);
     void selectXpsFile(bool checked);
