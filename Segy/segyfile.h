@@ -140,8 +140,8 @@ public:
    bool isCorrect();
    QString getPath();
 
-   QVector<QVector<float> > getDataInWindow(const uint &minOffset, const uint &maxOffset, const uint &minTime, const uint &maxTime, const bool &muted = false, const double minA = 0.0);
-   QVector<QVector<float> > getDataInWindow(const uint &minOffset, const uint &maxOffset, const uint &minTime, const uint &maxTime, const uint &v1, const uint &v2, const bool muted);
+  // QVector<QVector<float> > getDataInWindow(const uint &minOffset, const uint &maxOffset, const uint &minTime, const uint &maxTime, const bool &muted = false, const double minA = 0.0);
+  // QVector<QVector<float> > getDataInWindow(const uint &minOffset, const uint &maxOffset, const uint &minTime, const uint &maxTime, const uint &v1, const uint &v2, const bool muted);
    QVector<QVector<float> > getDataInWindow(QTextStream *logStr, const uint &minOffset, const uint &maxOffset, const uint &minTime, const uint &maxTime, const bool &muted, const bool &tests, const float &minA);
    QVector<QVector<float> > getDataInWindow(QTextStream *logStr, const uint &minOffset, const uint &maxOffset, const uint &minTime, const uint &maxTime, const bool &muted, const bool &tests, const float &minA,QVector<int> exclReceivers);
    QVector<QVector<float> > getDataInWindow(QTextStream *logStr, const uint &minOffset, const uint &maxOffset, const uint &minTime, const uint &maxTime, const bool &muted, const bool &tests, const float &minA, QVector<Exclusion*> exclVec);

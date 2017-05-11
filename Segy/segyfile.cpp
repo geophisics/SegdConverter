@@ -551,7 +551,7 @@ QString SegyFile::getPath()
 
 //получем QVector c данными трасс, попадающих в окно
 
-QVector<QVector<float> > SegyFile::getDataInWindow(const uint &minOffset, const uint &maxOffset, const uint &minTime, const uint &maxTime, const bool &muted, const double minA)
+/*QVector<QVector<float> > SegyFile::getDataInWindow(const uint &minOffset, const uint &maxOffset, const uint &minTime, const uint &maxTime, const bool &muted, const double minA)
 {
     QVector<segyTrace*>::iterator tracesIterator = segyTraces.begin();
     int firstPos;
@@ -581,13 +581,11 @@ QVector<QVector<float> > SegyFile::getDataInWindow(const uint &minOffset, const 
 
     }
     return result;
-}
+}*/
 
 QVector<QVector<float> > SegyFile::getDataInWindow(QTextStream *logStr,const uint &minOffset, const uint &maxOffset, const uint &minTime, const uint &maxTime, const bool &muted, const bool &tests, const float &minA)
 {
     QVector<segyTrace*>::iterator tracesIterator = segyTraces.begin();
-
-
     int firstPos;
     int length;
     firstPos = minTime/(sampleInterval/1000);
@@ -731,13 +729,12 @@ QVector<QVector<float> > SegyFile::getDataInWindow(QTextStream *logStr, const ui
         }
     }
     *logStr<<QString("Muted: %1; Bad Tests: %2; Min Ampl: %3; Exclusion:%6 All Bad: %4; For Count: %5\n").arg(nbOfMuted).arg(nbOfTest).arg(nbOfA).arg(nbOfMuted+nbOfTest+nbOfA+nbOfExcl).arg(result.size()).arg(nbOfExcl);
-
     return result;
 }
 
 
 
-QVector<QVector<float> > SegyFile::getDataInWindow(const uint &minOffset, const uint &maxOffset, const uint &minTime, const uint &maxTime, const uint &v1, const uint &v2, const bool muted)
+/*QVector<QVector<float> > SegyFile::getDataInWindow(const uint &minOffset, const uint &maxOffset, const uint &minTime, const uint &maxTime, const uint &v1, const uint &v2, const bool muted)
 {
     QVector<segyTrace*>::iterator tracesIterator = segyTraces.begin();
     int firstPos;
@@ -781,7 +778,7 @@ QVector<QVector<float> > SegyFile::getDataInWindow(const uint &minOffset, const 
         }
     }
     return result;
-}
+}*/
 
 //проверка трасс на эксклюзивную зону
 QStringList SegyFile::deleteFileInExclusions(QVector<Exclusion*> excl)

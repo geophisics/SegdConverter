@@ -371,6 +371,7 @@
    <addaction name="actionAuxes"/>
    <addaction name="actionAuxesDisplay"/>
    <addaction name="separator"/>
+   <addaction name="actionAnalyzeTests"/>
    <addaction name="actionShowTest"/>
    <addaction name="separator"/>
    <addaction name="actionRun"/>
@@ -533,6 +534,9 @@
    </property>
   </action>
   <action name="actionAuxes">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset resource="icons.qrc">
      <normaloff>:/icons/imgs/wave.png</normaloff>:/icons/imgs/wave.png</iconset>
@@ -617,6 +621,21 @@
    </property>
    <property name="toolTip">
     <string>Открыть окно результатов полевых тестов</string>
+   </property>
+  </action>
+  <action name="actionAnalyzeTests">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/imgs/test.png</normaloff>:/icons/imgs/test.png</iconset>
+   </property>
+   <property name="text">
+    <string>Анализировать Тесты</string>
+   </property>
+   <property name="toolTip">
+    <string>Анализировать Тесты</string>
    </property>
   </action>
  </widget>

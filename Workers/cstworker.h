@@ -14,6 +14,7 @@ public:
 protected:
     void countAttributes(CstFile *cst);
     bool convertOneFile(const QString &filePath);
+    void createNewCstFiles();
 public slots:
 
     virtual void Converting();

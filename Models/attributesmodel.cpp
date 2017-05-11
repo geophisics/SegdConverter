@@ -32,8 +32,8 @@ void AttributesModel::setHeaders(QSettings *settings)
     attributes.clear();
     headers =headers.mid(0,6);
     columns =6;
-    settings->beginGroup("/ConvertSettings");
-    if (settings->value("/AnalisysAuxes",false).toBool())
+    settings->beginGroup("/MainSettings");
+    if (settings->value("/CheckAuxes",false).toBool())
     {
         headers<<"Check Aux";
         columns++;

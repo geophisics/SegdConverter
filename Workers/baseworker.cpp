@@ -47,6 +47,16 @@ void BaseWorker::setXpsPath(const QString &path)
     paths.insert("XpsPath",QDir::toNativeSeparators(path));
 }
 
+void BaseWorker::setCheckTests(const bool &b)
+{
+    checkTests = b;
+}
+
+void BaseWorker::setCheckAuxes(const bool &b)
+{
+    analysisAuxes = b;
+}
+
 //чтение настроек конвертации
 void BaseWorker::readSettings()
 {
@@ -56,10 +66,10 @@ void BaseWorker::readSettings()
     logStream.setCodec("UTF8");
     settings->beginGroup("/ConvertSettings");
     SercelMpFactor = settings->value("/UseHeaderMpFactor",1).toBool();
-    analysisAuxes = settings->value("/AnalisysAuxes",false).toBool();
+    //analysisAuxes = settings->value("/AnalisysAuxes",false).toBool();
 
-    checkTests = settings->value("/CheckTests",false).toBool();
-    testsPercent = settings->value("/TestPercent",2).toInt();
+    //checkTests = settings->value("/CheckTests",false).toBool();
+    //testsPercent = settings->value("/TestPercent",2).toInt();
     online = settings->value("/OnLine",false).toBool();
     if (!SercelMpFactor)
     {
@@ -202,7 +212,14 @@ void BaseWorker::readSettings()
 
         upholeTime.check = settings->value("/CheckUpholeTime",false).toBool();
         upholeTime.traceNb = settings->value("/UpholeTimeTraceNb",3).toInt();
-
+        settings->endGroup();
+    }
+    if (checkTests)
+    {
+        settings->beginGroup("/TestSettings");
+        testLimits.maxInRow=settings->value("/MaxInRow",0).toInt();
+        testLimits.maxInLine=settings->value("/MaxInLine",0.0).toFloat();
+        testLimits.maxAll=settings->value("/MaxAll").toFloat();
         settings->endGroup();
     }
 }
@@ -810,9 +827,7 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
 
 void BaseWorker::checkingTests(SegdFile *segd)
 {
-
-    //fileAttributes.append(segd->checkTests(&logStream,2,2));
-    fileAttributes.append(segd->checkTests(&logStream,2,2,testMap));
+    fileAttributes.append(segd->checkTests(&logStream,testLimits,testMap));
 }
 
 QVector<float> BaseWorker::getSpectrumDb(std::vector<float> traceData)

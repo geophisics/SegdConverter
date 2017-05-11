@@ -85,7 +85,8 @@ protected:
 
     //параметры анализа тестов
     bool checkTests;
-    int testsPercent;
+    TestLimits testLimits;
+    //int testsPercent;
     TestMap *testMap;
     //--------------------------
     bool backup;
@@ -113,7 +114,6 @@ protected:
     QFile logFile;
     QTextStream logStream;
 
-
     int fileForConvertingNum; // порядковый номер файла в папке для конвертации
     int fileCount; // счетчик файлов в сводном файле
 
@@ -123,6 +123,10 @@ public:
     void setOutPath(const QString &path);
     void setAttrFilePath(const QString &path);
     void setXpsPath(const QString &path);
+
+
+    void setCheckTests(const bool &b);
+    void setCheckAuxes(const bool &b);
 
     void setMode (const bool &md);
     void setOnline (const bool &b);

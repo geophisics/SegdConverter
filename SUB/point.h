@@ -80,4 +80,16 @@ struct Template
     uint lastReceiver;
 };
 
+struct TestLimits
+{
+    TestLimits(){
+        maxInRow =0;
+        maxInLine =0.0;
+        maxAll =0.0;
+    }
+    uint maxInRow;
+    float maxInLine;
+    float maxAll;
+};
+
 #endif // POINT_H

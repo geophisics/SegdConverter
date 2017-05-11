@@ -49,7 +49,8 @@ SOURCES += main.cpp\
     SUB/point.cpp \
     segdtestdialog.cpp \
     Models/testmodel.cpp \
-    testviewdialog.cpp
+    testviewdialog.cpp \
+    testparametersdialog.cpp
 
 HEADERS  += segdconverterwindow.h \
     convertparametersdialog.h \
@@ -90,7 +91,8 @@ HEADERS  += segdconverterwindow.h \
     segdtestdialog.h \
     SUB/threadsavemap.h \
     Models/testmodel.h \
-    testviewdialog.h
+    testviewdialog.h \
+    testparametersdialog.h
 
 
 
@@ -102,7 +104,8 @@ FORMS    += segdconverterwindow.ui \
     auxesdialog.ui \
     auxviewdialog.ui \
     segdtestdialog.ui \
-    testviewdialog.ui
+    testviewdialog.ui \
+    testparametersdialog.ui
 
 RESOURCES += \
     icons.qrc

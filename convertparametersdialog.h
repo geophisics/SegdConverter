@@ -28,7 +28,6 @@ private slots:
     void exclusionCheckBoxStateChangedSlot(int state);
     void maxFilesCheckBoxStateChangedSlot(int state);
     void userMpFactorRadioButtonToogled(bool checked);
-    void activateTestSpinBox(int state);
     void saveSettings();
 
 };

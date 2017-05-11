@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>653</width>
+    <width>493</width>
     <height>589</height>
    </rect>
   </property>
@@ -18,13 +18,13 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>653</width>
+    <width>493</width>
     <height>589</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>653</width>
+    <width>493</width>
     <height>589</height>
    </size>
   </property>
@@ -130,33 +130,6 @@
        </layout>
       </widget>
      </item>
-     <item>
-      <widget class="QGroupBox" name="groupBox">
-       <property name="title">
-        <string>Полевые тесты</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_10">
-        <item row="0" column="0" colspan="2">
-         <widget class="QCheckBox" name="testsCheckBox">
-          <property name="text">
-           <string>Анализировать</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_2">
-          <property name="text">
-           <string>Допуск
-неисправных, %</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QSpinBox" name="testsSpinBox"/>
-        </item>
-       </layout>
-      </widget>
-     </item>
     </layout>
    </item>
    <item row="1" column="0">
@@ -167,21 +140,7 @@
         <string>Cлужебные каналы</string>
        </property>
        <layout class="QGridLayout" name="gridLayout">
-        <item row="1" column="0">
-         <widget class="QRadioButton" name="noWriteAuxRadioButton">
-          <property name="text">
-           <string>Не записывать</string>
-          </property>
-         </widget>
-        </item>
         <item row="2" column="0">
-         <widget class="QRadioButton" name="writeAuxRadioButton">
-          <property name="text">
-           <string>Записывать</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
          <widget class="QRadioButton" name="writeAuxInNewFileRadioButton">
           <property name="text">
            <string>В отдельный файл</string>
@@ -189,9 +148,16 @@
          </widget>
         </item>
         <item row="0" column="0">
-         <widget class="QCheckBox" name="analisysAuxesCheckBox">
+         <widget class="QRadioButton" name="noWriteAuxRadioButton">
           <property name="text">
-           <string>Анализировать</string>
+           <string>Не записывать</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QRadioButton" name="writeAuxRadioButton">
+          <property name="text">
+           <string>Записывать</string>
           </property>
          </widget>
         </item>
@@ -271,19 +237,6 @@
         </item>
        </layout>
       </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>37</width>
-         <height>17</height>
-        </size>
-       </property>
-      </spacer>
      </item>
     </layout>
    </item>
@@ -436,9 +389,6 @@
   <zorder>maxFileGroupBox</zorder>
   <zorder>buttonBox</zorder>
   <zorder>backupGroupBox</zorder>
-  <zorder>groupBox</zorder>
-  <zorder>horizontalSpacer</zorder>
-  <zorder>horizontalSpacer</zorder>
  </widget>
  <resources>
   <include location="icons.qrc"/>

@@ -16,7 +16,6 @@ ConvertParametersDialog::ConvertParametersDialog(QWidget *parent) :
     doubleVal->setNotation(QDoubleValidator::StandardNotation);
     ui->userMpFactorLineEdit->setValidator(doubleVal);
     settings = new QSettings(QCoreApplication::applicationDirPath()+QDir::separator()+"config.ini",QSettings::IniFormat,this);
-    connect(ui->testsCheckBox,SIGNAL(stateChanged(int)),this,SLOT(activateTestSpinBox(int)));
     readSettings();
     connect(ui->onlineYesRadioButton,SIGNAL(toggled(bool)),ui->waitingTimeSpinBox,SLOT(setEnabled(bool)));
 }
@@ -85,18 +84,7 @@ void ConvertParametersDialog::backupCheckBoxStateChangedSlot(int state)
         ui->backupPushButton->setEnabled(false);
     }
 }
-//делаем активным или неактивным спинбокс с допусками по тестам
-void ConvertParametersDialog::activateTestSpinBox(int state)
-{
-    if (state==2)
-    {
-        ui->testsSpinBox->setEnabled(true);
-    }
-    else
-    {
-        ui->testsSpinBox->setEnabled(false);
-    }
-}
+
 // делаем активными или неактивными настройки максимального числа файлов
 void ConvertParametersDialog::maxFilesCheckBoxStateChangedSlot(int state)
 {
@@ -173,14 +161,11 @@ void ConvertParametersDialog::saveSettings()
     settings->setValue("/OnLine",ui->onlineYesRadioButton->isChecked());
     settings->setValue("/WaitingTime",ui->waitingTimeSpinBox->value());
     settings->setValue("/CST",ui->formatCstRadioButton->isChecked());
-    settings->setValue("/CheckTests",ui->testsCheckBox->isChecked());
-    settings->setValue("/TestPercent",ui->testsSpinBox->value());
     settings->setValue("/NoWriteAuxes",ui->noWriteAuxRadioButton->isChecked());
 
     settings->setValue("/WriteAuxes",ui->writeAuxRadioButton->isChecked());
     settings->setValue("/WriteAuxesInNewFile",ui->writeAuxInNewFileRadioButton->isChecked());
 
-    settings->setValue("/AnalisysAuxes",ui->analisysAuxesCheckBox->isChecked());
     settings->setValue("/MuteChannels",ui->useMuteChannelsRadioButton->isChecked());
     settings->setValue("/MissedChannels",ui->writeMissedRadioButton->isChecked());
     settings->setValue("/NotUseMpFactor",ui->notUseMpFactorRadioButton->isChecked());
@@ -210,15 +195,11 @@ void ConvertParametersDialog::readSettings()
     ui->waitingTimeSpinBox->setEnabled(ui->onlineYesRadioButton->isChecked());
     ui->formatCstRadioButton->setChecked(settings->value("/CST",1).toBool());
     ui->formatSegyRadioButton->setChecked(!ui->formatCstRadioButton->isChecked());
-    ui->testsCheckBox->setChecked(settings->value("/CheckTests",false).toBool());
-    ui->testsSpinBox->setValue(settings->value("/TestPercent",2).toInt());
-    ui->testsSpinBox->setEnabled(ui->testsCheckBox->isChecked());
 
     ui->noWriteAuxRadioButton->setChecked(settings->value("/NoWriteAuxes",1).toBool());
     ui->writeAuxRadioButton->setChecked(settings->value("/WriteAuxes",0).toBool());
     ui->writeAuxInNewFileRadioButton->setChecked(settings->value("/WriteAuxesInNewFile",0).toBool());
 
-    ui->analisysAuxesCheckBox->setChecked(settings->value("/AnalisysAuxes",false).toBool());
     ui->useMuteChannelsRadioButton->setChecked(settings->value("/MuteChannels",1).toBool());
     ui->noUseMuteChannelsRadioButton->setChecked(!ui->useMuteChannelsRadioButton->isChecked());
     ui->writeMissedRadioButton->setChecked(settings->value("/MissedChannels",false).toBool());

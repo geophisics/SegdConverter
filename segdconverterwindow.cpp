@@ -12,6 +12,7 @@
 #include "auxviewdialog.h"
 #include "SUB/general.h"
 #include <mydoublevalidator.h>
+#include <testparametersdialog.h>
 
 
 SegdConverterWindow::SegdConverterWindow(QWidget *parent) :
@@ -60,7 +61,8 @@ SegdConverterWindow::SegdConverterWindow(QWidget *parent) :
     connect(ui->actionRun,SIGNAL(triggered(bool)),this,SLOT(runActionSlot()));
     connect(ui->actionAboutQt,SIGNAL(triggered(bool)),this,SLOT(aboutQtSlot()));
     connect(ui->actionAbout,SIGNAL(triggered(bool)),this,SLOT(aboutSlot()));
-    connect(ui->actionAuxes,SIGNAL(triggered(bool)),this,SLOT(openAuxParametersDialog()));
+    connect(ui->actionAuxes,SIGNAL(triggered(bool)),this,SLOT(openAuxParametersDialog(bool)));
+    connect(ui->actionAnalyzeTests,SIGNAL(triggered(bool)),this,SLOT(openTestParametersDialog(bool)));
     //connect(ui->actionFilter,SIGNAL(triggered(bool)),ui->filterGroupBox,SLOT(setVisible(bool)));
     connect(ui->actionFilter,SIGNAL(triggered(bool)),this,SLOT(filtersEnabled(bool)));
     connect(ui->actionSorting,SIGNAL(triggered(bool)),this,SLOT(enableSorting(bool)));
@@ -82,7 +84,7 @@ void SegdConverterWindow::openConvertParametersDialog()
     if (dialogResult==1)
     {
         readConvertParamsSettings();
-        attr_model->setHeaders(settings);
+//
         if (!viewDialog.isNull())
         {
             viewDialog.data()->clearData();
@@ -124,6 +126,8 @@ void SegdConverterWindow::readSettings()
     ui->segdLineEdit->setText(settings->value("/SegdPath","").toString());
     ui->outFileLineEdit->setText(settings->value("/OutFile","").toString());
     ui->attrFileLineEdit->setText(settings->value("AttrPath","").toString());
+    ui->actionAuxes->setChecked(settings->value("/CheckAuxes",false).toBool());
+    ui->actionAnalyzeTests->setChecked(settings->value("/CheckTests",false).toBool());
     WorkDir = settings->value("/WorkDir","").toString();
     QByteArray MyArray = settings->value("/TableState","").toByteArray();
     settings->endGroup();
@@ -136,8 +140,6 @@ void SegdConverterWindow::readSettings()
         AttributeColumns<<settings->value("/ColumnForView","").toString();
     }
     settings->endArray();
-
-
     settings->endGroup();
     settings->beginGroup("/ConvertSettings");
     online = settings->value("/OnLine",false).toBool();
@@ -153,6 +155,8 @@ void SegdConverterWindow::saveSettings()
     settings->setValue("/SegdPath",ui->segdLineEdit->text());
     settings->setValue("/OutFile",ui->outFileLineEdit->text());
     settings->setValue("/AttrPath",ui->attrFileLineEdit->text());
+    settings->setValue("/CheckTests",ui->actionAnalyzeTests->isChecked());
+    settings->setValue("CheckAuxes",ui->actionAuxes->isChecked());
     settings->setValue("/WorkDir",WorkDir);
     settings->beginWriteArray("/VisibleColumns");
     for (int i=0; i< attr_sortFilterModel->getVisibleColumns()->count();++i)
@@ -424,7 +428,8 @@ void SegdConverterWindow::startThread(BaseWorker *worker)
     connect(worker,SIGNAL(sendInfoMessage(QString,QColor)),this,SLOT(recieveInfoMessage(QString,QColor)));
     worker->setSegdPath(ui->segdLineEdit->text());
     worker->setOutPath(ui->outFileLineEdit->text());
-
+    worker->setCheckTests(ui->actionAnalyzeTests->isChecked());
+    worker->setCheckAuxes(ui->actionAuxes->isChecked());
     worker->readSettings();
     if (ui->actionOpenRPS->isChecked()) {
         worker->readRps(rpsFile);
@@ -436,7 +441,7 @@ void SegdConverterWindow::startThread(BaseWorker *worker)
         worker->setXpsPath(xpsFile);
     }
     worker->setMode(ui->segdLabel->text()=="Директория Segd");
-    if (ui->actionAuxes->isEnabled()) {
+    if (ui->actionAuxes->isChecked()) {
         setViewAuxesDialog(worker);
     }
     connect(p_myThread,SIGNAL(started()),worker,SLOT(Converting()));
@@ -808,10 +813,46 @@ void SegdConverterWindow::resetTableViewPositions()
 }
 
 // открывыем настройки служебных каналов
-void SegdConverterWindow::openAuxParametersDialog()
+void SegdConverterWindow::openAuxParametersDialog(bool checked)
 {
-    AuxesDialog *dialog = new AuxesDialog(this);
-    dialog->exec();
+    if (checked)
+    {
+        AuxesDialog *dialog = new AuxesDialog(this);
+        int dialogResult = dialog->exec();//dialog->exec();
+        if (dialogResult ==1)
+        {
+            ui->actionAuxes->setChecked(true);
+        }
+        else
+        {
+            ui->actionAuxes->setChecked(false);
+        }
+    }
+    settings->beginGroup("/MainSettings");
+    settings->setValue("/CheckAuxes",ui->actionAuxes->isChecked());
+    settings->endGroup();
+    attr_model->setHeaders(settings);
+}
+
+void SegdConverterWindow::openTestParametersDialog(const bool &checked)
+{
+    if (checked)
+    {
+        TestParametersDialog *dialog = new TestParametersDialog(settings,this);
+        int dialogResult = dialog->exec();
+        if (dialogResult==1)
+        {
+            ui->actionAnalyzeTests->setChecked(true);
+        }
+        else
+        {
+            ui->actionAnalyzeTests->setChecked(false);
+        }
+    }
+    settings->beginGroup("/MainSettings");
+    settings->setValue("/CheckTests",ui->actionAnalyzeTests->isChecked());
+    settings->endGroup();
+    attr_model->setHeaders(settings);
 }
 
 void SegdConverterWindow::slot1(const int &i)

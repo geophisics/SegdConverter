@@ -28,7 +28,7 @@ void CstWorker::Converting()
     if (online) {
         numOfFilesInDir--;
     }
-
+    createNewCstFiles();
     while (fileForConvertingNum<numOfFilesInDir && *p_running)
     {
         if (convertOneFile(segdFilesInDir.value(fileForConvertingNum).absoluteFilePath()))
@@ -43,6 +43,7 @@ void CstWorker::Converting()
         if (limitMaxFiles && fileCount >= maxFilesValue)
         {
             maxNumOfFilesReached();
+            createNewCstFiles();
         }
         if (online){
             segdFilesInDir = segdDir.entryInfoList(QStringList()<<"*.segd",QDir::Files,QDir::Name);
@@ -242,6 +243,34 @@ void CstWorker::segdDirChanged(QString string)
            if (limitMaxFiles && fileCount >= maxFilesValue)
            {
                maxNumOfFilesReached();
+               createNewCstFiles();
            }
        }
+}
+
+void CstWorker::createNewCstFiles()
+{
+    QFile cstFile;
+    cstFile.setFileName(paths.value("OutPath"));
+    if (cstFile.open(QIODevice::WriteOnly))
+    {
+        cstFile.close();
+    }
+    else {
+        messaging(QString(" Ошибка создания файла ").append(paths.value("OutPath")),Qt::red);
+        *p_running = false;
+    }
+    if (auxMode == writeAuxesMode::writeInNewFile )
+    {
+        cstFile.setFileName(paths.value("AuxPath"));
+        if (cstFile.open(QIODevice::WriteOnly))
+        {
+            cstFile.close();
+        }
+        else
+        {
+            messaging(QString(" Ошибка создания файла служебных трасс %1. Запись служебных трасс не производится").arg(paths.value("AuxPath")),Qt::red);
+            auxMode = writeAuxesMode::noWrite;
+        }
+    }
 }

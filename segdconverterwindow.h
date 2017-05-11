@@ -66,7 +66,8 @@ private slots:
     void disableStop(bool disable);
     //void stopActionSlot();
     void convertingEnded();
-    void openAuxParametersDialog();
+    void openAuxParametersDialog(bool checked);
+    void openTestParametersDialog(const bool &checked);
     void recieveInfoMessage(const QString &message,const QColor &color);
 
     void firstFilterComboItemChanged(const int &i);
