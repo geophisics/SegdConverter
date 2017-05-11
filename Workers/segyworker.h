@@ -9,7 +9,7 @@ class SegyWorker : public BaseWorker
     Q_OBJECT
 public:
     explicit SegyWorker(volatile bool *running,CountedAttributes *attr) : BaseWorker(running,attr) {}
-
+    explicit SegyWorker(volatile bool *running,CountedAttributes *attr,TestMap *tMap) : BaseWorker(running,attr,tMap) {}
 protected:
     bool writeFileHeaders; //требуется или нет писать заголовки segy файла
     void countAttributesFromFile(SegyFile *sgy);

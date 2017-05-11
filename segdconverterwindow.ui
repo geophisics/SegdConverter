@@ -371,6 +371,8 @@
    <addaction name="actionAuxes"/>
    <addaction name="actionAuxesDisplay"/>
    <addaction name="separator"/>
+   <addaction name="actionShowTest"/>
+   <addaction name="separator"/>
    <addaction name="actionRun"/>
    <addaction name="actionStop"/>
    <addaction name="separator"/>
@@ -603,6 +605,18 @@
    </property>
    <property name="toolTip">
     <string>Очистить таблицу рассчитанных атрибутов и служебные трассы</string>
+   </property>
+  </action>
+  <action name="actionShowTest">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/imgs/location.png</normaloff>:/icons/imgs/location.png</iconset>
+   </property>
+   <property name="text">
+    <string>Результаты тестирования</string>
+   </property>
+   <property name="toolTip">
+    <string>Открыть окно результатов полевых тестов</string>
    </property>
   </action>
  </widget>

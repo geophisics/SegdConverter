@@ -46,7 +46,10 @@ SOURCES += main.cpp\
     auxviewdialog.cpp \
     Models/attributesmodel.cpp \
     SUB/exclusion.cpp \
-    SUB/point.cpp
+    SUB/point.cpp \
+    segdtestdialog.cpp \
+    Models/testmodel.cpp \
+    testviewdialog.cpp
 
 HEADERS  += segdconverterwindow.h \
     convertparametersdialog.h \
@@ -83,7 +86,11 @@ HEADERS  += segdconverterwindow.h \
     SUB/exclusion.h \
     SUB/point.h \
     SUB/threadsafevector.h \
-    SUB/general.h
+    SUB/general.h \
+    segdtestdialog.h \
+    SUB/threadsavemap.h \
+    Models/testmodel.h \
+    testviewdialog.h
 
 
 
@@ -93,7 +100,9 @@ FORMS    += segdconverterwindow.ui \
     windowsparametersdialog.ui \
     tableviewdialog.ui \
     auxesdialog.ui \
-    auxviewdialog.ui
+    auxviewdialog.ui \
+    segdtestdialog.ui \
+    testviewdialog.ui
 
 RESOURCES += \
     icons.qrc

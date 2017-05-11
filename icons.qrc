@@ -24,6 +24,8 @@
         <file>imgs/next.png</file>
         <file>imgs/previous.png</file>
         <file>imgs/eraser.png</file>
+        <file>imgs/location.png</file>
+        <file>imgs/test.png</file>
     </qresource>
     <qresource prefix="/sound">
         <file>whistle8.wav</file>

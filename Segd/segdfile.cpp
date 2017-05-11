@@ -1,5 +1,6 @@
 #include "segdfile.h"
 #include "math.h"
+
 SegdFile::SegdFile(QObject *parent) : QObject(parent)
 {
 
@@ -426,6 +427,7 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const int &max
     int badChannelPerLine = 0;
     int badChannelInRow =0;
     int channelsPerLine =0;
+    float badPercent =0.0;
     for ( ;itTrace!=tracesOfSegd.end();++itTrace)
     {
         trace = *itTrace;
@@ -435,9 +437,12 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const int &max
         }
         else
         {
-
-            *p_stream<<QString("Количество неисправных каналов на линии: %1\n").arg(badChannelPerLine);
-            *p_stream<<QString("Процент неисправных каналов на линии: %1\n").arg(100.0*badChannelPerLine/channelsPerLine);
+            badPercent= 100.0*badChannelPerLine/channelsPerLine;
+            *p_stream<<QString("Количество неисправных каналов на линии: %1(%2%)\n").arg(badChannelPerLine).arg(badPercent);
+            if (badChannelPerLine>maxInLine)
+            {
+                result =false;
+            }
             currentLine = trace->getExtensionOne()->getReceiverLineNum();
             incorrectTraces+=badChannelPerLine;
             badChannelPerLine =0;
@@ -465,7 +470,6 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const int &max
                        .arg(trace->getExtensionOne()->getReceiverLineNum()).arg(trace->getExtensionOne()->getReceiverPointNum())
                        .arg(trace->getExtensionThree()->getResistanceValue()).arg(trace->getExtensionThree()->getTiltValue())
                        .arg(trace->getExtensionFive()->getLeakageValue());
-            //qDebug()<<QString("Обнаружен неисправный канал %1. Tilt=%2").arg(trace->getExtensionOne()->getLinePointNum()).arg(trace->getExtensionThree()->getTiltValue());
             continue;
         }
         if (trace->getExtensionFive()->getLeakageError()==1 || std::isnan(trace->getExtensionFive()->getLeakageValue()))
@@ -477,20 +481,136 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const int &max
                        .arg(trace->getExtensionOne()->getReceiverLineNum()).arg(trace->getExtensionOne()->getReceiverPointNum())
                        .arg(trace->getExtensionThree()->getResistanceValue()).arg(trace->getExtensionThree()->getTiltValue())
                        .arg(trace->getExtensionFive()->getLeakageValue());
-            //qDebug()<<QString("Обнаружен неисправный канал %1. Leakage=%2").arg(trace->getExtensionOne()->getLinePointNum()).arg(trace->getExtensionFive()->getLeakageValue());
             continue;
         }
         if (badChannelInRow>maxInRow)
         {
             *p_stream<<QString("Превышено максимальное число неработающих каналов подряд: %1\n").arg(badChannelInRow);
             result = false;
-            //qDebug()<<"Превышено максимальное число неработающих каналов подряд"<<badChannelInRow;
         }
         badChannelInRow=0;
     }
-    return 100.0*incorrectTraces/this->getExtendedHeader().getNumberOfSeis();
+    badPercent= 100.0*badChannelPerLine/channelsPerLine;
+    *p_stream<<QString("Количество неисправных каналов на линии: %1(%2%)\n").arg(badChannelPerLine).arg(badPercent);
+    if (badChannelPerLine>maxInLine)
+    {
+        result =false;
+    }
+    incorrectTraces+=badChannelPerLine;
+    badPercent = 100.0*incorrectTraces/this->getExtendedHeader().getNumberOfSeis();
+    *p_stream<<QString("Количество неисправных каналов на всей рассановке: %1(%2%)\n").arg(incorrectTraces).arg(badPercent);
+    return qMakePair(badPercent,result);
 }
 
+QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const int &maxInRow, const int &maxInLine, TestMap *tMap)
+{
+    *p_stream<<QString("Проверка тестов для файла № %1\n").arg(this->getGeneralThree().getExtendedFileNumber());
+    *p_stream<<QString("Неисправные каналы:\n");
+    *p_stream<<"FFID\tSource Line\tSource Point\tReceiver Line\tReceiver Point\tResistance\tTilt\tLeakage\n";
+    QVector<SegdTrace*>::iterator itTrace = tracesOfSegd.begin();
+    SegdTrace* trace = *itTrace;
+    TestPoint tPoint;
+    bool result = true;
+    int incorrectTraces=0;
+    while (trace->getChannelType()!=1)
+    {
+        itTrace++;
+        trace = *itTrace;
+    }
+
+    int currentLine = trace->getExtensionOne()->getReceiverLineNum();
+    int badChannelPerLine = 0;
+    int badChannelInRow =0;
+    int channelsPerLine =0;
+    float badPercent =0.0;
+    for ( ;itTrace!=tracesOfSegd.end();++itTrace)
+    {
+        trace = *itTrace;
+
+        tPoint.setLine(trace->getExtensionOne()->getReceiverLineNum());
+        tPoint.setPoint(trace->getExtensionOne()->getReceiverPointNum());
+        tPoint.setX(trace->getExtensionTwo()->getX());
+        tPoint.setY(trace->getExtensionTwo()->getY());
+        tPoint.setZ(trace->getExtensionTwo()->getZ());
+
+        if (trace->getExtensionOne()->getReceiverLineNum()==currentLine)
+        {
+            channelsPerLine++;
+        }
+        else
+        {
+            badPercent= 100.0*badChannelPerLine/channelsPerLine;
+            *p_stream<<QString("Количество неисправных каналов на линии: %1(%2%)\n").arg(badChannelPerLine).arg(badPercent);
+            if (badChannelPerLine>maxInLine)
+            {
+                result =false;
+            }
+            currentLine = trace->getExtensionOne()->getReceiverLineNum();
+            incorrectTraces+=badChannelPerLine;
+            badChannelPerLine =0;
+            badChannelInRow=0;
+            channelsPerLine=0;
+        }
+        if (trace->getExtensionThree()->getResistanceError()==1 || std::isnan(trace->getExtensionThree()->getResistanceValue()))
+        {
+            badChannelPerLine++;
+            badChannelInRow++;
+            *p_stream<<QString("%1\t%2\t%3\t%4\t%5\t%6\t%7\t%8\n").arg(this->getGeneralThree().getExtendedFileNumber())
+                       .arg(this->getGeneralThree().getLineNumber()).arg(this->getGeneralThree().getPointNumber())
+                       .arg(trace->getExtensionOne()->getReceiverLineNum()).arg(trace->getExtensionOne()->getReceiverPointNum())
+                       .arg(trace->getExtensionThree()->getResistanceValue()).arg(trace->getExtensionThree()->getTiltValue())
+                       .arg(trace->getExtensionFive()->getLeakageValue());
+            tPoint.setTestStatus(false);
+            tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
+            //qDebug()<<QString("Обнаружен неисправный канал %1. Resistance=%2").arg(trace->getExtensionOne()->getLinePointNum()).arg(trace->getExtensionThree()->getResistanceValue());
+            continue;
+        }
+        if (trace->getExtensionThree()->getTiltError()==1 || std::isnan(trace->getExtensionThree()->getTiltValue()))
+        {
+            badChannelPerLine++;
+            badChannelInRow++;
+            *p_stream<<QString("%1\t%2\t%3\t%4\t%5\t%6\t%7\t%8\n").arg(this->getGeneralThree().getExtendedFileNumber())
+                       .arg(this->getGeneralThree().getLineNumber()).arg(this->getGeneralThree().getPointNumber())
+                       .arg(trace->getExtensionOne()->getReceiverLineNum()).arg(trace->getExtensionOne()->getReceiverPointNum())
+                       .arg(trace->getExtensionThree()->getResistanceValue()).arg(trace->getExtensionThree()->getTiltValue())
+                       .arg(trace->getExtensionFive()->getLeakageValue());
+            tPoint.setTestStatus(false);
+            tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
+            continue;
+        }
+        if (trace->getExtensionFive()->getLeakageError()==1 || std::isnan(trace->getExtensionFive()->getLeakageValue()))
+        {
+            badChannelPerLine++;
+            badChannelInRow++;
+            *p_stream<<QString("%1\t%2\t%3\t%4\t%5\t%6\t%7\t%8\n").arg(this->getGeneralThree().getExtendedFileNumber())
+                       .arg(this->getGeneralThree().getLineNumber()).arg(this->getGeneralThree().getPointNumber())
+                       .arg(trace->getExtensionOne()->getReceiverLineNum()).arg(trace->getExtensionOne()->getReceiverPointNum())
+                       .arg(trace->getExtensionThree()->getResistanceValue()).arg(trace->getExtensionThree()->getTiltValue())
+                       .arg(trace->getExtensionFive()->getLeakageValue());
+            tPoint.setTestStatus(false);
+            tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
+            continue;
+        }
+        if (badChannelInRow>maxInRow)
+        {
+            *p_stream<<QString("Превышено максимальное число неработающих каналов подряд: %1\n").arg(badChannelInRow);
+            result = false;
+        }
+        tPoint.setTestStatus(true);
+        tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
+        badChannelInRow=0;
+    }
+    badPercent= 100.0*badChannelPerLine/channelsPerLine;
+    *p_stream<<QString("Количество неисправных каналов на линии: %1(%2%)\n").arg(badChannelPerLine).arg(badPercent);
+    if (badChannelPerLine>maxInLine)
+    {
+        result =false;
+    }
+    incorrectTraces+=badChannelPerLine;
+    badPercent = 100.0*incorrectTraces/this->getExtendedHeader().getNumberOfSeis();
+    *p_stream<<QString("Количество неисправных каналов на всей рассановке: %1(%2%)\n").arg(incorrectTraces).arg(badPercent);
+    return qMakePair(badPercent,result);
+}
 
 QList<int> SegdFile::getLPs()
 {
@@ -562,6 +682,7 @@ bool SegdFile::checkLine(QVector<SegdTrace*> tracesOnLine, const int badPodryad,
     }
     return result;
 }
+
 QVector<SegdTrace*> SegdFile::getLineTraces(const uint &lineNb)
 {
    QVector<SegdTrace*>::iterator itTrace= tracesOfSegd.begin();
@@ -665,8 +786,6 @@ QStringList SegdFile::getXLine(QVector<SegdTrace*> traces)
     return out;
 }
 
-
-
 void SegdFile::deleteUnworkedTraces()
 {
     QVector<SegdTrace*>::iterator traceIt = tracesOfSegd.begin();
@@ -718,6 +837,7 @@ void SegdFile::deleteMuteTraces(const QString &logFile)
     }
     lFile.close();
 }
+
 void SegdFile::deleteUnworkedTraces(const QString &logFile)
 {
     QVector<SegdTrace*>::iterator traceIt = tracesOfSegd.begin();

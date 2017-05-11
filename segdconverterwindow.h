@@ -7,6 +7,7 @@
 #include <Workers/segyworker.h>
 #include <Workers/cstworker.h>
 #include <auxviewdialog.h>
+#include <testviewdialog.h>
 #include <Models/attributesmodel.h>
 namespace Ui {
 class SegdConverterWindow;
@@ -34,8 +35,11 @@ private:
     //SegyWorker *p_segyWorker;
     QString spsFile, rpsFile, xpsFile;
     QPointer<AuxViewDialog> viewDialog;
+    QPointer<TestViewDialog> testViewDialog;
     AttributesModel *attr_model;
     AttributesSortFilterProxyModel *attr_sortFilterModel;
+
+    TestMap tMap;
     volatile bool running;
 
 

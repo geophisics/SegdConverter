@@ -8,6 +8,8 @@ class CstWorker : public BaseWorker
     Q_OBJECT
 public:
     explicit CstWorker(volatile bool *running, CountedAttributes *attr) : BaseWorker(running,attr) {}
+    explicit CstWorker(volatile bool *running, CountedAttributes *attr,TestMap *tMap) : BaseWorker(running,attr,tMap) {}
+
 
 protected:
     void countAttributes(CstFile *cst);

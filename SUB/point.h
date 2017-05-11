@@ -17,16 +17,36 @@ public:
     uint getX() const;
     uint getY() const;
     uint getZ() const;
-private:
+
+protected:
     int line;
     int point;
     float x;
     float y;
     float z;
     QString linePoint;
-signals:
+};
 
-public slots:
+class TestPoint: public Point
+{
+public:
+    //TestPoint():Point() {testStatus =true};// {testStatus=true};
+    TestPoint();
+    TestPoint(const TestPoint &other);
+    void setX(const float &f);
+    void setY(const float &f);
+    void setZ(const float &f);
+    void setTestStatus(const bool &b);
+
+    int getLine() const;
+    int getPoint() const;
+    float getX() const;
+    float getY() const;
+    float getZ() const;
+    bool getTestStatus() const;
+
+private:
+    bool testStatus;
 };
 
 class XFile

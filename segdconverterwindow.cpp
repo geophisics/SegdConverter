@@ -348,12 +348,14 @@ void SegdConverterWindow::runActionSlot()
 
     if (ui->outFileLabel->text()=="Файл CST")
     {
-        CstWorker *p_cstWorker = new CstWorker(&running,attr_model->getAttributes());
+       // CstWorker *p_cstWorker = new CstWorker(&running,attr_model->getAttributes());
+        CstWorker *p_cstWorker = new CstWorker(&running,attr_model->getAttributes(),&tMap);
         startThread(p_cstWorker);
     }
     else
     {
-        SegyWorker *p_segyWorker = new SegyWorker(&running,attr_model->getAttributes());
+        //SegyWorker *p_segyWorker = new SegyWorker(&running,attr_model->getAttributes());
+        SegyWorker *p_segyWorker = new SegyWorker(&running,attr_model->getAttributes(),&tMap);
         startThread(p_segyWorker);
     }
 }
@@ -422,6 +424,7 @@ void SegdConverterWindow::startThread(BaseWorker *worker)
     connect(worker,SIGNAL(sendInfoMessage(QString,QColor)),this,SLOT(recieveInfoMessage(QString,QColor)));
     worker->setSegdPath(ui->segdLineEdit->text());
     worker->setOutPath(ui->outFileLineEdit->text());
+
     worker->readSettings();
     if (ui->actionOpenRPS->isChecked()) {
         worker->readRps(rpsFile);
@@ -518,6 +521,8 @@ void SegdConverterWindow::runCst()
     p_myThread->start();
 }
 
+
+
 void SegdConverterWindow::setViewAuxesDialog(BaseWorker *worker)
 {
     if (viewDialog.isNull())
@@ -530,6 +535,8 @@ void SegdConverterWindow::setViewAuxesDialog(BaseWorker *worker)
     viewDialog.data()->show();
     ui->actionAuxesDisplay->setEnabled(true);
 }
+
+
 void SegdConverterWindow::saveAttributes(const QString &path)
 {
     if (attr_model->saveDataInXlsx(path))

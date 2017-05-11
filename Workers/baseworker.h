@@ -49,10 +49,12 @@ public:
 
     explicit BaseWorker(volatile bool *stopped,
                         CountedAttributes *attr);
-
+    explicit BaseWorker(volatile bool *stopped,
+                        CountedAttributes *attr,
+                        TestMap *tMap);
 protected:
 
-
+    volatile bool *p_running;
     Paths paths;
    // QString segdPath;
    // QString outPath;
@@ -77,16 +79,21 @@ protected:
     float minAmpl;
     //-----------------------------------
 
+    CountedAttributes* attributes;
+    AttributesFromFile fileAttributes;
+    QFileSystemWatcher *watcher;
+
     //параметры анализа тестов
     bool checkTests;
     int testsPercent;
+    TestMap *testMap;
     //--------------------------
     bool backup;
     bool limitMaxFiles;
     int maxFilesValue;
     int waitingTime;
     bool *run;
-    volatile bool *p_running;
+
 
     QMap<QString, Point> pp;
     QMap<QString, Point> pv;
@@ -110,9 +117,7 @@ protected:
     int fileForConvertingNum; // порядковый номер файла в папке для конвертации
     int fileCount; // счетчик файлов в сводном файле
 
-    CountedAttributes* attributes;
-    AttributesFromFile fileAttributes;
-    QFileSystemWatcher *watcher;
+
 public:
     void setSegdPath(const QString &path);
     void setOutPath(const QString &path);

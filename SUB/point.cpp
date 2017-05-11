@@ -62,6 +62,70 @@ uint Point::getZ() const
     return round(z);
 }
 
+TestPoint::TestPoint()
+{
+    line = 0;
+    point = 0;
+    x = 0;
+    y = 0;
+    z = 0;
+    testStatus = true;
+}
+TestPoint::TestPoint(const TestPoint &other)
+{
+    line = other.line;
+    point = other.point;
+    x = other.x;
+    y = other.y;
+    z = other.z;
+    testStatus = other.testStatus;
+}
+
+void TestPoint::setX(const float &f)
+{
+    x = f;
+}
+void TestPoint::setY(const float &f)
+{
+    y = f;
+}
+void TestPoint::setZ(const float &f)
+{
+    z = f;
+}
+void TestPoint::setTestStatus(const bool &b)
+{
+    testStatus = b;
+}
+
+int TestPoint::getLine() const
+{
+    return line;
+}
+int TestPoint::getPoint() const
+{
+    return point;
+}
+float TestPoint::getX() const
+{
+    return x;
+}
+
+float TestPoint::getY() const
+{
+    return y;
+}
+
+float TestPoint::getZ() const
+{
+    return z;
+}
+bool TestPoint::getTestStatus() const
+{
+    return testStatus;
+}
+
+
 XFile::XFile()
 {
 

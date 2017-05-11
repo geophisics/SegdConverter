@@ -16,7 +16,10 @@ BaseWorker::BaseWorker(volatile bool *running, CountedAttributes *attr):p_runnin
 {
     settings = new QSettings(QCoreApplication::applicationDirPath()+QDir::separator()+"config.ini",QSettings::IniFormat,this);
 }
-
+BaseWorker::BaseWorker(volatile bool *running, CountedAttributes *attr, TestMap *tMap):p_running(running),attributes(attr),testMap(tMap)
+{
+    settings = new QSettings(QCoreApplication::applicationDirPath()+QDir::separator()+"config.ini",QSettings::IniFormat,this);
+}
 // устанавливаем путь до файлов segd
 void BaseWorker::setSegdPath(const QString &path)
 {
@@ -807,9 +810,9 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
 
 void BaseWorker::checkingTests(SegdFile *segd)
 {
-    float badTestsPercent = segd->checkTests(&logStream);
-    bool checkTest = badTestsPercent<testsPercent ? true : false;
-    fileAttributes.append(qMakePair(badTestsPercent,checkTest));
+
+    //fileAttributes.append(segd->checkTests(&logStream,2,2));
+    fileAttributes.append(segd->checkTests(&logStream,2,2,testMap));
 }
 
 QVector<float> BaseWorker::getSpectrumDb(std::vector<float> traceData)
