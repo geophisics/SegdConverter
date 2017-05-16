@@ -561,7 +561,7 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const int &max
                        .arg(trace->getExtensionThree()->getResistanceValue()).arg(trace->getExtensionThree()->getTiltValue())
                        .arg(trace->getExtensionFive()->getLeakageValue());
             tPoint.setTestStatus(false);
-            tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
+     //       tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
             //qDebug()<<QString("Обнаружен неисправный канал %1. Resistance=%2").arg(trace->getExtensionOne()->getLinePointNum()).arg(trace->getExtensionThree()->getResistanceValue());
             continue;
         }
@@ -575,7 +575,7 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const int &max
                        .arg(trace->getExtensionThree()->getResistanceValue()).arg(trace->getExtensionThree()->getTiltValue())
                        .arg(trace->getExtensionFive()->getLeakageValue());
             tPoint.setTestStatus(false);
-            tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
+    //        tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
             continue;
         }
         if (trace->getExtensionFive()->getLeakageError()==1 || std::isnan(trace->getExtensionFive()->getLeakageValue()))
@@ -588,7 +588,7 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const int &max
                        .arg(trace->getExtensionThree()->getResistanceValue()).arg(trace->getExtensionThree()->getTiltValue())
                        .arg(trace->getExtensionFive()->getLeakageValue());
             tPoint.setTestStatus(false);
-            tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
+      //      tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
             continue;
         }
         if (badChannelInRow>maxInRow)
@@ -597,7 +597,7 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const int &max
             result = false;
         }
         tPoint.setTestStatus(true);
-        tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
+   //     tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
         badChannelInRow=0;
     }
     badPercent= 100.0*badChannelPerLine/channelsPerLine;
@@ -636,18 +636,38 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const TestLimi
     for ( ;itTrace!=tracesOfSegd.end();++itTrace)
     {
         trace = *itTrace;
+
         tPoint.setLine(trace->getExtensionOne()->getReceiverLineNum());
         tPoint.setPoint(trace->getExtensionOne()->getReceiverPointNum());
         tPoint.setX(trace->getExtensionTwo()->getX());
         tPoint.setY(trace->getExtensionTwo()->getY());
         tPoint.setZ(trace->getExtensionTwo()->getZ());
 
+        tPoint.setResistance(trace->getExtensionThree()->getResistanceValue());
+        tPoint.setTilt(trace->getExtensionThree()->getTiltValue());
+        tPoint.setLeakage(trace->getExtensionFive()->getLeakageValue());
+
+
+        tPoint.setResistanceError((std::isnan(tPoint.getResistance()) || trace->getExtensionThree()->getResistanceError()==1));
+        tPoint.setTiltError(std::isnan(tPoint.getTilt()) || trace->getExtensionThree()->getTiltError()==1);
+        tPoint.setLeakageError(std::isnan(tPoint.getLeakage()) || trace->getExtensionFive()->getLeakageError()==1);
+
+        tPoint.checkTestStatus();
+        //tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
+        tMap->insert(tPoint.getLine()*10000+tPoint.getPoint(),TestPoint(tPoint));
         if (trace->getExtensionOne()->getReceiverLineNum()==currentLine)
         {
             channelsPerLine++;
         }
+
         else
         {
+            if (badChannelInRow>limits.maxInRow && limits.maxInRow!=0)
+            {
+                *p_stream<<QString("Превышено максимальное число неработающих каналов подряд: %1\n").arg(badChannelInRow);
+                result = false;
+            }
+
             badPercent= 100.0*badChannelPerLine/channelsPerLine;
             *p_stream<<QString("Количество неисправных каналов на линии: %1(%2%)\n").arg(badChannelPerLine).arg(badPercent);
             if (badChannelPerLine>limits.maxInLine && limits.maxInLine!=0.0)
@@ -660,7 +680,28 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const TestLimi
             badChannelInRow=0;
             channelsPerLine=0;
         }
-        if (trace->getExtensionThree()->getResistanceError()==1 || std::isnan(trace->getExtensionThree()->getResistanceValue()))
+
+        if (tPoint.getTestError())
+        {
+            badChannelPerLine++;
+            badChannelInRow++;
+            *p_stream<<QString("%1\t%2\t%3\t%4\t%5\t%6\t%7\t%8\n").arg(this->getGeneralThree().getExtendedFileNumber())
+                       .arg(this->getGeneralThree().getLineNumber()).arg(this->getGeneralThree().getPointNumber())
+                       .arg(tPoint.getLine()).arg(tPoint.getPoint())
+                       .arg(tPoint.getResistance()).arg(tPoint.getTilt())
+                       .arg(tPoint.getLeakage());
+           // tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
+            continue;
+        }
+        if (badChannelInRow>limits.maxInRow && limits.maxInRow!=0)
+        {
+            *p_stream<<QString("Превышено максимальное число неработающих каналов подряд: %1\n").arg(badChannelInRow);
+            result = false;
+        }
+        //tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
+        badChannelInRow=0;
+
+        /*if (trace->getExtensionThree()->getResistanceError()==1 || std::isnan(trace->getExtensionThree()->getResistanceValue()))
         {
             badChannelPerLine++;
             badChannelInRow++;
@@ -673,8 +714,8 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const TestLimi
             tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
             //qDebug()<<QString("Обнаружен неисправный канал %1. Resistance=%2").arg(trace->getExtensionOne()->getLinePointNum()).arg(trace->getExtensionThree()->getResistanceValue());
             continue;
-        }
-        if (trace->getExtensionThree()->getTiltError()==1 || std::isnan(trace->getExtensionThree()->getTiltValue()))
+        }*/
+        /*if (trace->getExtensionThree()->getTiltError()==1 || std::isnan(trace->getExtensionThree()->getTiltValue()))
         {
             badChannelPerLine++;
             badChannelInRow++;
@@ -686,8 +727,8 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const TestLimi
             tPoint.setTestStatus(false);
             tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
             continue;
-        }
-        if (trace->getExtensionFive()->getLeakageError()==1 || std::isnan(trace->getExtensionFive()->getLeakageValue()))
+        }*/
+        /*if (trace->getExtensionFive()->getLeakageError()==1 || std::isnan(trace->getExtensionFive()->getLeakageValue()))
         {
             badChannelPerLine++;
             badChannelInRow++;
@@ -699,15 +740,20 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const TestLimi
             tPoint.setTestStatus(false);
             tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
             continue;
-        }
-        if (badChannelInRow>limits.maxInRow && limits.maxInRow!=0)
+        }*/
+        /*if (badChannelInRow>limits.maxInRow && limits.maxInRow!=0)
         {
             *p_stream<<QString("Превышено максимальное число неработающих каналов подряд: %1\n").arg(badChannelInRow);
             result = false;
         }
         tPoint.setTestStatus(true);
         tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
-        badChannelInRow=0;
+        badChannelInRow=0;*/
+    }
+    if (badChannelInRow>limits.maxInRow && limits.maxInRow!=0)
+    {
+        *p_stream<<QString("Превышено максимальное число неработающих каналов подряд: %1\n").arg(badChannelInRow);
+        result = false;
     }
     badPercent= 100.0*badChannelPerLine/channelsPerLine;
     *p_stream<<QString("Количество неисправных каналов на линии: %1(%2%)\n").arg(badChannelPerLine).arg(badPercent);
@@ -717,11 +763,11 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const TestLimi
     }
     incorrectTraces+=badChannelPerLine;
     badPercent = 100.0*incorrectTraces/this->getExtendedHeader().getNumberOfSeis();
+    *p_stream<<QString("Количество неисправных каналов на всей рассановке: %1(%2%)\n").arg(incorrectTraces).arg(badPercent);
     if (badChannelPerLine>limits.maxAll && limits.maxAll!=0)
     {
         result =false;
     }
-    *p_stream<<QString("Количество неисправных каналов на всей рассановке: %1(%2%)\n").arg(incorrectTraces).arg(badPercent);
     return qMakePair(badPercent,result);
 }
 

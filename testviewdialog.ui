@@ -47,11 +47,19 @@
       <enum>Qt::Horizontal</enum>
      </property>
      <widget class="QTableView" name="tableView"/>
-     <widget class="QWidget" name="widget" native="true"/>
+     <widget class="QtCharts::QChartView" name="widget" native="true"/>
     </widget>
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QtCharts::QChartView</class>
+   <extends>QWidget</extends>
+   <header location="global">QtCharts/QChartView</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

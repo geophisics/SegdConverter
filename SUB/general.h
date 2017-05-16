@@ -2,6 +2,7 @@
 #define GENERAL_H
 #include "SUB/threadsafevector.h"
 #include "SUB/threadsavemap.h"
+#include "SUB/threadsavehash.h"
 #include <QVariant>
 #include <SUB/point.h>
 typedef QVector<QPair<QVariant,bool> > AttributesFromFile; // атрибуты одного файла
@@ -10,8 +11,9 @@ typedef QPair<float,float> AttributesRange;
 
 typedef QPair<quint32,quint32> PointId;
 
-typedef ThreadSaveMap<PointId,TestPoint> TestMap;
-
+//typedef ThreadSaveMap<PointId,TestPoint> TestMap;
+//typedef ThreadSaveHash<PointId,TestPoint> TestMap;
+typedef ThreadSaveHash<uint,TestPoint> TestMap;
 
 
 

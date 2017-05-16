@@ -1,51 +1,53 @@
-#ifndef THREADSAVEMAP_H
-#define THREADSAVEMAP_H
+#ifndef THREADSAVEHASH_H
+#define THREADSAVEHASH_H
 
 #include <QReadWriteLock>
 #include <QReadLocker>
 #include <QWriteLocker>
-#include <QMap>
+#include <QHash>
 
 template <typename T1,typename T2>
-class ThreadSaveMap
+
+class ThreadSaveHash
 {
 public:
-    explicit ThreadSaveMap() {}
+    explicit ThreadSaveHash() {}
     int count() const
     {
         QReadLocker locker(&lock);
-        return map.count();
+        return hash.count();
     }
     bool isEmpty() const
     {
         QReadLocker locker(&lock);
-        return map.isEmpty();
+        return hash.isEmpty();
     }
     void clear()
     {
         QWriteLocker locker(&lock);
-        map.clear();
+        hash.clear();
     }
     void insert(const T1 &key,const T2 &value)
     {
         QWriteLocker locker(&lock);
-        map.insert(key,value);
+        hash.insert(key,value);
     }
 
     T2 value(const T1 &key) const
     {
         QReadLocker locker(&lock);
-        return map.value(key);
+        return hash.value(key);
     }
     QList<T2> values() const
     {
         QReadLocker locker(&lock);
-        return map.values();
+        return hash.values();
     }
 
 private:
     mutable QReadWriteLock lock;
-    QMap<T1,T2> map;
+    QHash<T1,T2> hash;
 };
 
-#endif // THREADSAVEMAP_H
+
+#endif // THREADSAVEHASH_H

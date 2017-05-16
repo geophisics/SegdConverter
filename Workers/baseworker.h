@@ -124,6 +124,8 @@ public:
     void setAttrFilePath(const QString &path);
     void setXpsPath(const QString &path);
 
+    void setTestMap(TestMap *map);
+
 
     void setCheckTests(const bool &b);
     void setCheckAuxes(const bool &b);
@@ -190,6 +192,7 @@ signals:
     void sendVectors(QVector<QPointF> *trace,bool,QVector<QPointF> *spectrum,bool,int);
     void sendExplAuxes(int, QVector<QPointF>* , bool,QVector<QPointF>* , bool,QVector<QPointF>* , bool, float, float);
     void attributesCounted();
+    void testCounted();
 
 
     //void sendAuxPairs(QPair<bool,int> auxAkfTrace,QPair<bool,int> spectrum);

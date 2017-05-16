@@ -352,14 +352,14 @@ void SegdConverterWindow::runActionSlot()
 
     if (ui->outFileLabel->text()=="Файл CST")
     {
-       // CstWorker *p_cstWorker = new CstWorker(&running,attr_model->getAttributes());
-        CstWorker *p_cstWorker = new CstWorker(&running,attr_model->getAttributes(),&tMap);
+        CstWorker *p_cstWorker = new CstWorker(&running,attr_model->getAttributes());
+        //CstWorker *p_cstWorker = new CstWorker(&running,attr_model->getAttributes(),&tMap);
         startThread(p_cstWorker);
     }
     else
     {
-        //SegyWorker *p_segyWorker = new SegyWorker(&running,attr_model->getAttributes());
-        SegyWorker *p_segyWorker = new SegyWorker(&running,attr_model->getAttributes(),&tMap);
+        SegyWorker *p_segyWorker = new SegyWorker(&running,attr_model->getAttributes());
+        //SegyWorker *p_segyWorker = new SegyWorker(&running,attr_model->getAttributes(),&tMap);
         startThread(p_segyWorker);
     }
 }
@@ -444,11 +444,17 @@ void SegdConverterWindow::startThread(BaseWorker *worker)
     if (ui->actionAuxes->isChecked()) {
         setViewAuxesDialog(worker);
     }
+    if (ui->actionAnalyzeTests->isChecked())
+    {
+        setTestViewDialog(worker);
+    }
     connect(p_myThread,SIGNAL(started()),worker,SLOT(Converting()));
     connect(worker,SIGNAL(finished()),p_myThread,SLOT(quit()));
     connect(worker,SIGNAL(finished()),this,SLOT(convertingEnded()));
     connect(worker,SIGNAL(finished()),worker,SLOT(deleteLater()));
     connect(p_myThread,SIGNAL(finished()),p_myThread,SLOT(deleteLater()));
+
+
     connect(worker,SIGNAL(attributesCounted()),attr_model,SIGNAL(layoutChanged()));
     connect(attr_model,SIGNAL(layoutChanged()),ui->attributesTableView,SLOT(scrollToBottom()));
     connect(ui->actionStop,SIGNAL(triggered(bool)),worker,SLOT(stopRunning()));
@@ -515,6 +521,11 @@ void SegdConverterWindow::runCst()
     if (ui->actionAuxes->isEnabled())  {
         setViewAuxesDialog(p_cstWorker);
     }
+
+    if (ui->actionAnalyzeTests->isChecked())
+    {
+        setTestViewDialog(p_cstWorker);
+    }
     connect(p_myThread,SIGNAL(started()),p_cstWorker,SLOT(Converting()));
     connect(p_cstWorker,SIGNAL(finished()),p_myThread,SLOT(quit()));
     connect(p_cstWorker,SIGNAL(finished()),this,SLOT(convertingEnded()));
@@ -539,6 +550,18 @@ void SegdConverterWindow::setViewAuxesDialog(BaseWorker *worker)
     connect (worker,SIGNAL(sendExplAuxes(int, QVector<QPointF>*,bool,QVector<QPointF>*,bool,QVector<QPointF>*,bool,float,float)),viewDialog,SLOT(receiveExplAuxes(int,QVector<QPointF>*,bool,QVector<QPointF>*,bool,QVector<QPointF>*,bool,float,float)));
     viewDialog.data()->show();
     ui->actionAuxesDisplay->setEnabled(true);
+}
+
+
+void SegdConverterWindow::setTestViewDialog(BaseWorker *worker)
+{
+    if (testViewDialog.isNull())
+    {
+        testViewDialog = new TestViewDialog(this);
+    }
+    worker->setTestMap(testViewDialog.data()->getTestMap());
+    connect(worker,SIGNAL(testCounted()),testViewDialog.data(),SLOT(newTestReceived()));
+    testViewDialog.data()->show();
 }
 
 

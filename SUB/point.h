@@ -36,17 +36,45 @@ public:
     void setX(const float &f);
     void setY(const float &f);
     void setZ(const float &f);
+
+    void setResistance(const float &f);
+    void setTilt(const float &f);
+    void setLeakage(const float &f);
+
+    void setResistanceError(const bool &b);
+    void setTiltError(const bool &b);
+    void setLeakageError(const bool &b);
+
     void setTestStatus(const bool &b);
+
+    void checkTestStatus();
+
 
     int getLine() const;
     int getPoint() const;
     float getX() const;
     float getY() const;
     float getZ() const;
-    bool getTestStatus() const;
+
+    float getLeakage() const;
+    float getTilt() const;
+    float getResistance() const;
+
+    bool getLeakageError() const;
+    bool getTiltError() const;
+    bool getResistanceError() const;
+
+    bool getTestError() const;
 
 private:
-    bool testStatus;
+    bool testError;
+    float resistanceValue;
+    bool resistanceError;
+    float tiltValue;
+    bool tiltError;
+    float leakageValue;
+    bool leakageError;
+
 };
 
 class XFile

@@ -2,6 +2,7 @@
 #define TABLEVIEWDIALOG_H
 
 #include <QDialog>
+
 namespace Ui {
 class TableViewDialog;
 }
@@ -18,6 +19,7 @@ public:
 private:
     Ui::TableViewDialog *ui;
     QSet<int> *checkedRows;
+
 private slots:
     void okClicked();
     void selectAllSlot();

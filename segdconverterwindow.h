@@ -96,6 +96,7 @@ private:
     void runCst();
     void startThread(BaseWorker *worker);
     void setViewAuxesDialog(BaseWorker *worker);
+    void setTestViewDialog(BaseWorker *worker);
     void saveAttributes(const QString &path);
     void setValidators();
     void filtersConnecting();

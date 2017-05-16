@@ -47,6 +47,11 @@ void BaseWorker::setXpsPath(const QString &path)
     paths.insert("XpsPath",QDir::toNativeSeparators(path));
 }
 
+void BaseWorker::setTestMap(TestMap *map)
+{
+    testMap = map;
+}
+
 void BaseWorker::setCheckTests(const bool &b)
 {
     checkTests = b;
@@ -828,6 +833,7 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
 void BaseWorker::checkingTests(SegdFile *segd)
 {
     fileAttributes.append(segd->checkTests(&logStream,testLimits,testMap));
+    emit testCounted();
 }
 
 QVector<float> BaseWorker::getSpectrumDb(std::vector<float> traceData)

@@ -69,7 +69,13 @@ TestPoint::TestPoint()
     x = 0;
     y = 0;
     z = 0;
-    testStatus = true;
+
+    resistanceError = false;
+    tiltError = false;
+    leakageError = false;
+
+    testError= false;
+
 }
 TestPoint::TestPoint(const TestPoint &other)
 {
@@ -78,7 +84,13 @@ TestPoint::TestPoint(const TestPoint &other)
     x = other.x;
     y = other.y;
     z = other.z;
-    testStatus = other.testStatus;
+    resistanceValue = other.resistanceValue;
+    resistanceError = other.resistanceError;
+    tiltValue = other.tiltValue;
+    tiltError = other.tiltError;
+    leakageValue = other.leakageValue;
+    leakageError = other.leakageError;
+    testError = other.testError;
 }
 
 void TestPoint::setX(const float &f)
@@ -93,9 +105,42 @@ void TestPoint::setZ(const float &f)
 {
     z = f;
 }
+
+void TestPoint::setResistance(const float &f)
+{
+    resistanceValue =f;
+}
+
+void TestPoint::setTilt(const float &f)
+{
+    tiltValue = f;
+}
+void TestPoint::setLeakage(const float &f)
+{
+    leakageValue = f;
+}
+
+void TestPoint::setResistanceError(const bool &b)
+{
+    resistanceError =b;
+}
+void TestPoint::setTiltError(const bool &b)
+{
+    tiltError = b;
+}
+void TestPoint::setLeakageError(const bool &b)
+{
+    leakageError =b;
+}
+
 void TestPoint::setTestStatus(const bool &b)
 {
-    testStatus = b;
+    testError = b;
+}
+
+void TestPoint::checkTestStatus()
+{
+    testError = (tiltError || resistanceError || leakageError);
 }
 
 int TestPoint::getLine() const
@@ -120,12 +165,40 @@ float TestPoint::getZ() const
 {
     return z;
 }
-bool TestPoint::getTestStatus() const
+bool TestPoint::getTestError() const
 {
-    return testStatus;
+    return testError;
 }
 
+float TestPoint::getLeakage() const
+{
+    return leakageValue;
+}
 
+bool TestPoint::getLeakageError() const
+{
+    return leakageError;
+}
+
+bool TestPoint::getTiltError() const
+{
+    return tiltError;
+}
+
+float TestPoint::getTilt() const
+{
+    return tiltValue;
+}
+
+float TestPoint::getResistance() const
+{
+    return resistanceValue;
+}
+
+bool TestPoint::getResistanceError() const
+{
+    return resistanceError;
+}
 XFile::XFile()
 {
 

@@ -92,7 +92,8 @@ HEADERS  += segdconverterwindow.h \
     SUB/threadsavemap.h \
     Models/testmodel.h \
     testviewdialog.h \
-    testparametersdialog.h
+    testparametersdialog.h \
+    SUB/threadsavehash.h
 
 
 
@@ -118,4 +119,7 @@ unix|win32: LIBS += -L$$PWD/../../AquilaLib/lib/ -lOoura_fft
 INCLUDEPATH += $$PWD/../../AquilaLib/include
 DEPENDPATH += $$PWD/../../AquilaLib/include
 
-
+RC_ICONS = geophis.ico
+QMAKE_TARGET_COMPANY = "SNGEO"
+QMAKE_TARGET_COPYRIGHT = "Nikolay Mordashov"
+QMAKE_TARGET_DESCRIPTION = "QC for field data"
