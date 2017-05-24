@@ -13,7 +13,7 @@
 #include "SUB/general.h"
 #include <mydoublevalidator.h>
 #include <testparametersdialog.h>
-
+#include "form.h"
 
 SegdConverterWindow::SegdConverterWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -543,10 +543,10 @@ void SegdConverterWindow::setViewAuxesDialog(BaseWorker *worker)
 {
     if (viewDialog.isNull())
     {
-        viewDialog = new AuxViewDialog(this);
+        viewDialog = new AuxViewDialog();
     }
     connect (ui->actionAuxesDisplay,SIGNAL(triggered(bool)),viewDialog.data(),SLOT(show()));
-    connect (worker,SIGNAL(sendVectors(QVector<QPointF>*,bool,QVector<QPointF>*,bool,int)),viewDialog,SLOT(receiveVectors(QVector<QPointF>*,bool,QVector<QPointF>*,bool,int)));
+    connect (worker,SIGNAL(sendVectors(QVector<QPointF>*,bool,QVector<QPointF>*,bool,int)),viewDialog,SLOT(receiveVibAuxes(QVector<QPointF>*,bool,QVector<QPointF>*,bool,int)));
     connect (worker,SIGNAL(sendExplAuxes(int, QVector<QPointF>*,bool,QVector<QPointF>*,bool,QVector<QPointF>*,bool,float,float)),viewDialog,SLOT(receiveExplAuxes(int,QVector<QPointF>*,bool,QVector<QPointF>*,bool,QVector<QPointF>*,bool,float,float)));
     viewDialog.data()->show();
     ui->actionAuxesDisplay->setEnabled(true);

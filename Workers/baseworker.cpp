@@ -466,21 +466,21 @@ void BaseWorker::countAttributesInWindow(QVector<QVector<float> > &traces, const
     if (windows.at(winNb).countAmpl)
     {
         attribute = getAbsAvg(traces);
-        checkAttribute = attribute>windows.at(winNb).minAmpl ? true:false;
+        checkAttribute = attribute>=windows.at(winNb).minAmpl ? true:false;
         fileAttributes.append(qMakePair(attribute,checkAttribute));
         ampls->insert(QString("A%1").arg(winNb+1),attribute);
     }
     if (windows.at(winNb).countRms)
     {
         attribute = getAbsAvg(traces);
-        checkAttribute = attribute>windows.at(winNb).minRms ? true:false;
+        checkAttribute = attribute>=windows.at(winNb).minRms ? true:false;
         fileAttributes.append(qMakePair(attribute,checkAttribute));
         ampls->insert(QString("R%1").arg(winNb+1),attribute);
     }
     if (windows.at(winNb).countFreq)
     {
         attribute = countFreq(traces,sInt);
-        checkAttribute = attribute>windows.at(winNb).minFreq ? true:false;
+        checkAttribute = attribute>=windows.at(winNb).minFreq ? true:false;
         fileAttributes.append(qMakePair(attribute,checkAttribute));
     }
     if (windows.at(winNb).countEnergy || windows.at(winNb).countDfr || windows.at(winNb).writeSpectrum )
@@ -511,7 +511,7 @@ void BaseWorker::countAttributesInWindow(QVector<QVector<float> > &traces, const
            attribute = getEnergy(spectrum,frqStep);
            if (windows.at(winNb).countEnergy)
            {
-               checkAttribute = attribute>windows.at(winNb).minEnergy ? true:false;
+               checkAttribute = attribute>=windows.at(winNb).minEnergy ? true:false;
                fileAttributes.append(qMakePair(attribute,checkAttribute));
            }
            if (windows.at(winNb).countDfr)
@@ -524,7 +524,7 @@ void BaseWorker::countAttributesInWindow(QVector<QVector<float> > &traces, const
                {
                    attribute = getWidth(spectrum)*frqStep;
                }
-               checkAttribute = attribute>windows.at(winNb).minDfr ? true:false;
+               checkAttribute = attribute>=windows.at(winNb).minDfr ? true:false;
                fileAttributes.append(qMakePair(attribute,checkAttribute));
 
            }
@@ -882,7 +882,7 @@ bool BaseWorker::checkConfirmedTimeBreak(QVector<float> traceData, const int &sI
     {
         return false;
     }
-    if (fabs(maxAmpl - confirmedTimeBreak.maxAmpl)/confirmedTimeBreak.maxAmpl*100 > 5)
+    if (fabs(maxAmpl - confirmedTimeBreak.maxAmpl)/confirmedTimeBreak.maxAmpl*100.0 > 5.0)
     {
         return false;
     }
