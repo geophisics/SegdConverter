@@ -627,12 +627,22 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const TestLimi
         itTrace++;
         trace = *itTrace;
     }
-
     uint currentLine = trace->getExtensionOne()->getReceiverLineNum();
+    uint currentChannel;
     int badChannelPerLine = 0;
     uint badChannelInRow =0;
     int channelsPerLine =0;
     float badPercent =0.0;
+
+    XFile xFile(this->getGeneralThree().getExtendedFileNumber(),
+                this->getGeneralThree().getLineNumber(),
+                this->getGeneralThree().getPointNumber());
+    Template xTemplate;
+    xTemplate.firstChannel = trace->getTraceHeader()->getTraceNumber();
+    xTemplate.receiverLine = trace->getExtensionOne()->getReceiverLineNum();
+    xTemplate.firstReceiver = trace->getExtensionOne()->getReceiverPointNum();
+
+
     for ( ;itTrace!=tracesOfSegd.end();++itTrace)
     {
         trace = *itTrace;
@@ -653,34 +663,54 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const TestLimi
         tPoint.setLeakageError(std::isnan(tPoint.getLeakage()) || trace->getExtensionFive()->getLeakageError()==1);
 
         tPoint.checkTestStatus();
-        //tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
         tMap->insert(tPoint.getLine()*10000+tPoint.getPoint(),TestPoint(tPoint));
+
+        //если номер линии не изменился
         if (trace->getExtensionOne()->getReceiverLineNum()==currentLine)
         {
             channelsPerLine++;
         }
-
+        //если номер линии изменился
+        //----------------------------------------------------
         else
         {
+            //проверяем количество неисправных каналов на прошлой линии подряд
             if (badChannelInRow>limits.maxInRow && limits.maxInRow!=0)
             {
                 *p_stream<<QString("Превышено максимальное число неработающих каналов подряд: %1\n").arg(badChannelInRow);
                 result = false;
             }
-
+            //считаем количество неисправных каналов на прошлой линии всего
             badPercent= 100.0*badChannelPerLine/channelsPerLine;
             *p_stream<<QString("Количество неисправных каналов на линии: %1(%2%)\n").arg(badChannelPerLine).arg(badPercent);
             if (badChannelPerLine>limits.maxInLine && limits.maxInLine!=0.0)
             {
                 result =false;
             }
+            //записываем линию в описание расстановки
+            xTemplate.lastChannel = trace->getTraceHeader()->getTraceNumber()-1;
+            xTemplate.lastReceiver = currentChannel;
+            xFile.addLineToTemplate(Template(xTemplate));
+            //и обьявляем новую линию
+            xTemplate.firstChannel = trace->getTraceHeader()->getTraceNumber();
+            xTemplate.receiverLine = trace->getExtensionOne()->getReceiverLineNum();
+            xTemplate.firstReceiver = trace->getExtensionOne()->getReceiverPointNum();
+            //объявляем новую линию и обнуляем счетчики
             currentLine = trace->getExtensionOne()->getReceiverLineNum();
             incorrectTraces+=badChannelPerLine;
             badChannelPerLine =0;
             badChannelInRow=0;
             channelsPerLine=0;
         }
+        //------------------------------------------------------------------------------
+        //если разрыв нумерации пикетов на линии то сбрасываем счетчик неисправных каналов подряд
+        if (tPoint.getPoint()-currentChannel!=1)
+        {
 
+            badChannelInRow=0;
+        }
+        currentChannel = tPoint.getPoint();
+        // если канал неисправен то добавляем к счетчикам неисправных каналов 1 и продолжаем цикл
         if (tPoint.getTestError())
         {
             badChannelPerLine++;
@@ -690,66 +720,19 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const TestLimi
                        .arg(tPoint.getLine()).arg(tPoint.getPoint())
                        .arg(tPoint.getResistance()).arg(tPoint.getTilt())
                        .arg(tPoint.getLeakage());
-           // tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
             continue;
         }
+        //если канал исправен то проверяем количество неисправных каналов подряд...
         if (badChannelInRow>limits.maxInRow && limits.maxInRow!=0)
         {
             *p_stream<<QString("Превышено максимальное число неработающих каналов подряд: %1\n").arg(badChannelInRow);
             result = false;
         }
-        //tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
+        // и сбрасываем счетчик неисправных каналов
         badChannelInRow=0;
-
-        /*if (trace->getExtensionThree()->getResistanceError()==1 || std::isnan(trace->getExtensionThree()->getResistanceValue()))
-        {
-            badChannelPerLine++;
-            badChannelInRow++;
-            *p_stream<<QString("%1\t%2\t%3\t%4\t%5\t%6\t%7\t%8\n").arg(this->getGeneralThree().getExtendedFileNumber())
-                       .arg(this->getGeneralThree().getLineNumber()).arg(this->getGeneralThree().getPointNumber())
-                       .arg(trace->getExtensionOne()->getReceiverLineNum()).arg(trace->getExtensionOne()->getReceiverPointNum())
-                       .arg(trace->getExtensionThree()->getResistanceValue()).arg(trace->getExtensionThree()->getTiltValue())
-                       .arg(trace->getExtensionFive()->getLeakageValue());
-            tPoint.setTestStatus(false);
-            tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
-            //qDebug()<<QString("Обнаружен неисправный канал %1. Resistance=%2").arg(trace->getExtensionOne()->getLinePointNum()).arg(trace->getExtensionThree()->getResistanceValue());
-            continue;
-        }*/
-        /*if (trace->getExtensionThree()->getTiltError()==1 || std::isnan(trace->getExtensionThree()->getTiltValue()))
-        {
-            badChannelPerLine++;
-            badChannelInRow++;
-            *p_stream<<QString("%1\t%2\t%3\t%4\t%5\t%6\t%7\t%8\n").arg(this->getGeneralThree().getExtendedFileNumber())
-                       .arg(this->getGeneralThree().getLineNumber()).arg(this->getGeneralThree().getPointNumber())
-                       .arg(trace->getExtensionOne()->getReceiverLineNum()).arg(trace->getExtensionOne()->getReceiverPointNum())
-                       .arg(trace->getExtensionThree()->getResistanceValue()).arg(trace->getExtensionThree()->getTiltValue())
-                       .arg(trace->getExtensionFive()->getLeakageValue());
-            tPoint.setTestStatus(false);
-            tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
-            continue;
-        }*/
-        /*if (trace->getExtensionFive()->getLeakageError()==1 || std::isnan(trace->getExtensionFive()->getLeakageValue()))
-        {
-            badChannelPerLine++;
-            badChannelInRow++;
-            *p_stream<<QString("%1\t%2\t%3\t%4\t%5\t%6\t%7\t%8\n").arg(this->getGeneralThree().getExtendedFileNumber())
-                       .arg(this->getGeneralThree().getLineNumber()).arg(this->getGeneralThree().getPointNumber())
-                       .arg(trace->getExtensionOne()->getReceiverLineNum()).arg(trace->getExtensionOne()->getReceiverPointNum())
-                       .arg(trace->getExtensionThree()->getResistanceValue()).arg(trace->getExtensionThree()->getTiltValue())
-                       .arg(trace->getExtensionFive()->getLeakageValue());
-            tPoint.setTestStatus(false);
-            tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
-            continue;
-        }*/
-        /*if (badChannelInRow>limits.maxInRow && limits.maxInRow!=0)
-        {
-            *p_stream<<QString("Превышено максимальное число неработающих каналов подряд: %1\n").arg(badChannelInRow);
-            result = false;
-        }
-        tPoint.setTestStatus(true);
-        tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
-        badChannelInRow=0;*/
     }
+
+    //проверяем неисправные каналы на последней линии расстановки
     if (badChannelInRow>limits.maxInRow && limits.maxInRow!=0)
     {
         *p_stream<<QString("Превышено максимальное число неработающих каналов подряд: %1\n").arg(badChannelInRow);
@@ -761,6 +744,7 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const TestLimi
     {
         result =false;
     }
+    //считаем и проверяем количество неисправных каналов на всей расстановке
     incorrectTraces+=badChannelPerLine;
     badPercent = 100.0*incorrectTraces/this->getExtendedHeader().getNumberOfSeis();
     *p_stream<<QString("Количество неисправных каналов на всей рассановке: %1(%2%)\n").arg(incorrectTraces).arg(badPercent);
@@ -770,6 +754,9 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const TestLimi
     }
     return qMakePair(badPercent,result);
 }
+
+
+
 
 QList<int> SegdFile::getLPs()
 {
@@ -881,15 +868,10 @@ QStringList SegdFile::getXFile()
     QList<int> lps = getLPs();
     QList<int>::iterator itList = lps.begin();
     QVector<SegdTrace*> tracesPerLine;
-    //int badLines=0;
     for (; itList!=lps.end();++itList)
     {
         tracesPerLine=getLineTraces(*itList);
         xFile.append(getXLine(tracesPerLine));
-        //if (!checkLine(tracesPerLine,badTraces,badTracesPercent))
-        //{
-        //    badLines++;
-        //}
     }
     return xFile;
 }
