@@ -83,15 +83,23 @@ class XFile
 public:
     explicit XFile();
     explicit XFile(QQueue<QString> strList);
+    explicit XFile(const uint &fileNum,const uint &line, const uint &point);
+
     uint getLine();
     uint getPoint();
-    QQueue<Template>* getTemplates();
+    uint getFfid();
+    QQueue<Template> getTemplates();
     bool checkTemplates();
+    void addLineToTemplate(Template templ);
+    void setFfid(const uint &f);
+    void setSourceLine(const uint &line);
+    void setSourcePoint (const uint &point);
+    bool pointInTemplate(const uint &line, const uint &point) const;
 private:
     uint ffid;
     uint sourceLine;
     uint sourcePoint;
-    QQueue<Template> *templates;
+    QQueue<Template> templates;
 
     //QVector<Template> templates;
 };
@@ -100,6 +108,7 @@ struct Template
 {
     Template();
     Template(const QString &str);
+    Template(const Template &other);
     uint increment;
     uint firstChannel;
     uint lastChannel;

@@ -52,6 +52,11 @@ void BaseWorker::setTestMap(TestMap *map)
     testMap = map;
 }
 
+void BaseWorker::setXFileMap(XFileMap *map)
+{
+    xFileMap = map;
+}
+
 void BaseWorker::setCheckTests(const bool &b)
 {
     checkTests = b;
@@ -192,7 +197,7 @@ void BaseWorker::readSettings()
     if (analysisAuxes)
     {
         settings->beginGroup("/VibAuxSettings");
-        akf.traceNb =settings->value("/AkfTrace",2).toUInt();
+        akf.traceNb =settings->value("/AkfTrace",2).toUInt()-1;
         akf.maxTime = settings->value("/PeakTime",500).toUInt();
         akf.frqLvl = settings->value("/FreqLvl",-50).toInt();
         akf.minFrq = settings->value("/MinFreq",7).toUInt();
@@ -203,20 +208,24 @@ void BaseWorker::readSettings()
         settings->beginGroup("/ExplAuxSettings");
 
         timeBreak.check = settings->value("/CheckTimeBreak",true).toBool();
-        timeBreak.traceNb = settings->value("/TimeBreakTraceNb",1).toUInt();
+        timeBreak.traceNb = settings->value("/TimeBreakTraceNb",1).toUInt()-1;
         timeBreak.maxTime = settings->value("/TimeBreakTmax",10).toInt();
         timeBreak.maxAmpl = settings->value("/TimeBreakAmax",500).toFloat();
         timeBreak.nbOfDiscret = settings->value("/TimeBreakNbOfDiscret",4).toUInt();
 
         confirmedTimeBreak.check =  settings->value("/CheckConfirmedTimeBreak",true).toBool();
 
-        confirmedTimeBreak.traceNb = settings->value("/ConfirmedTimeBreakTraceNb",2).toUInt();
+        confirmedTimeBreak.traceNb = settings->value("/ConfirmedTimeBreakTraceNb",2).toUInt()-1;
         confirmedTimeBreak.maxTime = settings->value("/ConfirmedTimeBreakTmax",10).toUInt();
         confirmedTimeBreak.maxAmpl = settings->value("/ConfirmedTimeBreakAmax",500).toFloat();
         confirmedTimeBreak.nbOfDiscret = settings->value("/ConfirmedTimeBreakNbOfDiscret",90).toUInt();
+        confirmedTimeBreak.useConstant =settings->value("/ConfirmedTimeBreakConstant",false).toBool();
+        confirmedTimeBreak.tvOffset = settings->value("/ConfirmedTimeBreakTvOffset",350).toUInt();
 
         upholeTime.check = settings->value("/CheckUpholeTime",false).toBool();
-        upholeTime.traceNb = settings->value("/UpholeTimeTraceNb",3).toInt();
+        upholeTime.traceNb = settings->value("/UpholeTimeTraceNb",3).toInt()-1;
+        upholeTime.useConstant = settings->value("/UpholeTimeConstant",false).toBool();
+        upholeTime.tvOffset = settings->value("/UpholeTimeOffset",800).toUInt();
         settings->endGroup();
     }
     if (checkTests)
@@ -728,7 +737,7 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
 {
     if (segd->getExtendedHeader().getTypeOfProcess() > 2 && segd->getExtendedHeader().getTypeOfSource()==2 )
     {
-        QVector<float> traceData = segd->getTrace(akf.traceNb-1)->getTraceData();
+        QVector<float> traceData = segd->getTrace(akf.traceNb)->getTraceData();
         QVector<float> spectrum = getSpectrumDb(traceData.toStdVector());
         uint sampleRate = segd->getExtendedHeader().getSampleRate()/1000;
         float maxAmpl = *std::max_element(traceData.begin(),traceData.end());
@@ -764,7 +773,7 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
         int numOfSamplesForTrace = akf.maxTime*2/sampleRate;
         for (int i=0 ; i<=numOfSamplesForTrace; i++)
         {
-            tracePoints->append(QPointF(segd->getTrace(akf.traceNb-1)->getTraceData().value(i),i*segd->getExtendedHeader().getSampleRate()/1000));
+            tracePoints->append(QPointF(segd->getTrace(akf.traceNb)->getTraceData().value(i),i*segd->getExtendedHeader().getSampleRate()/1000));
         }
         if (checkSpectrum && checkAkfTrace)
         {
@@ -784,19 +793,19 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
         bool correctTimeBreak, correctConfrimedTimeBreak, correctUpholeTime;
         int sampleInt = segd->getExtendedHeader().getSampleRate()/1000;
         if (timeBreak.check){
-            correctTimeBreak = checkTimeBreak(segd->getTrace(timeBreak.traceNb-1)->getTraceData(),sampleInt);
+            correctTimeBreak = checkTimeBreak(segd->getTrace(timeBreak.traceNb)->getTraceData(),sampleInt);
         }
         else{
             correctTimeBreak = true;
         }
         if (confirmedTimeBreak.check)
         {
-            correctConfrimedTimeBreak = checkConfirmedTimeBreak(segd->getTrace(confirmedTimeBreak.traceNb-1)->getTraceData(),sampleInt);
+            correctConfrimedTimeBreak = checkConfirmedTimeBreak(segd->getTrace(confirmedTimeBreak.traceNb)->getTraceData(),sampleInt);
         }
         else{
             correctConfrimedTimeBreak = true;
         }
-        int countedUphole = countUpholeTime(segd->getTrace(upholeTime.traceNb-1)->getTraceData().mid(800/sampleInt+1,200/sampleInt))*sampleInt;
+        int countedUphole = countUpholeTime(segd->getTrace(upholeTime.traceNb)->getTraceData().mid(upholeTime.tvOffset/sampleInt+1,200/sampleInt))*sampleInt;
         if (abs(countedUphole*1000 - segd->getExtendedHeader().getUpholeTime())<segd->getExtendedHeader().getSampleRate())
         {
             correctUpholeTime = true;
@@ -808,14 +817,17 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
         QVector<QPointF> *timeBreakPoints = new QVector<QPointF>;
         QVector<QPointF> *confirmedTimeBreakPoints = new QVector<QPointF>;
         QVector<QPointF> *upholeTimePoints = new QVector<QPointF>;
-
-        for (int i=0; i<=1000;i+=sampleInt)
+        float tbConst = confirmedTimeBreak.useConstant ? getAuxConstant(segd->getTrace(confirmedTimeBreak.traceNb)->getTraceData(),confirmedTimeBreak.tvOffset,sampleInt) : 0.0;
+        float tvConst = upholeTime.useConstant ? getAuxConstant(segd->getTrace(upholeTime.traceNb)->getTraceData(),upholeTime.tvOffset,sampleInt) : 0.0;
+        uint maxUpholeTime = upholeTime.tvOffset +200;
+        for (uint i=0; i<=1000;i+=sampleInt)
         {
-            timeBreakPoints->append(QPointF(segd->getTrace(timeBreak.traceNb-1)->getTraceData().value(i/sampleInt),i));
-            confirmedTimeBreakPoints->append(QPointF(segd->getTrace(confirmedTimeBreak.traceNb-1)->getTraceData().value(i/sampleInt),i));
-            if (i >= 800)
+
+            timeBreakPoints->append(QPointF(segd->getTrace(timeBreak.traceNb)->getTraceData().value(i/sampleInt),i));
+            confirmedTimeBreakPoints->append(QPointF(segd->getTrace(confirmedTimeBreak.traceNb)->getTraceData().value(i/sampleInt)-tbConst,i));
+            if (i >= upholeTime.tvOffset && i<=maxUpholeTime)
             {
-            upholeTimePoints->append(QPointF(segd->getTrace(upholeTime.traceNb-1)->getTraceData().value(i/sampleInt),i));
+            upholeTimePoints->append(QPointF(segd->getTrace(upholeTime.traceNb)->getTraceData().value(i/sampleInt)-tvConst,i));
             }
         }
         if (correctTimeBreak && correctConfrimedTimeBreak &&correctUpholeTime)
@@ -832,7 +844,7 @@ void BaseWorker::chekingAuxData(SegdFile *segd)
 
 void BaseWorker::checkingTests(SegdFile *segd)
 {
-    fileAttributes.append(segd->checkTests(&logStream,testLimits,testMap));
+    fileAttributes.append(segd->checkTests(&logStream,testLimits,testMap,xFileMap));
     emit testCounted();
 }
 
@@ -857,7 +869,7 @@ bool BaseWorker::checkTimeBreak(QVector<float> traceData, const int &sInt)
     {
         return false;
     }
-    if (fabs(maxAmpl - timeBreak.maxAmpl)/timeBreak.maxAmpl*100 > 5)
+    if (fabs(maxAmpl - timeBreak.maxAmpl)/timeBreak.maxAmpl*100.0 > 10.0)
     {
         return false;
     }
@@ -882,7 +894,7 @@ bool BaseWorker::checkConfirmedTimeBreak(QVector<float> traceData, const int &sI
     {
         return false;
     }
-    if (fabs(maxAmpl - confirmedTimeBreak.maxAmpl)/confirmedTimeBreak.maxAmpl*100.0 > 5.0)
+    if (fabs(maxAmpl - confirmedTimeBreak.maxAmpl)/confirmedTimeBreak.maxAmpl*100.0 > 10.0)
     {
         return false;
     }
@@ -891,7 +903,6 @@ bool BaseWorker::checkConfirmedTimeBreak(QVector<float> traceData, const int &sI
         return false;
     }
     return true;
-
 }
 
 int BaseWorker::countUpholeTime(QVector<float> traceData)
@@ -908,6 +919,12 @@ int BaseWorker::countUpholeTime(QVector<float> traceData)
         i--;
     }
     return i-1;
+}
+
+float BaseWorker::getAuxConstant(QVector<float> traceData, const int &offset, const int &sI)
+{
+    QVector<float> constantVec = traceData.mid((offset-100)/sI,100/sI);
+    return std::accumulate(constantVec.begin(),constantVec.end(),.0)/constantVec.count();
 }
 
 

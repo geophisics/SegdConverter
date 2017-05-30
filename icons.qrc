@@ -28,12 +28,12 @@
         <file>imgs/test.png</file>
     </qresource>
     <qresource prefix="/sound">
-        <file>sounds/ambulance.mp3</file>
-        <file>sounds/bus.mp3</file>
-        <file>sounds/clock.mp3</file>
-        <file>sounds/door.mp3</file>
-        <file>sounds/fire.mp3</file>
-        <file>sounds/taxi.mp3</file>
-        <file>sounds/vuvuzela.mp3</file>
+        <file>sounds/ambulance.wav</file>
+        <file>sounds/bus.wav</file>
+        <file>sounds/clock.wav</file>
+        <file>sounds/door.wav</file>
+        <file>sounds/fire.wav</file>
+        <file>sounds/taxi.wav</file>
+        <file>sounds/vuvuzela.wav</file>
     </qresource>
 </RCC>

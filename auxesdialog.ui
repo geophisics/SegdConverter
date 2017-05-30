@@ -6,20 +6,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>401</width>
-    <height>456</height>
+    <width>480</width>
+    <height>549</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>401</width>
-    <height>0</height>
+    <width>480</width>
+    <height>525</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>401</width>
-    <height>456</height>
+    <width>480</width>
+    <height>549</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -41,7 +41,7 @@
          <item row="0" column="0">
           <widget class="QLabel" name="label">
            <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600; color:#ff0000;&quot;&gt;*&lt;/span&gt; Номер трассы АКФ&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>* Номер трассы АКФ</string>
            </property>
            <property name="buddy">
             <cstring>akfTraceNbSpinBox</cstring>
@@ -61,7 +61,7 @@
          <item row="1" column="0">
           <widget class="QLabel" name="label_2">
            <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600; color:#ff0000;&quot;&gt;*&lt;/span&gt; Минимальная частота, Гц&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>* Минимальная частота, Гц</string>
            </property>
            <property name="buddy">
             <cstring>minFreqSpinBox</cstring>
@@ -78,7 +78,7 @@
          <item row="2" column="0">
           <widget class="QLabel" name="label_3">
            <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600; color:#ff0000;&quot;&gt;*&lt;/span&gt; Максимальная частота, Гц&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>* Максимальная частота, Гц</string>
            </property>
            <property name="buddy">
             <cstring>maxFreqSpinBox</cstring>
@@ -184,7 +184,7 @@
       <attribute name="title">
        <string>Взрывной источник</string>
       </attribute>
-      <layout class="QGridLayout" name="gridLayout_6">
+      <layout class="QGridLayout" name="gridLayout_8">
        <item row="0" column="0">
         <widget class="QGroupBox" name="timeBreakGroupBox">
          <property name="title">
@@ -210,7 +210,10 @@
              <item row="0" column="0">
               <widget class="QLabel" name="timeBreakTraceNbLabel">
                <property name="text">
-                <string>Номер трассы</string>
+                <string>* Номер трассы</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
                </property>
                <property name="buddy">
                 <cstring>timeBreakTraceNbSpinBox</cstring>
@@ -230,7 +233,11 @@
              <item row="1" column="0">
               <widget class="QLabel" name="timeBreakTmaxLabel">
                <property name="text">
-                <string>Tmax</string>
+                <string>Время максимальной 
+ амплитуды, мс</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
                </property>
                <property name="buddy">
                 <cstring>timeBreakTmaxSpinBox</cstring>
@@ -250,7 +257,11 @@
              <item row="2" column="0">
               <widget class="QLabel" name="timeBreakAmaxLabel">
                <property name="text">
-                <string>Amax</string>
+                <string>Максимальная 
+амплитуда</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
                </property>
                <property name="buddy">
                 <cstring>timeBreakAmaxLineEdit</cstring>
@@ -275,6 +286,9 @@
                <property name="text">
                 <string>Количество дискретов</string>
                </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
                <property name="buddy">
                 <cstring>timeBreakNbOfDiscretSpinBox</cstring>
                </property>
@@ -297,64 +311,97 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <layout class="QVBoxLayout" name="verticalLayout">
-         <item>
-          <widget class="QGroupBox" name="upholeTimeGroupBox">
-           <property name="title">
-            <string>Аналоговое Тв</string>
-           </property>
-           <layout class="QGridLayout" name="gridLayout_4">
-            <item row="0" column="0" colspan="2">
-             <widget class="QCheckBox" name="upholeTimeCheckBox">
-              <property name="text">
-               <string>Проверять</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="upholeTimeTraceNbLabel">
-              <property name="text">
-               <string>Номер трассы</string>
-              </property>
-              <property name="buddy">
-               <cstring>upholeTimeTraceNbSpinBox</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QSpinBox" name="upholeTimeTraceNbSpinBox">
-              <property name="minimum">
-               <number>1</number>
-              </property>
-              <property name="maximum">
-               <number>10</number>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item>
-          <spacer name="verticalSpacer_2">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
+        <widget class="QGroupBox" name="upholeTimeGroupBox">
+         <property name="title">
+          <string>Аналоговое Тв</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_6">
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="upholeTimeCheckBox">
+            <property name="text">
+             <string>Проверять</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QGroupBox" name="upholeTimeSettingsGroupBox">
+            <property name="title">
+             <string/>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_4">
+             <item row="0" column="0">
+              <widget class="QLabel" name="upholeTimeTraceNbLabel">
+               <property name="text">
+                <string>* Номер трассы</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="buddy">
+                <cstring>upholeTimeTraceNbSpinBox</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QSpinBox" name="upholeTimeTraceNbSpinBox">
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>10</number>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0" colspan="2">
+              <widget class="QCheckBox" name="upholeTimeConstantCheckBox">
+               <property name="text">
+                <string>* Учитывать постоянную
+составляющую</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="upholeTimexLabel">
+               <property name="text">
+                <string>* Смещение  
+ по времени Тв, мс</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="buddy">
+                <cstring>confirmedTimeBreakAmaxLineEdit</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLineEdit" name="upholeTimeOffsetLineEdit">
+               <property name="maximumSize">
+                <size>
+                 <width>50</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="maxLength">
+                <number>10</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </item>
        <item row="1" column="0">
         <widget class="QGroupBox" name="confirmedTimeBreakGroupBox">
          <property name="title">
           <string> Подтвержденная отметка момента</string>
          </property>
-         <layout class="QGridLayout" name="gridLayout_8">
+         <layout class="QGridLayout" name="gridLayout_9">
           <item row="0" column="0">
            <widget class="QCheckBox" name="confirmedTimeBreakCheckBox">
             <property name="text">
@@ -374,7 +421,10 @@
              <item row="0" column="0">
               <widget class="QLabel" name="confirmedTimeBreakTraceNbLabel">
                <property name="text">
-                <string>Номер трассы</string>
+                <string>* Номер трассы</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
                </property>
                <property name="buddy">
                 <cstring>confirmedTimeBreakTraceNbSpinBox</cstring>
@@ -391,17 +441,21 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="0">
+             <item row="2" column="0">
               <widget class="QLabel" name="confirmedTimeBreakTmaxLabel">
                <property name="text">
-                <string>Tmax</string>
+                <string>Время максимальной 
+ амплитуды, мс</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
                </property>
                <property name="buddy">
                 <cstring>confirmedTimeBreakTmaxSpinBox</cstring>
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
+             <item row="2" column="1">
               <widget class="QSpinBox" name="confirmedTimeBreakTmaxSpinBox">
                <property name="minimum">
                 <number>1</number>
@@ -411,17 +465,21 @@
                </property>
               </widget>
              </item>
-             <item row="2" column="0">
+             <item row="3" column="0">
               <widget class="QLabel" name="confirmedTimeBreakAmaxLabel">
                <property name="text">
-                <string>Amax</string>
+                <string>Максимальная 
+амплитуда</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
                </property>
                <property name="buddy">
                 <cstring>confirmedTimeBreakAmaxLineEdit</cstring>
                </property>
               </widget>
              </item>
-             <item row="2" column="1">
+             <item row="3" column="1">
               <widget class="QLineEdit" name="confirmedTimeBreakAmaxLineEdit">
                <property name="maximumSize">
                 <size>
@@ -434,7 +492,7 @@
                </property>
               </widget>
              </item>
-             <item row="3" column="0">
+             <item row="4" column="0">
               <widget class="QLabel" name="confirmedTimeBreakNbOfDiscretLabel">
                <property name="text">
                 <string>Количество дискретов</string>
@@ -444,13 +502,48 @@
                </property>
               </widget>
              </item>
-             <item row="3" column="1">
+             <item row="4" column="1">
               <widget class="QSpinBox" name="confirmedTimeBreakNbOfDiscretSpinBox">
                <property name="minimum">
                 <number>1</number>
                </property>
                <property name="maximum">
                 <number>200</number>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="0">
+              <widget class="QLabel" name="confirmedTimeBreakTvOffsetLabel">
+               <property name="text">
+                <string>* Смещение по
+времени Тв, мс</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="buddy">
+                <cstring>confirmedTimeBreakAmaxLineEdit</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="1">
+              <widget class="QLineEdit" name="confirmedTimeBreakTvOffsetLineEdit">
+               <property name="maximumSize">
+                <size>
+                 <width>50</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="maxLength">
+                <number>10</number>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0" colspan="2">
+              <widget class="QCheckBox" name="confirmedTimeBreakConstantaCheckBox">
+               <property name="text">
+                <string>* Учитывать постоянную
+составляющую</string>
                </property>
               </widget>
              </item>
@@ -462,6 +555,13 @@
        </item>
        <item row="1" column="1">
         <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600; color:#ff0000;&quot;&gt;*&lt;/span&gt; - Заполняется пользователем&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+          </widget>
+         </item>
          <item>
           <spacer name="verticalSpacer_3">
            <property name="orientation">
@@ -553,16 +653,16 @@
   <connection>
    <sender>upholeTimeCheckBox</sender>
    <signal>toggled(bool)</signal>
-   <receiver>upholeTimeTraceNbSpinBox</receiver>
+   <receiver>upholeTimeSettingsGroupBox</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>280</x>
-     <y>70</y>
+     <x>351</x>
+     <y>71</y>
     </hint>
     <hint type="destinationlabel">
-     <x>332</x>
-     <y>90</y>
+     <x>351</x>
+     <y>152</y>
     </hint>
    </hints>
   </connection>

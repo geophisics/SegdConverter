@@ -18,17 +18,25 @@ public:
     explicit TestViewDialog(QWidget *parent = 0);
     ~TestViewDialog();
     TestMap* getTestMap();
+    XFileMap* getXMap();
 
 private:
     Ui::TestViewDialog *ui;
     TestMap testMap;
+    XFileMap xMap;
+
+
     TestModel *p_TestModel;
-    TestSortFilterModel *p_filterTestModel;
-    QtCharts::QScatterSeries *s_series;
-    QtCharts::QVXYModelMapper *modelMappper;
+    TestSortFilterModel *p_badFilterTestModel;
+    TestSortFilterModel *p_goodFilterTestModel;
+    QtCharts::QScatterSeries *p_badScatterSeries;
+    QtCharts::QScatterSeries *p_goodScatterSeries;
+    QtCharts::QVXYModelMapper *p_badModelMappper;
+    QtCharts::QVXYModelMapper *p_goodModelMapper;
 
 public slots:
     void newTestReceived();
+    void showAuxesByFfid(const uint &f);
 
 };
 

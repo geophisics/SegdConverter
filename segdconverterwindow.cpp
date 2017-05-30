@@ -73,6 +73,7 @@ SegdConverterWindow::SegdConverterWindow(QWidget *parent) :
 SegdConverterWindow::~SegdConverterWindow()
 {
     saveSettings();
+
     delete ui;
 }
 
@@ -560,8 +561,9 @@ void SegdConverterWindow::setTestViewDialog(BaseWorker *worker)
         testViewDialog = new TestViewDialog(this);
     }
     worker->setTestMap(testViewDialog.data()->getTestMap());
-    connect(worker,SIGNAL(testCounted()),testViewDialog.data(),SLOT(newTestReceived()));
-    testViewDialog.data()->show();
+    worker->setXFileMap(testViewDialog.data()->getXMap());
+    //connect(worker,SIGNAL(testCounted()),testViewDialog.data(),SLOT(newTestReceived()));
+    //testViewDialog.data()->show();
 }
 
 
@@ -783,6 +785,11 @@ void SegdConverterWindow::closeEvent(QCloseEvent *event)
             saveAsAttributesSlot();
         }
     }
+    if (viewDialog)
+    {
+        delete viewDialog;
+    }
+    QMainWindow::closeEvent(event);
 }
 
 void SegdConverterWindow::eraseCountedAttributes()
@@ -967,19 +974,27 @@ void SegdConverterWindow::enableSorting(const bool &b)
 
 void SegdConverterWindow::tableViewItemDoubleClicked(QModelIndex index)
 {
-    if (viewDialog.isNull())
+    QString header = attr_model->headerData(index.column(),Qt::Horizontal,Qt::DisplayRole).toString();
+    int ffid = attr_model->getFirstColumnValue(index);
+    if ( header=="Check Tests" && !testViewDialog.isNull())
     {
+        testViewDialog.data()->showAuxesByFfid(ffid);
+        testViewDialog.data()->show();
         return;
     }
-    int ffid = attr_model->getFirstColumnValue(index);
-    if (viewDialog.data()->showAuxesByFfid(ffid))
+    if ( header == "Check Aux" &&!viewDialog.isNull())
     {
-        viewDialog.data()->setVisible(true);
+        if (viewDialog.data()->showAuxesByFfid(ffid))
+        {
+            viewDialog.data()->setVisible(true);
+        }
+        else
+        {
+            QMessageBox::warning(this, "Внимание",QString("Не найдены служебные каналы для файла %1").arg(ffid));
+        }
+        return;
     }
-    else
-    {
-        QMessageBox::warning(this, "Внимание",QString("Не найдены служебные каналы для файла %1").arg(ffid));
-    }
+    return;
 }
 
 void SegdConverterWindow::firstFilterComboItemChanged(const int &i)

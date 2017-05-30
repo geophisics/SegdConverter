@@ -206,14 +206,26 @@ XFile::XFile()
 XFile::XFile(QQueue<QString> strList)
 {
     QString tmp = strList.dequeue();
-    templates = new QQueue<Template>();
+    //templates = new QQueue<Template>();
     ffid = tmp.mid(7,4).toUInt();
     sourceLine = tmp.mid(13,16).toUInt();
     sourcePoint = tmp.mid(29,8).toUInt();
-    templates->enqueue(Template(tmp));
+    templates.enqueue(Template(tmp));
     while (!strList.isEmpty()) {
-        templates->enqueue(Template(strList.dequeue()));
+        templates.enqueue(Template(strList.dequeue()));
     }
+}
+
+XFile::XFile(const uint &fileNum, const uint &line, const uint &point)
+{
+    ffid = fileNum;
+    sourceLine = line;
+    sourcePoint = point;
+    //templates = new QQueue<Template>();
+}
+uint XFile::getFfid()
+{
+    return ffid;
 }
 
 uint XFile::getLine()
@@ -224,14 +236,40 @@ uint XFile::getPoint()
 {
     return sourcePoint;
 }
-QQueue<Template>* XFile::getTemplates()
+
+
+void XFile::setFfid(const uint &f)
+{
+    ffid = f;
+}
+
+void XFile::setSourceLine(const uint &line)
+{
+    sourceLine = line;
+}
+
+void XFile::setSourcePoint(const uint &point)
+{
+    sourcePoint = point;
+}
+
+bool XFile::pointInTemplate(const uint &line, const uint &point) const
+{
+    foreach (Template t, templates) {
+        if (t.receiverLine == line && t.firstReceiver<=point && t.lastReceiver >= point) {
+            return true;
+        }
+    }
+    return false;
+}
+QQueue<Template> XFile::getTemplates()
 {
     return templates;
 }
 bool XFile::checkTemplates()
 {
     uint lastChannel=0;
-    foreach (Template t, *templates) {
+    foreach (Template t, templates) {
         if (t.firstReceiver+(t.lastChannel-t.firstChannel)*t.increment!=t.lastReceiver || lastChannel >= t.firstChannel)
         {
             return false;
@@ -239,6 +277,11 @@ bool XFile::checkTemplates()
         lastChannel = t.lastChannel;
     }
     return true;
+}
+
+void XFile::addLineToTemplate(Template templ)
+{
+    templates.enqueue(templ);
 }
 Template::Template(const QString &str)
 {
@@ -253,8 +296,19 @@ Template::Template(const QString &str)
     firstReceiver = str.mid(63,8).toInt();
     lastReceiver = str.mid(71,8).toInt();
 }
+
+Template::Template(const Template &other)
+{
+    increment = other.increment;
+    firstChannel = other.firstChannel;
+    lastChannel = other.lastChannel;
+    receiverLine = other.receiverLine;
+    firstReceiver = other.firstReceiver;
+    lastReceiver = other.lastReceiver;
+}
 Template::Template()
 {
+    increment = 1;
     firstChannel = 0;
     lastChannel = 0;
     receiverLine = 0;

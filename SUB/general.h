@@ -13,7 +13,10 @@ typedef QPair<quint32,quint32> PointId;
 
 //typedef ThreadSaveMap<PointId,TestPoint> TestMap;
 //typedef ThreadSaveHash<PointId,TestPoint> TestMap;
-typedef ThreadSaveHash<uint,TestPoint> TestMap;
+//typedef ThreadSaveHash<uint,TestPoint> TestMap;
+typedef ThreadSaveMap<uint,TestPoint> TestMap;
+typedef ThreadSaveMap<uint,XFile> XFileMap;
+
 
 
 

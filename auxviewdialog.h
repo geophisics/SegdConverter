@@ -17,6 +17,9 @@
 
 QT_CHARTS_USE_NAMESPACE
 
+//typedef QPair<float,float> AxisRange;
+
+
 class AuxesWidget;
 struct AuxData{
 
@@ -25,6 +28,15 @@ struct AuxData{
     float headerUphole;
     float countedUphole;
     ~AuxData();
+};
+
+struct AxisRange
+{
+    AxisRange(const float &min, const float &max):minValue(min),
+        maxValue(max) {}
+    AxisRange(){minValue=0.0;maxValue=1000.0;}
+    float minValue;
+    float maxValue;
 };
 
 
@@ -45,20 +57,9 @@ private:
     Ui::AuxViewDialog *ui;
     AuxesWidget *auxWidget;
     QStatusBar *statBar;
-    quint32 minFreq, maxFreq, maxTimeAkf;
-    int frqLvl;
-
     QSettings *settings;
-    QSound *alert;
-    QtCharts::QChartView *firstView;
-    QtCharts::QChartView *secondView;
-    QtCharts::QChartView *thirdView;
+    QSound *alarmSound;
 
-    QList<QtCharts::QChartView*> views;
-
-
-    QtCharts::QChart *firstChart, *secondChart, *thirdChart;
-    QtCharts::QLineSeries *firstSeries,*secondSeries,*thirdSeries, *countedUpholeSeries, *headerUpholeSeries;
     QMap<int,AuxData> auxes;
     QMap<int,AuxData>::iterator auxIterator;
 
@@ -71,7 +72,9 @@ public slots:
 private slots:
     void previousButtonClicked();
     void nextButtonClicked();
-    void setAlarmSound(const int &i);
+    void setAlarmSound(const int &i, const bool &b = true);
+
+
 };
 
 
@@ -82,22 +85,35 @@ class AuxesWidget : public QWidget
 public:
     explicit AuxesWidget(QWidget *parent = Q_NULLPTR);
     void paintAuxes(const int &ffid, const AuxData &data);
-    void unselectChartViews();
+    QMap<QString,AxisRange > getRanges();
     ~AuxesWidget();
+    void setFrqLvl(const int &i);
+    void setTvOffset(const int &i);
+    void setTbOffset(const int &i);
+    int getFrqLvl();
 private:
     //QHBoxLayout *viewLayout;
     QGridLayout *viewLayout;
     QStatusBar *statBar;
     QLabel *coordinatesLabel;
     QChart::ChartTheme badTheme,goodTheme;
+    int frqLvl;
+    int tvOffset;
+    int tbOffset;
+    QMap<QString,AxisRange > ranges;
+    void themeChanged();
+
+
+
+
+
 public slots:
     void setGoodTheme(const int &i);
     void setBadTheme(const int &i);
+    void setRange(const float &min, const float &max, const QString &chartName);
+    void setRanges(QMap<QString,AxisRange > r);
 private slots:
     void recieveCoordinates(const QString &coordinates);
-    //QtCharts::QChart::ChartTheme badTheme, goodTheme;
-    //QChart::ChartTheme
-
 };
 
 class AuxChartView : public QChartView
@@ -107,8 +123,6 @@ public:
     AuxChartView(QChart *chart, QWidget *parent = Q_NULLPTR);
     AuxChartView(QWidget *parent = Q_NULLPTR);
 protected:
-   // void mouseDoubleClickEvent(QMouseEvent *event);
-   // bool viewportEvent(QEvent *event);
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
@@ -124,28 +138,23 @@ signals:
 
 class AuxChart : public QChart
 {
+      Q_OBJECT
 public:
       explicit AuxChart(QGraphicsItem *parent = 0, Qt::WindowFlags wFlags = 0);
       ~AuxChart();
       void SetYRangeLimits(const float &min,const float &max);
+      void setYRange(const AxisRange &range);
       void yZoomIn();
       void yZoomOut();
       void yScroll(qreal dy);
-
-
       void yScrollUp();
       void yScrollDown();
-
       QString getCoordinatesForTime(const float &t) const;
-      //void resizeEvent(QGraphicsSceneResizeEvent *event);
-  protected:
-     // bool sceneEvent(QEvent *event);
-
+      QString getLevelForFreq(const float &f) const ;
   private:
-      //bool gestureEvent(QGestureEvent *event);
       float scrollFactor;
       QPair<float,float> yRangeLimits;
-
-  private:
+signals:
+      void sendNewRange(float,float,QString);
 };
 #endif // AUXVIEWDIALOG_H

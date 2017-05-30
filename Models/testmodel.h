@@ -38,8 +38,10 @@ public:
     bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const;
     bool filterAcceptsColumn(int source_column, const QModelIndex &source_parent) const;
     void setTestType(const testType &t);
+    void setXFile(const XFile &x);
 private:
     testType type;
+    XFile xFile;
 
 };
 

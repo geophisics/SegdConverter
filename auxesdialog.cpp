@@ -26,6 +26,9 @@ AuxesDialog::AuxesDialog(QWidget *parent) :
     doubleVal = new MyDoubleValidator(0,10000,2,ui->confirmedTimeBreakAmaxLineEdit);
     doubleVal->setNotation(QDoubleValidator::StandardNotation);
     ui->confirmedTimeBreakAmaxLineEdit->setValidator(doubleVal);
+    ui->confirmedTimeBreakTvOffsetLineEdit->setValidator(new QIntValidator(0,1000,ui->confirmedTimeBreakTvOffsetLineEdit));
+    ui->upholeTimeOffsetLineEdit->setValidator(new QIntValidator(0,1000,ui->upholeTimeOffsetLineEdit));
+
     readSettings();
     connect(ui->openSegdPushButton,SIGNAL(clicked(bool)),this,SLOT(openVibroSegdSlot()));
     connect(ui->openExamplePushButton,SIGNAL(clicked(bool)),this,SLOT(openExplSegdSlot()));
@@ -94,7 +97,7 @@ void AuxesDialog::openExplSegdSlot()
         }
         else
         {
-            QMessageBox::warning(0,"Ошибка","Выбранный файл не является взрывным");
+            QMessageBox::warning(0,"Ошибка","Выбранный файл отработан невзрывным источником");
         }
         delete segdAuxes;
     }
@@ -122,9 +125,14 @@ void AuxesDialog::writeSettings()
     settings->setValue("/ConfirmedTimeBreakTmax",ui->confirmedTimeBreakTmaxSpinBox->value());
     settings->setValue("/ConfirmedTimeBreakAmax",ui->confirmedTimeBreakAmaxLineEdit->text().replace(locale().decimalPoint(),'.'));
     settings->setValue("/ConfirmedTimeBreakNbOfDiscret",ui->confirmedTimeBreakNbOfDiscretSpinBox->value());
+    settings->setValue("/ConfirmedTimeBreakTvOffset",ui->confirmedTimeBreakTvOffsetLineEdit->text());
+    settings->setValue("/ConfirmedTimeBreakConstant",ui->confirmedTimeBreakConstantaCheckBox->isChecked());
+
 
     settings->setValue("/CheckUpholeTime",ui->upholeTimeCheckBox->isChecked());
     settings->setValue("/UpholeTimeTraceNb",ui->upholeTimeTraceNbSpinBox->value());
+    settings->setValue("/UpholeTimeOffset",ui->upholeTimeOffsetLineEdit->text());
+    settings->setValue("/UpholeTimeConstant",ui->upholeTimeConstantCheckBox->isChecked());
     settings->endGroup();
     accept();
 }
@@ -155,10 +163,15 @@ void AuxesDialog::readSettings()
     ui->confirmedTimeBreakTmaxSpinBox->setValue(settings->value("/ConfirmedTimeBreakTmax",10).toInt());
     ui->confirmedTimeBreakAmaxLineEdit->setText(settings->value("/ConfirmedTimeBreakAmax",500).toString().replace('.',locale().decimalPoint()));
     ui->confirmedTimeBreakNbOfDiscretSpinBox->setValue(settings->value("/ConfirmedTimeBreakNbOfDiscret",90).toInt());
+    ui->confirmedTimeBreakTvOffsetLineEdit->setText(settings->value("/ConfirmedTimeBreakTvOffset",350).toString());
+    ui->confirmedTimeBreakConstantaCheckBox->setChecked(settings->value("/ConfirmedTimeBreakConstant",false).toBool());
 
     ui->upholeTimeCheckBox->setChecked(settings->value("/CheckUpholeTime",false).toBool());
-    ui->upholeTimeTraceNbSpinBox->setEnabled(ui->upholeTimeCheckBox->isChecked());
+    ui->upholeTimeSettingsGroupBox->setEnabled(ui->upholeTimeCheckBox->isChecked());
     ui->upholeTimeTraceNbSpinBox->setValue(settings->value("/UpholeTimeTraceNb",3).toInt());
+    ui->upholeTimeOffsetLineEdit->setText(settings->value("/UpholeTimeOffset",800).toString());
+    ui->upholeTimeConstantCheckBox->setChecked(settings->value("/UpholeTimeConstant",false).toBool());
+
 
     settings->endGroup();
 

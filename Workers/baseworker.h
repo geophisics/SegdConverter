@@ -25,6 +25,8 @@ struct TimeBreakSettings
     uint nbOfDiscret;
     uint maxTime;
     float maxAmpl;
+    bool useConstant;
+    uint tvOffset;
     TimeBreakSettings();
 };
 
@@ -88,6 +90,7 @@ protected:
     TestLimits testLimits;
     //int testsPercent;
     TestMap *testMap;
+    XFileMap *xFileMap;
     //--------------------------
     bool backup;
     bool limitMaxFiles;
@@ -125,6 +128,7 @@ public:
     void setXpsPath(const QString &path);
 
     void setTestMap(TestMap *map);
+    void setXFileMap(XFileMap *map);
 
 
     void setCheckTests(const bool &b);
@@ -174,6 +178,7 @@ protected:
     bool checkTimeBreak(QVector<float> traceData, const int &sInt);
     bool checkConfirmedTimeBreak (QVector<float> traceData, const int &sInt);
     int  countUpholeTime(QVector<float> traceData);
+    float getAuxConstant(QVector<float> traceData, const int &offset, const int &sI);
 
     QQueue<QString> findTemplates(const int &ffid);
 

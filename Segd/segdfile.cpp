@@ -612,7 +612,7 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const int &max
     return qMakePair(badPercent,result);
 }
 
-QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const TestLimits &limits, TestMap *tMap)
+QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const TestLimits &limits, TestMap *tMap, XFileMap *xMap)
 {
     *p_stream<<QString("Проверка тестов для файла № %1\n").arg(this->getGeneralThree().getExtendedFileNumber());
     *p_stream<<QString("Неисправные каналы:\n");
@@ -628,10 +628,10 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const TestLimi
         trace = *itTrace;
     }
     uint currentLine = trace->getExtensionOne()->getReceiverLineNum();
-    uint currentChannel;
+    uint currentPointNb = trace->getExtensionOne()->getReceiverPointNum();
     int badChannelPerLine = 0;
     uint badChannelInRow =0;
-    int channelsPerLine =0;
+    int channelsPerLine = 1;
     float badPercent =0.0;
 
     XFile xFile(this->getGeneralThree().getExtendedFileNumber(),
@@ -643,7 +643,7 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const TestLimi
     xTemplate.firstReceiver = trace->getExtensionOne()->getReceiverPointNum();
 
 
-    for ( ;itTrace!=tracesOfSegd.end();++itTrace)
+    for ( ;itTrace!=tracesOfSegd.end();itTrace++)
     {
         trace = *itTrace;
 
@@ -669,6 +669,17 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const TestLimi
         if (trace->getExtensionOne()->getReceiverLineNum()==currentLine)
         {
             channelsPerLine++;
+            //если разрыв нумерации пикетов на линии то сбрасываем счетчик неисправных каналов подряд
+            if (tPoint.getPoint()-currentPointNb>1)
+            {
+                xTemplate.lastChannel = trace->getTraceHeader()->getTraceNumber()-1;
+                xTemplate.lastReceiver = currentPointNb;
+                xFile.addLineToTemplate(Template(xTemplate));
+                badChannelInRow=0;
+                xTemplate.firstChannel = trace->getTraceHeader()->getTraceNumber();
+                xTemplate.receiverLine = trace->getExtensionOne()->getReceiverLineNum();
+                xTemplate.firstReceiver = trace->getExtensionOne()->getReceiverPointNum();
+            }
         }
         //если номер линии изменился
         //----------------------------------------------------
@@ -689,7 +700,7 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const TestLimi
             }
             //записываем линию в описание расстановки
             xTemplate.lastChannel = trace->getTraceHeader()->getTraceNumber()-1;
-            xTemplate.lastReceiver = currentChannel;
+            xTemplate.lastReceiver = currentPointNb;
             xFile.addLineToTemplate(Template(xTemplate));
             //и обьявляем новую линию
             xTemplate.firstChannel = trace->getTraceHeader()->getTraceNumber();
@@ -700,16 +711,11 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const TestLimi
             incorrectTraces+=badChannelPerLine;
             badChannelPerLine =0;
             badChannelInRow=0;
-            channelsPerLine=0;
+            channelsPerLine=1;
         }
         //------------------------------------------------------------------------------
-        //если разрыв нумерации пикетов на линии то сбрасываем счетчик неисправных каналов подряд
-        if (tPoint.getPoint()-currentChannel!=1)
-        {
 
-            badChannelInRow=0;
-        }
-        currentChannel = tPoint.getPoint();
+       currentPointNb = tPoint.getPoint();
         // если канал неисправен то добавляем к счетчикам неисправных каналов 1 и продолжаем цикл
         if (tPoint.getTestError())
         {
@@ -731,7 +737,9 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const TestLimi
         // и сбрасываем счетчик неисправных каналов
         badChannelInRow=0;
     }
-
+    xTemplate.lastChannel = trace->getTraceHeader()->getTraceNumber();
+    xTemplate.lastReceiver = currentPointNb;
+    xFile.addLineToTemplate(Template(xTemplate));
     //проверяем неисправные каналы на последней линии расстановки
     if (badChannelInRow>limits.maxInRow && limits.maxInRow!=0)
     {
@@ -752,11 +760,9 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const TestLimi
     {
         result =false;
     }
+    xMap->insert(xFile.getFfid(),xFile);
     return qMakePair(badPercent,result);
 }
-
-
-
 
 QList<int> SegdFile::getLPs()
 {

@@ -497,7 +497,7 @@ QVector<QVector<float> >CstFile::getDataInWindow(QTextStream *logStr, const uint
 
 bool CstFile::setTemplates(XFile *xps)
 {
-    if (xps->getTemplates()->last().lastChannel > numOfSeis)
+    if (xps->getTemplates().last().lastChannel > numOfSeis)
     {
         return false;
     }
@@ -513,8 +513,8 @@ bool CstFile::setTemplates(XFile *xps)
             line=xps->getLine();
             point = xps->getPoint();
         }
-        while (!xps->getTemplates()->isEmpty()) {
-            templ = xps->getTemplates()->dequeue();
+        while (!xps->getTemplates().isEmpty()) {
+            templ = xps->getTemplates().dequeue();
             currentLine =templ.receiverLine;
             currentReceiver =templ.firstReceiver;
             for(;currentTrace<templ.firstChannel+numOfAuxes-1;++currentTrace)

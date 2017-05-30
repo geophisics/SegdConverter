@@ -910,7 +910,7 @@ uint SegyFile::getSourceZ(const uint &trNb)
 
 bool SegyFile::setTemplates(XFile *xps)
 {
-    if (xps->getTemplates()->last().lastChannel > numOfDataTraces)
+    if (xps->getTemplates().last().lastChannel > numOfDataTraces)
     {
         return false;
     }
@@ -925,8 +925,8 @@ bool SegyFile::setTemplates(XFile *xps)
             segyTraces.value(currentTrace)->setSP(xps->getLine());
             segyTraces.value(currentTrace)->setShotPointNum(xps->getPoint());
         }
-        while (!xps->getTemplates()->isEmpty()) {
-            templ = xps->getTemplates()->dequeue();
+        while (!xps->getTemplates().isEmpty()) {
+            templ = xps->getTemplates().dequeue();
             currentLine =templ.receiverLine;
             currentReceiver =templ.firstReceiver;
             for(;currentTrace<templ.firstChannel+numOfAuxiliaryTraces-1;++currentTrace)

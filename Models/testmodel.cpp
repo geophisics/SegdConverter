@@ -1,5 +1,6 @@
 #include "testmodel.h"
 #include <QBrush>
+#include <QDebug>
 TestModel::TestModel(QObject *parent):QAbstractTableModel(parent)
 {
     headers<<"Line"<<"Point"<<"X"<<"Y"<<"Resistance"<<"Tilt"<<"Leakage"<<"Test Status";
@@ -109,19 +110,50 @@ void TestSortFilterModel::setTestType(const testType &t)
     type = t;
 }
 
+void TestSortFilterModel::setXFile(const XFile &x)
+{
+    xFile = x;
+    //this->invalidate();
+    this->invalidate();
+    //this->layoutChanged();
+}
+
 bool TestSortFilterModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
 {
     QModelIndex index = sourceModel()->index(source_row,7,source_parent);
     QString str = sourceModel()->data(index).toString();
+    index = sourceModel()->index(source_row,0,source_parent);
+    uint line = sourceModel()->data(index).toUInt();
+    index = sourceModel()->index(source_row,1,source_parent);
+    uint point = sourceModel()->data(index).toUInt();
     if (type==testType::badTest && str == "Bad")
     {
-        return true;
+        return xFile.pointInTemplate(line,point);
     }
-    if (type == testType::okTest && str == "Ok")
+    if (type==testType::okTest && str == "Ok")
     {
-        return true;
+        return xFile.pointInTemplate(line,point);
     }
     return false;
+
+    //sourceModel()->data()
+    //bool b = xFile.pointInTemplate(line,point);
+//    if ( xFile.pointInTemplate(line,point) ) {
+//        return true;
+//        if (type==testType::badTest && str == "Bad")
+//        {
+//            return true;
+//        }
+//        if (type == testType::okTest && str == "Ok")
+//        {
+//            return true;
+//        }
+//    }
+//    else
+//    {
+//        qDebug()<<line<<"  "<< point;
+//    }
+//    return false;
 }
 
 
