@@ -2,12 +2,15 @@
 <ui version="4.0">
  <class>TestViewDialog</class>
  <widget class="QDialog" name="TestViewDialog">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1038</width>
-    <height>532</height>
+    <width>919</width>
+    <height>436</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,52 +26,8 @@
       <property name="orientation">
        <enum>Qt::Vertical</enum>
       </property>
-      <widget class="QGroupBox" name="badPointsGroupBox">
-       <property name="title">
-        <string>Пикеты вне допусков</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout">
-        <property name="leftMargin">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <item row="0" column="0">
-         <widget class="QTableView" name="badPointsTableView"/>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QGroupBox" name="goodPointsGroupBox">
-       <property name="title">
-        <string>Пикеты в пределах допусков</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_2">
-        <property name="leftMargin">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <item row="0" column="0">
-         <widget class="QTableView" name="goodPointsTableView"/>
-        </item>
-       </layout>
-      </widget>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,1">
        <item>
         <layout class="QHBoxLayout" name="settingsHorizontalLayout">
@@ -299,9 +258,7 @@
         </layout>
        </item>
        <item>
-        <widget class="QtCharts::QChartView" name="pointsChartView" native="true">
-         <zorder>badPointsGroupBox</zorder>
-        </widget>
+        <widget class="TestChartView" name="pointsChartView" native="true"/>
        </item>
       </layout>
      </widget>
@@ -311,9 +268,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QtCharts::QChartView</class>
+   <class>TestChartView</class>
    <extends>QWidget</extends>
-   <header location="global">QtCharts/QChartView</header>
+   <header>testviewdialog.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

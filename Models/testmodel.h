@@ -39,6 +39,8 @@ public:
     bool filterAcceptsColumn(int source_column, const QModelIndex &source_parent) const;
     void setTestType(const testType &t);
     void setXFile(const XFile &x);
+    QVector <int> pointsInTemplate;
+    int rows123;
 private:
     testType type;
     XFile xFile;

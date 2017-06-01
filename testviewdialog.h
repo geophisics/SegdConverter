@@ -4,8 +4,14 @@
 #include <QDialog>
 #include <SUB/general.h>
 #include <Models/testmodel.h>
+#include <QtCharts/QChartView>
 #include <QtCharts/QScatterSeries>
 #include <QtCharts/QVXYModelMapper>
+#include <QSignalMapper>
+#include <QGraphicsSimpleTextItem>
+
+QT_CHARTS_USE_NAMESPACE
+
 namespace Ui {
 class TestViewDialog;
 }
@@ -25,7 +31,6 @@ private:
     TestMap testMap;
     XFileMap xMap;
 
-
     TestModel *p_TestModel;
     TestSortFilterModel *p_badFilterTestModel;
     TestSortFilterModel *p_goodFilterTestModel;
@@ -34,10 +39,37 @@ private:
     QtCharts::QVXYModelMapper *p_badModelMappper;
     QtCharts::QVXYModelMapper *p_goodModelMapper;
 
+    QVector<uint> pointsInTemplate;
+
+private:
+    void setBadScatterSeries();
+    void setGoodScatterSeries();
+
 public slots:
     void newTestReceived();
     void showAuxesByFfid(const uint &f);
 
+    void setGoodScatterVisible(const bool &b);
+    void setBadScatterVisible(const bool &b);
+    void setAllScatterVisible(const bool &b);
+
+
+    void setGoodScatterSize(const int &size);
+    void setBadScatterSize(const int &size);
+
+};
+
+class TestChartView : public QChartView
+{
+    Q_OBJECT
+public:
+    TestChartView(QWidget *parent =0);
+    TestChartView(QChart *chart, QWidget *parent = 0);
+
+    void addLineText(const QString &txt);
+
+private:
+    QList<QGraphicsSimpleTextItem*> lineNumbers;
 };
 
 #endif // TESTVIEWDIALOG_H

@@ -1,6 +1,7 @@
 #include "testmodel.h"
 #include <QBrush>
 #include <QDebug>
+#include <QDateTime>
 TestModel::TestModel(QObject *parent):QAbstractTableModel(parent)
 {
     headers<<"Line"<<"Point"<<"X"<<"Y"<<"Resistance"<<"Tilt"<<"Leakage"<<"Test Status";
@@ -113,8 +114,21 @@ void TestSortFilterModel::setTestType(const testType &t)
 void TestSortFilterModel::setXFile(const XFile &x)
 {
     xFile = x;
+    pointsInTemplate.clear();
+    uint counter;
+    foreach (Template t, xFile.getTemplates()) {
+        counter =0;
+        for (int i = t.firstChannel; i<=t.lastChannel;++i)
+        {
+            pointsInTemplate.push_back(t.receiverLine*10000+t.firstReceiver+counter);
+            counter++;
+        }
+    }
     //this->invalidate();
+    rows123 =0;
+    qDebug()<<QDateTime::currentDateTime();
     this->invalidate();
+    qDebug()<<QDateTime::currentDateTime();
     //this->layoutChanged();
 }
 
@@ -128,32 +142,25 @@ bool TestSortFilterModel::filterAcceptsRow(int source_row, const QModelIndex &so
     uint point = sourceModel()->data(index).toUInt();
     if (type==testType::badTest && str == "Bad")
     {
-        return xFile.pointInTemplate(line,point);
+        //return pointsInTemplate.contains(line*10000+point);
+        if (pointsInTemplate.contains(line*10000+point))
+        {
+
+            return true;
+        }
+        //return xFile.pointInTemplate(line,point);
     }
     if (type==testType::okTest && str == "Ok")
     {
-        return xFile.pointInTemplate(line,point);
+        //return pointsInTemplate.contains(line*10000+point);
+        if (pointsInTemplate.contains(line*10000+point))
+        {
+            return true;
+        }
+
+        //return xFile.pointInTemplate(line,point);
     }
     return false;
-
-    //sourceModel()->data()
-    //bool b = xFile.pointInTemplate(line,point);
-//    if ( xFile.pointInTemplate(line,point) ) {
-//        return true;
-//        if (type==testType::badTest && str == "Bad")
-//        {
-//            return true;
-//        }
-//        if (type == testType::okTest && str == "Ok")
-//        {
-//            return true;
-//        }
-//    }
-//    else
-//    {
-//        qDebug()<<line<<"  "<< point;
-//    }
-//    return false;
 }
 
 
