@@ -11,6 +11,8 @@
 #include <QGraphicsSimpleTextItem>
 
 QT_CHARTS_USE_NAMESPACE
+class LineLabelTextItem;
+class LineLabelRect;
 
 namespace Ui {
 class TestViewDialog;
@@ -36,10 +38,15 @@ private:
     TestSortFilterModel *p_goodFilterTestModel;
     QtCharts::QScatterSeries *p_badScatterSeries;
     QtCharts::QScatterSeries *p_goodScatterSeries;
+
     QtCharts::QVXYModelMapper *p_badModelMappper;
     QtCharts::QVXYModelMapper *p_goodModelMapper;
 
+
     QVector<uint> pointsInTemplate;
+
+
+    QtCharts::QScatterSeries *p_lastPointScatterSeries;
 
 private:
     void setBadScatterSeries();
@@ -57,6 +64,9 @@ public slots:
     void setGoodScatterSize(const int &size);
     void setBadScatterSize(const int &size);
 
+signals:
+    void sendLineLabel(QPointF,QString);
+
 };
 
 class TestChartView : public QChartView
@@ -65,11 +75,49 @@ class TestChartView : public QChartView
 public:
     TestChartView(QWidget *parent =0);
     TestChartView(QChart *chart, QWidget *parent = 0);
+public slots:
 
-    void addLineText(const QString &txt);
+    void addLineLabel(const QPointF coordinates, const QString &txt);
+    void recountLabelPositions();
+    void removeLineLabels();
 
 private:
-    QList<QGraphicsSimpleTextItem*> lineNumbers;
+    QList <LineLabelTextItem*> lineLabels;
+    QList <LineLabelRect*> lineRects;
+
+
+    //QList<QGraphicsSimpleTextItem*> lineNumbers;
+    //QList<QPair<QPointF,QGraphicsSimpleTextItem*> > lineLabels;
+};
+
+class LineLabelTextItem : public QGraphicsSimpleTextItem
+{
+public:
+    LineLabelTextItem(QGraphicsItem *parent = Q_NULLPTR);
+    LineLabelTextItem(const QString &text, QGraphicsItem *parent = Q_NULLPTR);
+    LineLabelTextItem(const QPointF &point, const QString &text, QGraphicsItem *parent = Q_NULLPTR);
+    QPointF getCoordinates();
+
+private:
+    QPointF coordinates;
+
+};
+
+class LineLabelRect: public QGraphicsItem
+{
+public:
+    LineLabelRect(QGraphicsItem *parent = Q_NULLPTR);
+    void setAnchor(QPointF point);
+    void setText(const QString &text);
+    QRectF boundingRect() const;
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+private:
+    QRectF m_rect;
+    QPointF m_anchor;
+    QLine m_line;
+    QString m_text;
+    QRectF m_textRect;
+    QFont m_font;
 };
 
 #endif // TESTVIEWDIALOG_H
