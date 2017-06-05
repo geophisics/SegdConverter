@@ -663,7 +663,7 @@ QPair<QVariant, bool> SegdFile::checkTests(QTextStream *p_stream, const TestLimi
         tPoint.setLeakageError(std::isnan(tPoint.getLeakage()) || trace->getExtensionFive()->getLeakageError()==1);
 
         tPoint.checkTestStatus();
-        tMap->insert(tPoint.getLine()*10000+tPoint.getPoint(),TestPoint(tPoint));
+        tMap->insert(qMakePair(tPoint.getLine(),tPoint.getPoint()),TestPoint(tPoint));
 
         //если номер линии не изменился
         if (trace->getExtensionOne()->getReceiverLineNum()==currentLine)
