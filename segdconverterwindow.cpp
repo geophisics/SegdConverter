@@ -559,6 +559,7 @@ void SegdConverterWindow::setTestViewDialog(BaseWorker *worker)
     if (testViewDialog.isNull())
     {
         testViewDialog = new TestViewDialog(this);
+        testViewDialog.data()->setSettings(settings);
     }
     worker->setTestMap(testViewDialog.data()->getTestMap());
     worker->setXFileMap(testViewDialog.data()->getXMap());
@@ -788,6 +789,10 @@ void SegdConverterWindow::closeEvent(QCloseEvent *event)
     if (viewDialog)
     {
         delete viewDialog;
+    }
+    if (testViewDialog)
+    {
+        delete testViewDialog;
     }
     QMainWindow::closeEvent(event);
 }

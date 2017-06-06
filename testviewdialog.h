@@ -9,10 +9,12 @@
 #include <QtCharts/QVXYModelMapper>
 #include <QSignalMapper>
 #include <QGraphicsSimpleTextItem>
+#include <QSettings>
 
 QT_CHARTS_USE_NAMESPACE
 class LineLabelTextItem;
 class LineLabelRect;
+class PointLabelRect;
 
 namespace Ui {
 class TestViewDialog;
@@ -27,6 +29,9 @@ public:
     ~TestViewDialog();
     TestMap* getTestMap();
     XFileMap* getXMap();
+    void setSettings(QSettings *set);
+    void readSettings();
+    void saveSettings();
 
 private:
     Ui::TestViewDialog *ui;
@@ -42,8 +47,10 @@ private:
     QtCharts::QVXYModelMapper *p_badModelMappper;
     QtCharts::QVXYModelMapper *p_goodModelMapper;
 
+    QSettings *settings;
 
-    QVector<uint> pointsInTemplate;
+    //QVector<uint> pointsInTemplate;
+    QVector<TestPoint> pointsInTemplate;
 
 
     QtCharts::QScatterSeries *p_lastPointScatterSeries;
@@ -66,7 +73,9 @@ public slots:
 
 signals:
     void sendLineLabel(QPointF,QString);
-
+private slots:
+    void mouseUnderPoint(const QPointF &coordinates, const bool &b);
+    void mousePressedOnChart(const QPointF &coordinates);
 };
 
 class TestChartView : public QChartView
@@ -75,16 +84,29 @@ class TestChartView : public QChartView
 public:
     TestChartView(QWidget *parent =0);
     TestChartView(QChart *chart, QWidget *parent = 0);
+    void addPointLabel();
+    void hideLastPointLabel();
+    void setLastPointLabel(const TestPoint &point);
+
+
 public slots:
 
     void addLineLabel(const QPointF coordinates, const QString &txt);
     void recountLabelPositions();
     void removeLineLabels();
+    void resizeEvent(QResizeEvent *event);
+    void mousePressEvent(QMouseEvent *event);
+    void mouseDoubleClickEvent(QMouseEvent *event);
+    void chartChanged();
 
 private:
-    QList <LineLabelTextItem*> lineLabels;
+    //QList <LineLabelTextItem*> lineLabels;
     QList <LineLabelRect*> lineRects;
+    QList <PointLabelRect*> pointRects;
+    void repositionLabels();
 
+signals:
+    void mousePressedWithCtrl(QPointF);
 
     //QList<QGraphicsSimpleTextItem*> lineNumbers;
     //QList<QPair<QPointF,QGraphicsSimpleTextItem*> > lineLabels;
@@ -108,6 +130,7 @@ class LineLabelRect: public QGraphicsItem
 public:
     LineLabelRect(QGraphicsItem *parent = Q_NULLPTR);
     void setAnchor(QPointF point);
+    QPointF getAnchor();
     void setText(const QString &text);
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
@@ -119,5 +142,24 @@ private:
     QRectF m_textRect;
     QFont m_font;
 };
+
+class PointLabelRect:public QGraphicsTextItem
+{
+public:
+    PointLabelRect(QGraphicsItem *parent = Q_NULLPTR);
+    QRectF boundingRect() const;
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    void setTestPoint(const TestPoint &point);
+    QRectF getRect() const;
+private:
+    TestPoint m_tpoint;
+    QString m_text;
+    QRectF m_textRect;
+    QRectF m_rect;
+    QFont m_font;
+};
+
+
+
 
 #endif // TESTVIEWDIALOG_H

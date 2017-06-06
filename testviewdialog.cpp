@@ -31,6 +31,12 @@ TestViewDialog::TestViewDialog(QWidget *parent) :
 
     QChart *chart = new QChart;
     chart->setAnimationOptions(QChart::NoAnimation);
+    chart->legend()->setAlignment(Qt::AlignBottom);
+    chart->legend()->setZValue(50);
+    //qDebug()<<chart->margins();
+    QMargins margins = chart->margins();
+    margins.setTop(40);
+    chart->setMargins(margins);
     ui->pointsChartView->setRubberBand(QChartView::RectangleRubberBand);
 
     p_goodScatterSeries = new QScatterSeries;
@@ -72,17 +78,60 @@ TestViewDialog::TestViewDialog(QWidget *parent) :
     ui->pointsChartView->setRenderHint(QPainter::Antialiasing);
     ui->pointsChartView->setChart(chart);
 
-    connect(ui->viewAllPointsRadioButton,SIGNAL(toggled(bool)),this,SLOT(setAllScatterVisible(bool)));
-    connect(ui->viewBadPointsRadioButton,SIGNAL(toggled(bool)),this,SLOT(setBadScatterVisible(bool)));
-    connect(ui->viewGoodPointsRadioButton,SIGNAL(toggled(bool)),this,SLOT(setGoodScatterVisible(bool)));
+    ui->pointsChartView->addPointLabel();
+
+    //connect(ui->viewBadPointsCheckBox,SIGNAL(toggled(bool)),this,SLOT(setAllScatterVisible(bool)));
+    connect(ui->viewBadPointsCheckBox,SIGNAL(toggled(bool)),this,SLOT(setBadScatterVisible(bool)));
+    //connect(ui->viewBadPointsRadioButton,SIGNAL(toggled(bool)),this,SLOT(setBadScatterVisible(bool)));
+    connect(ui->viewGoodPointsCheckBox,SIGNAL(toggled(bool)),this,SLOT(setGoodScatterVisible(bool)));
     connect(ui->goodPointsSizeSpinBox,SIGNAL(valueChanged(int)),this,SLOT(setGoodScatterSize(int)));
     connect(ui->badPointsSizeSpinBox,SIGNAL(valueChanged(int)),this,SLOT(setBadScatterSize(int)));
+    QValueAxis *axis = qobject_cast<QValueAxis*>(chart->axisX());
+    connect(axis,SIGNAL(rangeChanged(qreal,qreal)),ui->pointsChartView,SLOT(chartChanged()));
     connect(this,SIGNAL(sendLineLabel(QPointF,QString)),ui->pointsChartView,SLOT(addLineLabel(QPointF,QString)));
+
+
+    connect(p_badScatterSeries,SIGNAL(hovered(QPointF,bool)),this,SLOT(mouseUnderPoint(QPointF,bool)));
+    connect(p_goodScatterSeries,SIGNAL(hovered(QPointF,bool)),this,SLOT(mouseUnderPoint(QPointF,bool)));
+    connect(ui->pointsChartView,SIGNAL(mousePressedWithCtrl(QPointF)),this,SLOT(mousePressedOnChart(QPointF)));
 
 }
 
+void TestViewDialog::setSettings(QSettings *set)
+{
+    settings = set;
+    readSettings();
+}
+
+void TestViewDialog::readSettings()
+{
+    settings->beginGroup("TestViewSettings");
+    this->restoreGeometry(settings->value("Geometry").toByteArray());
+    ui->viewBadPointsCheckBox->setChecked(settings->value("ViewBadPoints",true).toBool());
+    ui->viewGoodPointsCheckBox->setChecked(settings->value("ViewGoodPoints",true).toBool());
+    ui->badPointsSizeSpinBox->setValue(settings->value("BadPointsSize",5).toUInt());
+    ui->goodPointsSizeSpinBox->setValue(settings->value("GoodPointsSize",5).toUInt());
+
+    p_badScatterSeries->setVisible(ui->viewBadPointsCheckBox->isChecked());
+    p_goodScatterSeries->setVisible(ui->viewGoodPointsCheckBox->isChecked());
+    settings->endGroup();
+}
+
+void TestViewDialog::saveSettings()
+{
+    settings->beginGroup("TestViewSettings");
+    settings->setValue("ViewBadPoints",ui->viewBadPointsCheckBox->isChecked());
+    settings->setValue("ViewGoodPoints",ui->viewGoodPointsCheckBox->isChecked());
+    settings->setValue("BadPointsSize",ui->badPointsSizeSpinBox->value());
+    settings->setValue("GoodPointsSize",ui->goodPointsSizeSpinBox->value());
+    settings->setValue("Geometry",this->saveGeometry());
+    settings->endGroup();
+}
+
+
 TestViewDialog::~TestViewDialog()
 {
+    saveSettings();
     delete ui;
 }
 
@@ -112,21 +161,12 @@ void TestViewDialog::newTestReceived()
 //устанавливаем видимость для "хороших" пикетов
 void TestViewDialog::setGoodScatterVisible(const bool &b)
 {
-    if (b)
-    {
-        p_goodScatterSeries->setVisible(true);
-        p_badScatterSeries->setVisible(false);
-    }
+        p_goodScatterSeries->setVisible(b);
 }
 
 void TestViewDialog::setBadScatterVisible(const bool &b)
 {
-
-    if (b)
-    {
-        p_goodScatterSeries->setVisible(false);
-        p_badScatterSeries->setVisible(true);
-    }
+    p_badScatterSeries->setVisible(b);
 }
 void TestViewDialog::setAllScatterVisible(const bool &b)
 {
@@ -161,7 +201,8 @@ void TestViewDialog::showAuxesByFfid(const uint &f)
         counter =0;
         for (uint i = t.firstChannel; i<=t.lastChannel;++i)
         {
-            pointsInTemplate.push_back(t.receiverLine*10000+t.firstReceiver+counter);
+            //pointsInTemplate.push_back(t.receiverLine*10000+t.firstReceiver+counter);
+            pointsInTemplate.append(testMap.value(qMakePair(t.receiverLine,t.firstReceiver+counter)));
             counter++;
         }
     }
@@ -183,6 +224,83 @@ void TestViewDialog::showAuxesByFfid(const uint &f)
   //qDebug()<<p_badFilterTestModel->rows123;
 }
 
+/*void TestViewDialog::mouseUnderPoint(cosnt QPointF &coordinates)
+{
+    qDebug()<<coordinates;
+}*/
+
+void TestViewDialog::mouseUnderPoint(const QPointF &coordinates, const bool &b)
+{
+    if (b)
+    {
+    qDebug()<<coordinates;
+    QVector<TestPoint>::iterator vecIt = pointsInTemplate.begin();
+    float minDistance = sqrt(powf(coordinates.x()-vecIt->getX(),2.0)+powf(coordinates.y()-vecIt->getY(),2.0));
+    float distance;
+    TestPoint tPoint = *vecIt;
+    //QPointF point = QPointF(vecIt->getX(),vecIt->getY());
+    while (vecIt!=pointsInTemplate.end())
+    {
+        vecIt++;
+        distance = sqrt(powf(coordinates.x()-vecIt->getX(),2.0)+powf(coordinates.y()-vecIt->getY(),2.0));
+        if (distance<minDistance)
+        {
+            minDistance = distance;
+            tPoint = *vecIt;
+        }
+    }
+    qDebug()<<tPoint.getLine()<<tPoint.getPoint();
+    ui->pointsChartView->setLastPointLabel(tPoint);
+    }
+    else
+    {
+        ui->pointsChartView->hideLastPointLabel();
+    }
+}
+
+void TestViewDialog::mousePressedOnChart(const QPointF &coordinates)
+{
+    float minDistance;
+    float distance;
+    QPointF nearestPoint;
+    if (p_badScatterSeries->isVisible())
+    {
+        minDistance = sqrt(powf(coordinates.x()-p_badScatterSeries->at(0).x(),2.0)+powf(coordinates.y()-p_badScatterSeries->at(0).y(),2.0));
+    }
+    else if (p_goodScatterSeries->isVisible())
+    {
+        minDistance = sqrt(powf(coordinates.x()-p_goodScatterSeries->at(0).x(),2.0)+powf(coordinates.y()-p_goodScatterSeries->at(0).y(),2.0));
+    }
+    else
+    {   qDebug()<<"No Visible Series";
+        return;
+    }
+    if (p_badScatterSeries->isVisible())
+    {
+        for (int i=0; i<p_badScatterSeries->count();++i)
+        {
+            distance =  sqrt(powf(coordinates.x()-p_badScatterSeries->at(i).x(),2.0)+powf(coordinates.y()-p_badScatterSeries->at(i).y(),2.0));
+            if (distance<minDistance)
+            {
+                minDistance = distance;
+                nearestPoint = p_badScatterSeries->at(i);
+            }
+        }
+    }
+    if (p_goodScatterSeries->isVisible())
+    {
+        for (int i=0; i<p_goodScatterSeries->count();++i)
+        {
+            distance =  sqrt(powf(coordinates.x()-p_goodScatterSeries->at(i).x(),2.0)+powf(coordinates.y()-p_goodScatterSeries->at(i).y(),2.0));
+            if (distance<minDistance)
+            {
+                minDistance = distance;
+                nearestPoint = p_goodScatterSeries->at(i);
+            }
+        }
+    }
+    mouseUnderPoint(nearestPoint,true);
+}
 void TestViewDialog::setBadScatterSeries()
 {
 
@@ -190,54 +308,58 @@ void TestViewDialog::setBadScatterSeries()
     ui->pointsChartView->removeLineLabels();
     QVector<QPointF> badPoints;
     QVector<QPointF> goodPoints;
-    float minX = std::numeric_limits<float>::max();
-    float maxX = 0.0;
-    float minY = std::numeric_limits<float>::max();
-    float maxY = 0.0;
+
     TestPoint tPoint;
     uint currentLine;
     uint pointsInLine;
     uint badPointsInLine;
 
-    QVector<uint>::iterator vecIt = pointsInTemplate.begin();
-    QPointF pointF;
+    QVector<TestPoint>::iterator vecIt = pointsInTemplate.begin();
+    float minX = vecIt->getX();
+    float maxX = 0.0;
+    float minY = vecIt->getY();
+    float maxY = 0.0;
+    QPointF lineLabelPoint;
 
 
     while (vecIt!=pointsInTemplate.end())
     {
-        tPoint = testMap.value(*vecIt);
-        currentLine = tPoint.getLine();
+        //tPoint = testMap.value(*vecIt);
+        //currentLine = tPoint.getLine();
+        currentLine = vecIt->getLine();
         qDebug()<<"Line"<<currentLine;
         pointsInLine = 0;
         badPointsInLine = 0;
-
-        while (currentLine == tPoint.getLine() && vecIt!=pointsInTemplate.end())
+        while (currentLine == vecIt->getLine() && vecIt!=pointsInTemplate.end())
         {
-            pointF= QPointF(tPoint.getX(),tPoint.getY());
-            if (tPoint.getTestError())
+            //pointF= QPointF(tPoint.getX(),tPoint.getY());
+            if (vecIt->getTestError())
             {
                 badPointsInLine++;
-                badPoints.append(QPointF(pointF));
+                badPoints.append(QPointF(vecIt->getX(),vecIt->getY()));
             }
             else
             {
-                goodPoints.append(QPointF(pointF));
+                goodPoints.append(QPointF(vecIt->getX(),vecIt->getY()));
             }
+            lineLabelPoint = QPointF(vecIt->getX(),vecIt->getY());
+            minX = vecIt->getX() > minX ? minX : vecIt->getX();
+            maxX = vecIt->getX() > maxX ? vecIt->getX() : maxX;
+            minY = vecIt->getY() > minY ? minY : vecIt->getY();
+            maxY = vecIt->getY() > maxY ? vecIt->getY() : maxY;
             vecIt++;
             pointsInLine++;
-            minX = tPoint.getX() > minX ? minX : tPoint.getX();
-            maxX = tPoint.getX() > maxX ? tPoint.getX() : maxX;
-            minY = tPoint.getY() > minY ? minY : tPoint.getY();
-            maxY = tPoint.getY() > maxY ? tPoint.getY() : maxY;
-            tPoint = testMap.value(*vecIt);
+            //tPoint = testMap.value(*vecIt);
         }
         qDebug()<<"PointsInLine"<<pointsInLine;
         qDebug()<<"BadPointsInLine"<<badPointsInLine;
-        qDebug()<<pointF;
+        //qDebug()<<pointF;
         //p_lastPointScatterSeries->append(pointF);
-        emit sendLineLabel(pointF,QString("ЛП %1\n(%2%)").arg(currentLine).arg(QString::number(badPointsInLine*100.0/pointsInLine,'g',2)));
+        qDebug()<<QPointF(vecIt->getX(),vecIt->getY());
+        emit sendLineLabel(lineLabelPoint,QString("ЛП %1\n%2(%3%)").arg(currentLine).arg(badPointsInLine).arg(QString::number(badPointsInLine*100.0/pointsInLine,'g',2)));
     }
     QValueAxis *yAxis = qobject_cast<QValueAxis*>(ui->pointsChartView->chart()->axisY());
+    qDebug()<<minX<<" "<<minY;
     yAxis->setRange(minY*0.9999, maxY*1.0001);
     yAxis=qobject_cast<QValueAxis*>(ui->pointsChartView->chart()->axisX());
     yAxis->setRange(minX*0.9999,maxX*1.0001);
@@ -249,7 +371,7 @@ void TestViewDialog::setBadScatterSeries()
 
 void TestViewDialog::setGoodScatterSeries()
 {
-    QVector<QPointF> goodPoints;
+/*    QVector<QPointF> goodPoints;
     TestPoint tPoint;
     for (int i=0; i<pointsInTemplate.count();i++)
     {
@@ -260,49 +382,132 @@ void TestViewDialog::setGoodScatterSeries()
         }
     }
     qDebug()<<"GoodPOints"<<goodPoints.count();
-    p_goodScatterSeries->replace(goodPoints);
+    p_goodScatterSeries->replace(goodPoints);*/
 }
 
 
 
 TestChartView::TestChartView(QWidget *parent):QChartView(parent)
 {
-
+    //pointRects.append(new PointLabelRect());
 }
 
 TestChartView::TestChartView(QChart *chart, QWidget *parent):QChartView(chart,parent)
 {
 
 }
+
+void TestChartView::addPointLabel()
+{
+    pointRects.append(new PointLabelRect(this->chart()));
+}
+
+void TestChartView::hideLastPointLabel()
+{
+    pointRects.last()->hide();
+}
+void TestChartView::setLastPointLabel(const TestPoint &point)
+{
+    //QPoint
+    pointRects.last()->setTestPoint(point);
+    pointRects.last()->setZValue(99);
+    QPointF pos = this->chart()->mapToPosition(point.getPointF()) + QPointF(20,-30);
+    if (pos.x()+pointRects.last()->getRect().width() > this->width())
+    {
+        pos.setX(pos.x()-40.0-pointRects.last()->getRect().width());
+    }
+    //pointRects.last()->setPos(this->chart()->mapToPosition(QPointF(point.getX(),point.getY())) + QPoint(20,-30));
+    pointRects.last()->setPos(pos);
+    pointRects.last()->show();
+}
+
+
 void TestChartView::addLineLabel(const QPointF coordinates,const QString &txt)
 {
-    lineLabels.append(new LineLabelTextItem(coordinates,txt,this->chart()));
+    //lineLabels.append(new LineLabelTextItem(coordinates,txt,this->chart()));
     LineLabelRect *labelRect = new LineLabelRect(this->chart());
-    labelRect->setAnchor(this->chart()->mapToPosition(coordinates));
+    labelRect->setAnchor(coordinates);
     labelRect->setText(txt);
     labelRect->setPos(this->chart()->mapToPosition(coordinates) + QPoint(-20, -50));
+    //labelRect->setPos(this->chart()->mapToPosition(coordinates));
     labelRect->setZValue(11);
     lineRects.append(labelRect);
 }
 
 void TestChartView::removeLineLabels()
 {
-    qDeleteAll(lineLabels);
+    //qDeleteAll(lineLabels);
     qDeleteAll(lineRects);
-    lineLabels.clear();
+    //lineLabels.clear();
     lineRects.clear();
+}
+
+void TestChartView::resizeEvent(QResizeEvent *event)
+{
+
+    QChartView::resizeEvent(event);
+    repositionLabels();
+}
+
+void TestChartView::mousePressEvent(QMouseEvent *event)
+{
+    if (event->modifiers()==Qt::ControlModifier)
+    {
+        qDebug()<<"Ctrl Pressed";
+        qDebug()<<this->chart()->mapToValue(event->pos());
+        emit mousePressedWithCtrl(chart()->mapToValue(event->pos()));
+    }
+    else{
+        QChartView::mousePressEvent(event);
+    }
+}
+
+void TestChartView::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    addPointLabel();
+    QChartView::mouseDoubleClickEvent(event);
+}
+
+void TestChartView::chartChanged()
+{
+    qDebug()<<"chartChanged";
+    repositionLabels();
+}
+
+void TestChartView::repositionLabels()
+{
+    QList<LineLabelRect*>::iterator it = lineRects.begin();
+    QPointF newPos;
+    QValueAxis *axis = qobject_cast<QValueAxis*>(this->chart()->axisX());
+    for ( ; it!=lineRects.end();++it)
+    {
+        if ((*it)->getAnchor().x()<axis->min() || (*it)->getAnchor().x()>axis->max())
+        {
+            (*it)->hide();
+        }
+        else
+        {
+            newPos = this->chart()->mapToPosition((*it)->getAnchor())+QPoint(-20,-50);
+            if (newPos.y()<20)
+            {
+                newPos.setY(20);
+            }
+            (*it)->setPos(newPos);
+            (*it)->show();
+        }
+    }
 }
 
 void TestChartView::recountLabelPositions()
 {
-    QList<LineLabelTextItem*>::iterator it = lineLabels.begin();
+    /*QList<LineLabelTextItem*>::iterator it = lineLabels.begin();
  //   (*it)->setPos(this->chart()->mapToPosition((*it)->getCoordinates()));
     for ( ; it!=lineLabels.end();++it)
     {
         qDebug() << (*it)->getCoordinates();
         qDebug()<<this->chart()->mapToPosition((*it)->getCoordinates());
         (*it)->setPos(this->chart()->mapToPosition((*it)->getCoordinates()));
-    }
+    }*/
 }
 
 
@@ -338,6 +543,11 @@ void LineLabelRect::setAnchor(QPointF point)
     m_anchor = point;
 }
 
+QPointF LineLabelRect::getAnchor()
+{
+    return m_anchor;
+}
+
 void LineLabelRect::setText(const QString &text)
 {
    m_text=text;
@@ -350,17 +560,7 @@ void LineLabelRect::setText(const QString &text)
 
 QRectF LineLabelRect::boundingRect() const
 {
-    QPointF anchor = mapFromParent(m_anchor);
-    qDebug()<<"Anchor"<<anchor;
-    qDebug()<<"m_anchor"<<m_anchor;
-    QRectF rect;
-    rect.setLeft(qMin(m_rect.left(), anchor.x()));
-    rect.setRight(qMax(m_rect.right(), anchor.x()));
-    rect.setTop(qMin(m_rect.top(), anchor.y()));
-    rect.setBottom(qMax(m_rect.bottom(), anchor.y()));
-    qDebug()<<"m_rect"<<m_rect;
-    qDebug()<<"rect"<<rect;
-    return rect;
+    return m_rect;
 }
 
 void LineLabelRect::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -369,9 +569,14 @@ void LineLabelRect::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
     Q_UNUSED(widget)
     QPainterPath path;
     path.addRoundedRect(m_rect, 5, 5);
-
-    QPointF anchor = mapFromParent(m_anchor);
-    if (!m_rect.contains(anchor)) {
+    //path.addEllipse(QPointF(m_rect.center().rx(),m_rect.bottom()),2,2);
+    //path.moveTo(QPointF(m_rect.center().rx(),m_rect.bottom()));
+    //QChart *parentChart = static_cast<QChart*>(this->parentItem());
+    //qDebug()<<
+    //QPointF ancor = (parentChart->mapToPosition(m_anchor));
+    //path.lineTo(mapFromParent(ancor));
+    //QPointF anchor = mapFromParent(m_anchor);
+    /*if (!m_rect.contains(anchor)) {
         QPointF point1, point2;
 
         // establish the position of the anchor point in relation to m_rect
@@ -405,10 +610,72 @@ void LineLabelRect::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
         path.lineTo(mapFromParent(m_anchor));
         path.lineTo(point2);
         path = path.simplified();
-    }
+    }*/
     painter->setBrush(QColor(255, 255, 255));
     painter->drawPath(path);
     painter->drawText(m_textRect, m_text);
 }
 
 
+
+
+PointLabelRect::PointLabelRect(QGraphicsItem *parent):
+    QGraphicsTextItem(parent)
+{
+
+}
+
+QRectF PointLabelRect::boundingRect() const
+{
+    //return QGraphicsTextItem::boundingRect();
+    return m_rect;
+}
+void PointLabelRect::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+    Q_UNUSED(option)
+    Q_UNUSED(widget)
+    QPainterPath path;
+    path.addRoundedRect(m_rect, 5, 5);
+    painter->setBrush(QBrush(QColor(255, 255, 255),Qt::SolidPattern));
+    painter->drawPath(path);
+    //painter->drawText(m_textRect, m_text);*/
+    QGraphicsTextItem::paint(painter,option,widget);
+}
+
+void PointLabelRect::setTestPoint(const TestPoint &point)
+{
+    QString text;
+    QColor color;
+    qDebug()<<point.getLine();
+    text = QString ("<table align = center>"
+                    "<tr> <td align = center> Линия </td> <td align = center>%1</td></tr>"
+                    "<tr> <td align = center> Пикет </td> <td align = center>%2</td></tr>").arg(point.getLine()).arg(point.getPoint());
+    if (point.getTestError())
+    {
+        color = Qt::red;
+    }
+    color = point.getTiltError()? Qt::red : Qt::green;
+    text.append(QString("<tr> <td align = center> Tilt </td> <td align = center bgcolor=%1>%2</td></tr>").arg(color.name()).arg(point.getTilt()));
+    color = point.getResistanceError()? Qt::red : Qt::green;
+    text.append(QString("<tr> <td align = center> Resistance </td> <td align = center bgcolor=%1>%2</td></tr>").arg(color.name()).arg(point.getResistance()));
+    color = point.getLeakageError()? Qt::red : Qt::green;
+    text.append(QString("<tr> <td align = center> Leakage </td> <td align = center bgcolor=%1>%2</td></tr>").arg(color.name()).arg(point.getLeakage()));
+    text.append("</table");
+    /*text =QString("<p>ЛП %1</p>"
+                  "<p>ПП %2</p>").arg(point.getLine()).arg(point.getPoint());*/
+    this->setHtml(text);
+    m_rect = QGraphicsTextItem::boundingRect().adjusted(-3,-3,3,3);
+    /*m_tpoint = point;
+    m_text = QString("ЛП %1\nПП %2\nTilt %3\nResistance %4\nLeakage %5").arg(m_tpoint.getLine())
+            .arg(m_tpoint.getPoint()).arg(m_tpoint.getTilt()).arg(m_tpoint.getResistance())
+            .arg(m_tpoint.getLeakage());
+    QFontMetrics metrics(m_font);
+    m_textRect = metrics.boundingRect(QRect(0,0,150,150),Qt::AlignLeft,m_text);
+    m_rect = m_textRect.adjusted(-5,-5,5,5);*/
+}
+
+
+QRectF PointLabelRect::getRect() const
+{
+    return m_rect;
+}

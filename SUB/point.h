@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QVector>
 #include <QQueue>
+#include <QPointF>
 struct Template;
 class Point
 {
@@ -17,6 +18,7 @@ public:
     uint getX() const;
     uint getY() const;
     uint getZ() const;
+    QPointF getPointF() const;
 
 protected:
     int line;

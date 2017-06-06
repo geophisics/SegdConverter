@@ -2,6 +2,7 @@
 #include "math.h"
 #include <QQueue>
 #include <QVector>
+
 Point::Point( )
 {
     line = 0;
@@ -60,6 +61,11 @@ uint Point::getY() const
 uint Point::getZ() const
 {
     return round(z);
+}
+
+QPointF Point::getPointF() const
+{
+    return QPointF(x,y);
 }
 
 TestPoint::TestPoint()
