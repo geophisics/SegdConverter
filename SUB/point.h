@@ -117,6 +117,9 @@ struct Template
     uint receiverLine;
     uint firstReceiver;
     uint lastReceiver;
+
+    uint badChannels;
+    bool lineStatus;
 };
 
 struct TestLimits

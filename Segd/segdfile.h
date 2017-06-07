@@ -53,8 +53,8 @@ public:
     QStringList getXFile();
     QStringList getXLine(QVector<SegdTrace*> traces);
     float checkTests();
-    QPair<QVariant,bool> checkTests(QTextStream *p_stream, const int &maxInRow, const int &maxInLine);
-    QPair<QVariant,bool> checkTests(QTextStream *p_stream, const int &maxInRow, const int &maxInLine, TestMap *tMap);
+  //  QPair<QVariant,bool> checkTests(QTextStream *p_stream, const int &maxInRow, const int &maxInLine);
+  //  QPair<QVariant,bool> checkTests(QTextStream *p_stream, const int &maxInRow, const int &maxInLine, TestMap *tMap);
     QPair<QVariant,bool> checkTests(QTextStream *p_stream, const TestLimits &limits, TestMap *tMap, XFileMap *xMap);
     void analyzingTestsHeaders(const int &badTraces, const int &badTracesPercent, const int &badLinesPercent);
     bool getFileState();

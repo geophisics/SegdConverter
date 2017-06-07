@@ -10,6 +10,8 @@ template <typename T1,typename T2>
 class ThreadSaveMap
 {
 public:
+//    typedef ThreadSaveMapIterator<T1,T2> iterator;
+
     explicit ThreadSaveMap() {}
     int count() const
     {
@@ -42,10 +44,13 @@ public:
         QReadLocker locker(&lock);
         return map.values();
     }
+//    iterator begin();
+//    iterator end();
 
 private:
     mutable QReadWriteLock lock;
     QMap<T1,T2> map;
 };
+
 
 #endif // THREADSAVEMAP_H

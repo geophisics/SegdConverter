@@ -301,6 +301,9 @@ Template::Template(const QString &str)
     receiverLine = str.mid(47,16).toInt();
     firstReceiver = str.mid(63,8).toInt();
     lastReceiver = str.mid(71,8).toInt();
+
+    badChannels =0;
+    lineStatus = true;
 }
 
 Template::Template(const Template &other)
@@ -311,6 +314,10 @@ Template::Template(const Template &other)
     receiverLine = other.receiverLine;
     firstReceiver = other.firstReceiver;
     lastReceiver = other.lastReceiver;
+
+    badChannels = other.badChannels;
+    lineStatus = other.lineStatus;
+
 }
 Template::Template()
 {
@@ -320,4 +327,7 @@ Template::Template()
     receiverLine = 0;
     firstReceiver = 0;
     lastReceiver = 0;
+
+    badChannels =0;
+    lineStatus = true;
 }

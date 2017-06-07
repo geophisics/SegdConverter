@@ -983,7 +983,7 @@ void SegdConverterWindow::tableViewItemDoubleClicked(QModelIndex index)
     int ffid = attr_model->getFirstColumnValue(index);
     if ( header=="Check Tests" && !testViewDialog.isNull())
     {
-        testViewDialog.data()->showAuxesByFfid(ffid);
+        testViewDialog.data()->showTemplatesByFfid(ffid);
         testViewDialog.data()->show();
         return;
     }

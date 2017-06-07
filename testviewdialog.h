@@ -30,49 +30,37 @@ public:
     TestMap* getTestMap();
     XFileMap* getXMap();
     void setSettings(QSettings *set);
-    void readSettings();
-    void saveSettings();
+
 
 private:
     Ui::TestViewDialog *ui;
     TestMap testMap;
     XFileMap xMap;
 
-    TestModel *p_TestModel;
-    TestSortFilterModel *p_badFilterTestModel;
-    TestSortFilterModel *p_goodFilterTestModel;
+
+
     QtCharts::QScatterSeries *p_badScatterSeries;
     QtCharts::QScatterSeries *p_goodScatterSeries;
 
-    QtCharts::QVXYModelMapper *p_badModelMappper;
-    QtCharts::QVXYModelMapper *p_goodModelMapper;
-
     QSettings *settings;
 
-    //QVector<uint> pointsInTemplate;
     QVector<TestPoint> pointsInTemplate;
 
-
-    QtCharts::QScatterSeries *p_lastPointScatterSeries;
-
 private:
-    void setBadScatterSeries();
+    void setBadScatterSeries(QMap<uint, QPair<uint, bool> > lines);
     void setGoodScatterSeries();
+    void readSettings();
+    void saveSettings();
 
 public slots:
-    void newTestReceived();
-    void showAuxesByFfid(const uint &f);
-
+    void showTemplatesByFfid(const uint &f);
     void setGoodScatterVisible(const bool &b);
     void setBadScatterVisible(const bool &b);
-    void setAllScatterVisible(const bool &b);
-
-
     void setGoodScatterSize(const int &size);
     void setBadScatterSize(const int &size);
 
 signals:
-    void sendLineLabel(QPointF,QString);
+    void sendLineLabel(QPointF,QString,bool);
 private slots:
     void mouseUnderPoint(const QPointF &coordinates, const bool &b);
     void mousePressedOnChart(const QPointF &coordinates);
@@ -91,8 +79,7 @@ public:
 
 public slots:
 
-    void addLineLabel(const QPointF coordinates, const QString &txt);
-    void recountLabelPositions();
+    void addLineLabel(const QPointF coordinates, const QString &txt, const bool &status);
     void removeLineLabels();
     void resizeEvent(QResizeEvent *event);
     void mousePressEvent(QMouseEvent *event);
@@ -100,7 +87,6 @@ public slots:
     void chartChanged();
 
 private:
-    //QList <LineLabelTextItem*> lineLabels;
     QList <LineLabelRect*> lineRects;
     QList <PointLabelRect*> pointRects;
     void repositionLabels();
@@ -108,22 +94,8 @@ private:
 signals:
     void mousePressedWithCtrl(QPointF);
 
-    //QList<QGraphicsSimpleTextItem*> lineNumbers;
-    //QList<QPair<QPointF,QGraphicsSimpleTextItem*> > lineLabels;
 };
 
-class LineLabelTextItem : public QGraphicsSimpleTextItem
-{
-public:
-    LineLabelTextItem(QGraphicsItem *parent = Q_NULLPTR);
-    LineLabelTextItem(const QString &text, QGraphicsItem *parent = Q_NULLPTR);
-    LineLabelTextItem(const QPointF &point, const QString &text, QGraphicsItem *parent = Q_NULLPTR);
-    QPointF getCoordinates();
-
-private:
-    QPointF coordinates;
-
-};
 
 class LineLabelRect: public QGraphicsItem
 {
@@ -132,6 +104,7 @@ public:
     void setAnchor(QPointF point);
     QPointF getAnchor();
     void setText(const QString &text);
+    void setLineStatus(const bool &stat);
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 private:
@@ -141,6 +114,7 @@ private:
     QString m_text;
     QRectF m_textRect;
     QFont m_font;
+    bool lineStatus;
 };
 
 class PointLabelRect:public QGraphicsTextItem
@@ -150,13 +124,17 @@ public:
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
     void setTestPoint(const TestPoint &point);
+    void setAnchor(const QPointF &point);
+    QPointF getChartAnchor() const;
     QRectF getRect() const;
 private:
     TestPoint m_tpoint;
     QString m_text;
-    QRectF m_textRect;
     QRectF m_rect;
     QFont m_font;
+    QPointF m_chartAnchor;
+    QPointF m_anchor;
+    bool testError;
 };
 
 
