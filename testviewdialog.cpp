@@ -2,6 +2,8 @@
 #include "ui_testviewdialog.h"
 #include "QValueAxis"
 #include <QDebug>
+#include <math.h>
+#include <QScreen>
 QT_CHARTS_USE_NAMESPACE
 
 
@@ -20,6 +22,7 @@ TestViewDialog::TestViewDialog(QWidget *parent) :
     chart->legend()->setZValue(50);
     QMargins margins = chart->margins();
     margins.setTop(40);
+    margins.setRight(60);
     chart->setMargins(margins);
     ui->pointsChartView->setRubberBand(QChartView::RectangleRubberBand);
 
@@ -58,6 +61,7 @@ TestViewDialog::TestViewDialog(QWidget *parent) :
     connect(p_badScatterSeries,SIGNAL(hovered(QPointF,bool)),this,SLOT(mouseUnderPoint(QPointF,bool)));
     connect(p_goodScatterSeries,SIGNAL(hovered(QPointF,bool)),this,SLOT(mouseUnderPoint(QPointF,bool)));
     connect(ui->pointsChartView,SIGNAL(mousePressedWithCtrl(QPointF)),this,SLOT(mousePressedOnChart(QPointF)));
+    connect(ui->deletePointLabelsPushButton,SIGNAL(clicked(bool)),ui->pointsChartView,SLOT(deletePointLabels()));
 
 }
 
@@ -220,6 +224,8 @@ void TestViewDialog::mousePressedOnChart(const QPointF &coordinates)
     }
     mouseUnderPoint(nearestPoint,true);
 }
+
+
 void TestViewDialog::setBadScatterSeries(QMap<uint, QPair<uint,bool> > lines)
 {
 
@@ -234,10 +240,15 @@ void TestViewDialog::setBadScatterSeries(QMap<uint, QPair<uint,bool> > lines)
     float minY = vecIt->getY();
     float maxY = 0.0;
     QPointF lineLabelPoint;
+    QPointF firstPoint;
+    float angle=0.0;
+    uint numOfLines=0;
+
     while (vecIt!=pointsInTemplate.end())
     {
         currentLine = vecIt->getLine();
         pointsInLine = 0;
+        firstPoint = vecIt->getPointF();
         while (currentLine == vecIt->getLine() && vecIt!=pointsInTemplate.end())
         {
             if (vecIt->getTestError())
@@ -256,25 +267,74 @@ void TestViewDialog::setBadScatterSeries(QMap<uint, QPair<uint,bool> > lines)
             vecIt++;
             pointsInLine++;
         }
+
         emit sendLineLabel(lineLabelPoint,QString("ЛП %1\n%2(%3%)").arg(currentLine).arg(lines.value(currentLine).first)
                            .arg(QString::number(lines.value(currentLine).first*100.0/pointsInLine,'g',2)),lines.value(currentLine).second);
+        angle+=fabs(atan((lineLabelPoint.y()-firstPoint.y())/(lineLabelPoint.x()-firstPoint.x())));
+
+        numOfLines++;
     }
-    QValueAxis *yAxis = qobject_cast<QValueAxis*>(ui->pointsChartView->chart()->axisY());
-    yAxis->setRange(minY*0.9999, maxY*1.0001);
-    yAxis=qobject_cast<QValueAxis*>(ui->pointsChartView->chart()->axisX());
-    yAxis->setRange(minX*0.9999,maxX*1.0001);
+    ui->pointsChartView->setLineAngle(angle/numOfLines);
+    ui->pointsChartView->setAxisRanges(minX,maxX,minY,maxY);
     p_badScatterSeries->replace(badPoints);
     p_goodScatterSeries->replace(goodPoints);
 }
 
 
+
+
 TestChartView::TestChartView(QWidget *parent):QChartView(parent)
 {
+    xEqualY = true;
 }
 
 TestChartView::TestChartView(QChart *chart, QWidget *parent):QChartView(chart,parent)
 {
+    xEqualY = true;
+}
 
+
+void TestChartView::setAxisRanges(const qreal &xmin, const qreal &xmax, const qreal &ymin, const qreal &ymax)
+{
+
+
+    //---------------------
+    QValueAxis *axis;// = qobject_cast<QValueAxis*>(ui->pointsChartView->chart()->axisY());
+    if (xEqualY)
+    {
+        QRectF plotAreaRect = this->chart()->plotArea();
+        qDebug()<<plotAreaRect;
+        qreal k = plotAreaRect.width()/plotAreaRect.height();
+        if (k>=1.0)
+        {
+            axis = qobject_cast<QValueAxis*>(this->chart()->axisY());
+            axis->setRange(ymin,ymax);
+            qreal xLength = (xmax - xmin)*k/2.0;
+            qreal xcenter = (xmax+xmin)/2.0;
+            axis = qobject_cast<QValueAxis*>(this->chart()->axisX());
+            axis->setRange(xcenter-xLength,xcenter+xLength);
+        }
+        else
+        {
+            axis = qobject_cast<QValueAxis*>(this->chart()->axisX());
+            axis->setRange(xmin,xmax);
+            qreal yLength = (ymax - ymin)/k/2.0;
+            qreal ycenter = (ymax+ymin)/2.0;
+            axis = qobject_cast<QValueAxis*>(this->chart()->axisY());
+            axis->setRange(ycenter-yLength,ycenter+yLength);
+        }
+    }
+}
+
+void TestChartView::setAxisRanges()
+{
+     QValueAxis *xAxis = qobject_cast<QValueAxis*>(this->chart()->axisX());
+     QValueAxis *yAxis = qobject_cast<QValueAxis*>(this->chart()->axisY());
+     qreal minX = xAxis->min();
+     qreal minY = yAxis->min();
+     qreal maxX = xAxis->max();
+     qreal maxY = yAxis->max();
+     setAxisRanges(minX,maxX,minY,maxY);
 }
 
 void TestChartView::addPointLabel()
@@ -282,6 +342,15 @@ void TestChartView::addPointLabel()
     pointRects.append(new PointLabelRect(this->chart()));
 }
 
+void TestChartView::deletePointLabels()
+{
+    QList<PointLabelRect*>::iterator pointIt = pointRects.begin();
+    while (*pointIt!=pointRects.last()) {
+        delete (*pointIt);
+        pointIt = pointRects.erase(pointIt);
+    }
+    pointRects.last()->hide();
+}
 void TestChartView::hideLastPointLabel()
 {
     pointRects.last()->hide();
@@ -301,14 +370,20 @@ void TestChartView::setLastPointLabel(const TestPoint &point)
 }
 
 
+void TestChartView::setLineAngle(const float &a)
+{
+    lineAngle = a;
+}
+
 void TestChartView::addLineLabel(const QPointF coordinates, const QString &txt, const bool &status)
 {
     LineLabelRect *labelRect = new LineLabelRect(this->chart());
+    labelRect->hide();
     labelRect->setAnchor(coordinates);
     labelRect->setText(txt);
     labelRect->setLineStatus(status);
-    labelRect->setPos(this->chart()->mapToPosition(coordinates) + QPoint(-20, -50));
-    labelRect->setZValue(11);
+//    labelRect->setPos(this->chart()->mapToPosition(coordinates) + QPoint(-20, -50));
+    labelRect->setZValue(0);
     lineRects.append(labelRect);
 }
 
@@ -322,6 +397,7 @@ void TestChartView::resizeEvent(QResizeEvent *event)
 {
 
     QChartView::resizeEvent(event);
+    setAxisRanges();
     repositionLabels();
 }
 
@@ -356,28 +432,34 @@ void TestChartView::repositionLabels()
     QValueAxis *axis = qobject_cast<QValueAxis*>(this->chart()->axisX());
     for ( ; it!=lineRects.end();++it)
     {
-        if ((*it)->getAnchor().x()<axis->min() || (*it)->getAnchor().x()>axis->max())
-        {
-            (*it)->hide();
-        }
-        else
-        {
-            newPos = this->chart()->mapToPosition((*it)->getAnchor())+QPoint(-20,-50);
+//        if ((*it)->getAnchor().x()<axis->min() || (*it)->getAnchor().x()>axis->max())
+//        {
+//            (*it)->hide();
+//        }
+//        else
+//        {
+            QPointF p(20*(cosf(lineAngle)-sinf(lineAngle)),-18-36*sinf(lineAngle)); //18 - половина высоты этикетки, 36 -высота этикетки
+           // qDebug()<<p;
+            newPos = this->chart()->mapToPosition((*it)->getAnchor())+p;// QPointF(20*(cosf(lineAngle)-sinf(lineAngle)),0);
             if (newPos.y()<20)
             {
                 newPos.setY(20);
             }
+            if (newPos.x()>this->width())
+            {
+                newPos.setX(this->width()-55);
+            }
             (*it)->setPos(newPos);
             (*it)->show();
-        }
+//        }
     }
+
 
     QList<PointLabelRect*>::iterator pointIt = pointRects.begin();
     QRectF rect;
     rect.setLeft(axis->min());
     rect.setRight(axis->max());
     axis = qobject_cast<QValueAxis*>(this->chart()->axisY());
-    qDebug()<<"Y min"<<axis->min()<<"Y max"<<axis->max();
     rect.setTop(axis->min());
     rect.setBottom(axis->max());
     while (*pointIt!=pointRects.last()) {
@@ -426,6 +508,7 @@ void LineLabelRect::setText(const QString &text)
    m_textRect.translate(0,0);
    prepareGeometryChange();
    m_rect=m_textRect.adjusted(-5,-5,5,5);
+   //qDebug()<<"Mrect"<<m_rect;
 }
 
 void LineLabelRect::setLineStatus(const bool &stat)

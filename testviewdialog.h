@@ -48,6 +48,7 @@ private:
 
 private:
     void setBadScatterSeries(QMap<uint, QPair<uint, bool> > lines);
+
     void setGoodScatterSeries();
     void readSettings();
     void saveSettings();
@@ -75,12 +76,16 @@ public:
     void addPointLabel();
     void hideLastPointLabel();
     void setLastPointLabel(const TestPoint &point);
-
+    void setLineAngle(const float &a);
+    void setAxisRanges(const qreal &xmin, const qreal &xmax, const qreal &ymin, const qreal &ymax);
+    void setAxisRanges();
 
 public slots:
 
     void addLineLabel(const QPointF coordinates, const QString &txt, const bool &status);
+
     void removeLineLabels();
+    void deletePointLabels();
     void resizeEvent(QResizeEvent *event);
     void mousePressEvent(QMouseEvent *event);
     void mouseDoubleClickEvent(QMouseEvent *event);
@@ -89,7 +94,10 @@ public slots:
 private:
     QList <LineLabelRect*> lineRects;
     QList <PointLabelRect*> pointRects;
+    float lineAngle;
+    bool xEqualY;
     void repositionLabels();
+
 
 signals:
     void mousePressedWithCtrl(QPointF);
