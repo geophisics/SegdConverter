@@ -46,10 +46,11 @@ private:
 
     QVector<TestPoint> pointsInTemplate;
 
+
+
+
 private:
     void setBadScatterSeries(QMap<uint, QPair<uint, bool> > lines);
-
-    void setGoodScatterSeries();
     void readSettings();
     void saveSettings();
 
@@ -73,32 +74,39 @@ class TestChartView : public QChartView
 public:
     TestChartView(QWidget *parent =0);
     TestChartView(QChart *chart, QWidget *parent = 0);
+
     void addPointLabel();
     void hideLastPointLabel();
     void setLastPointLabel(const TestPoint &point);
     void setLineAngle(const float &a);
-    void setAxisRanges(const qreal &xmin, const qreal &xmax, const qreal &ymin, const qreal &ymax);
+
+    void setAxisLimits(const qreal &xmin, const qreal &xmax, const qreal &ymin, const qreal &ymax);
     void setAxisRanges();
+    void setAxisRanges(const QSizeF &oldSize, const QSizeF &newSize);
 
 public slots:
 
     void addLineLabel(const QPointF coordinates, const QString &txt, const bool &status);
-
     void removeLineLabels();
     void deletePointLabels();
     void resizeEvent(QResizeEvent *event);
     void mousePressEvent(QMouseEvent *event);
     void mouseDoubleClickEvent(QMouseEvent *event);
-    void chartChanged();
+    void mouseMoveEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
+
 
 private:
+
     QList <LineLabelRect*> lineRects;
     QList <PointLabelRect*> pointRects;
+    qreal minX,maxX,minY,maxY;
     float lineAngle;
+    float chartKoef;
     bool xEqualY;
     void repositionLabels();
-
-
+    QGraphicsRectItem *zoomRect;
+    QPoint zoomPoint;
 signals:
     void mousePressedWithCtrl(QPointF);
 
@@ -144,8 +152,5 @@ private:
     QPointF m_anchor;
     bool testError;
 };
-
-
-
 
 #endif // TESTVIEWDIALOG_H

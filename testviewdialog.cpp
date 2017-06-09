@@ -11,11 +11,8 @@ TestViewDialog::TestViewDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::TestViewDialog)
 {
-
-
     ui->setupUi(this);
     this->setWindowFlags(Qt::Window);
-
     QChart *chart = new QChart;
     chart->setAnimationOptions(QChart::NoAnimation);
     chart->legend()->setAlignment(Qt::AlignBottom);
@@ -24,8 +21,7 @@ TestViewDialog::TestViewDialog(QWidget *parent) :
     margins.setTop(40);
     margins.setRight(60);
     chart->setMargins(margins);
-    ui->pointsChartView->setRubberBand(QChartView::RectangleRubberBand);
-
+    //ui->pointsChartView->setRubberBand(QChartView::RectangleRubberBand);
     p_goodScatterSeries = new QScatterSeries;
     p_goodScatterSeries->setMarkerSize(6.0);
     p_goodScatterSeries->setColor(Qt::green);
@@ -36,33 +32,23 @@ TestViewDialog::TestViewDialog(QWidget *parent) :
     p_badScatterSeries->setColor(Qt::red);
     p_badScatterSeries->setBorderColor(Qt::red);
     p_badScatterSeries->setName("Пикеты вне допусков");
-
     chart->addSeries(p_goodScatterSeries);
     chart->addSeries(p_badScatterSeries);
-
     chart->createDefaultAxes();
-
     ui->pointsChartView->setRenderHint(QPainter::Antialiasing);
     ui->pointsChartView->setChart(chart);
-
     ui->pointsChartView->addPointLabel();
-
     connect(ui->viewBadPointsCheckBox,SIGNAL(toggled(bool)),this,SLOT(setBadScatterVisible(bool)));
     connect(ui->viewGoodPointsCheckBox,SIGNAL(toggled(bool)),this,SLOT(setGoodScatterVisible(bool)));
     connect(ui->goodPointsSizeSpinBox,SIGNAL(valueChanged(int)),this,SLOT(setGoodScatterSize(int)));
     connect(ui->badPointsSizeSpinBox,SIGNAL(valueChanged(int)),this,SLOT(setBadScatterSize(int)));
     QValueAxis *axis = qobject_cast<QValueAxis*>(chart->axisX());
-    connect(axis,SIGNAL(rangeChanged(qreal,qreal)),ui->pointsChartView,SLOT(chartChanged()));
     axis = qobject_cast<QValueAxis*>(chart->axisY());
-    connect(axis,SIGNAL(rangeChanged(qreal,qreal)),ui->pointsChartView,SLOT(chartChanged()));
     connect(this,SIGNAL(sendLineLabel(QPointF,QString,bool)),ui->pointsChartView,SLOT(addLineLabel(QPointF,QString,bool)));
-
-
     connect(p_badScatterSeries,SIGNAL(hovered(QPointF,bool)),this,SLOT(mouseUnderPoint(QPointF,bool)));
     connect(p_goodScatterSeries,SIGNAL(hovered(QPointF,bool)),this,SLOT(mouseUnderPoint(QPointF,bool)));
     connect(ui->pointsChartView,SIGNAL(mousePressedWithCtrl(QPointF)),this,SLOT(mousePressedOnChart(QPointF)));
     connect(ui->deletePointLabelsPushButton,SIGNAL(clicked(bool)),ui->pointsChartView,SLOT(deletePointLabels()));
-
 }
 
 void TestViewDialog::setSettings(QSettings *set)
@@ -79,7 +65,6 @@ void TestViewDialog::readSettings()
     ui->viewGoodPointsCheckBox->setChecked(settings->value("ViewGoodPoints",true).toBool());
     ui->badPointsSizeSpinBox->setValue(settings->value("BadPointsSize",5).toUInt());
     ui->goodPointsSizeSpinBox->setValue(settings->value("GoodPointsSize",5).toUInt());
-
     p_badScatterSeries->setVisible(ui->viewBadPointsCheckBox->isChecked());
     p_goodScatterSeries->setVisible(ui->viewGoodPointsCheckBox->isChecked());
     settings->endGroup();
@@ -275,9 +260,12 @@ void TestViewDialog::setBadScatterSeries(QMap<uint, QPair<uint,bool> > lines)
         numOfLines++;
     }
     ui->pointsChartView->setLineAngle(angle/numOfLines);
-    ui->pointsChartView->setAxisRanges(minX,maxX,minY,maxY);
     p_badScatterSeries->replace(badPoints);
     p_goodScatterSeries->replace(goodPoints);
+    ui->pointsChartView->setAxisLimits(minX*0.9999,maxX*1.0001,minY*0.9999,maxY*1.0001);
+    ui->pointsChartView->setAxisRanges();
+
+
 }
 
 
@@ -286,55 +274,56 @@ void TestViewDialog::setBadScatterSeries(QMap<uint, QPair<uint,bool> > lines)
 TestChartView::TestChartView(QWidget *parent):QChartView(parent)
 {
     xEqualY = true;
+    zoomRect = Q_NULLPTR;
+    chartKoef = 1;
+
 }
 
 TestChartView::TestChartView(QChart *chart, QWidget *parent):QChartView(chart,parent)
 {
     xEqualY = true;
+    zoomRect = Q_NULLPTR;
+    chartKoef = 1;
 }
 
 
-void TestChartView::setAxisRanges(const qreal &xmin, const qreal &xmax, const qreal &ymin, const qreal &ymax)
+
+void TestChartView::setAxisRanges()
 {
-
-
-    //---------------------
-    QValueAxis *axis;// = qobject_cast<QValueAxis*>(ui->pointsChartView->chart()->axisY());
+    QValueAxis *axis;
     if (xEqualY)
     {
         QRectF plotAreaRect = this->chart()->plotArea();
-        qDebug()<<plotAreaRect;
-        qreal k = plotAreaRect.width()/plotAreaRect.height();
-        if (k>=1.0)
+        chartKoef = plotAreaRect.width()/plotAreaRect.height();
+        if (chartKoef>=1.0)
         {
             axis = qobject_cast<QValueAxis*>(this->chart()->axisY());
-            axis->setRange(ymin,ymax);
-            qreal xLength = (xmax - xmin)*k/2.0;
-            qreal xcenter = (xmax+xmin)/2.0;
+            axis->setRange(minY,maxY);
+            qreal xLength = (maxX - minX)*chartKoef/2.0;
+            qreal xcenter = (maxX+minX)/2.0;
             axis = qobject_cast<QValueAxis*>(this->chart()->axisX());
             axis->setRange(xcenter-xLength,xcenter+xLength);
         }
         else
         {
             axis = qobject_cast<QValueAxis*>(this->chart()->axisX());
-            axis->setRange(xmin,xmax);
-            qreal yLength = (ymax - ymin)/k/2.0;
-            qreal ycenter = (ymax+ymin)/2.0;
+            axis->setRange(minX,maxX);
+            qreal yLength = (maxY - minY)/chartKoef/2.0;
+            qreal ycenter = (maxY+minY)/2.0;
             axis = qobject_cast<QValueAxis*>(this->chart()->axisY());
             axis->setRange(ycenter-yLength,ycenter+yLength);
         }
     }
+    repositionLabels();
 }
 
-void TestChartView::setAxisRanges()
+//устанавливаем пределы осей
+void TestChartView::setAxisLimits(const qreal &xmin, const qreal &xmax, const qreal &ymin, const qreal &ymax)
 {
-     QValueAxis *xAxis = qobject_cast<QValueAxis*>(this->chart()->axisX());
-     QValueAxis *yAxis = qobject_cast<QValueAxis*>(this->chart()->axisY());
-     qreal minX = xAxis->min();
-     qreal minY = yAxis->min();
-     qreal maxX = xAxis->max();
-     qreal maxY = yAxis->max();
-     setAxisRanges(minX,maxX,minY,maxY);
+    minX=xmin;
+    maxX=xmax;
+    minY=ymin;
+    maxY=ymax;
 }
 
 void TestChartView::addPointLabel()
@@ -378,7 +367,7 @@ void TestChartView::setLineAngle(const float &a)
 void TestChartView::addLineLabel(const QPointF coordinates, const QString &txt, const bool &status)
 {
     LineLabelRect *labelRect = new LineLabelRect(this->chart());
-    labelRect->hide();
+    //labelRect->hide();
     labelRect->setAnchor(coordinates);
     labelRect->setText(txt);
     labelRect->setLineStatus(status);
@@ -395,10 +384,9 @@ void TestChartView::removeLineLabels()
 
 void TestChartView::resizeEvent(QResizeEvent *event)
 {
-
     QChartView::resizeEvent(event);
     setAxisRanges();
-    repositionLabels();
+    this->update();
 }
 
 void TestChartView::mousePressEvent(QMouseEvent *event)
@@ -406,9 +394,16 @@ void TestChartView::mousePressEvent(QMouseEvent *event)
     if (event->modifiers()==Qt::ControlModifier)
     {
         emit mousePressedWithCtrl(chart()->mapToValue(event->pos()));
-    }
-    else{
         QChartView::mousePressEvent(event);
+        return;
+    }
+    if (event->button()==Qt::LeftButton)
+    {
+        zoomPoint = event->pos();
+        zoomRect = new QGraphicsRectItem(event->x(),event->y(), 30 , 50,this->chart());
+        zoomRect->show();
+        QChartView::mousePressEvent(event);
+        return;
     }
 }
 
@@ -420,11 +415,55 @@ void TestChartView::mouseDoubleClickEvent(QMouseEvent *event)
     QChartView::mouseDoubleClickEvent(event);
 }
 
-void TestChartView::chartChanged()
+void TestChartView::mouseMoveEvent(QMouseEvent *event)
 {
-    repositionLabels();
+    if (zoomRect)
+    {
+
+        //QRectF rect;
+        //rect.setTopLeft(QPointF(std::min(zoomPoint.x(),event->x()),std::min(zoomPoint.y(),event->y())));
+
+        /*QRectF rect = QRectF(QPointF(std::min(zoomPoint.x(),event->x()),std::min(zoomPoint.y(),event->y())),
+                             QPointF(std::max(zoomPoint.x(),event->x()),std::max(zoomPoint.y(),event->y())));*/
+        qreal w,h;
+        w = event->x()-zoomPoint.x();
+
+        h = w/chartKoef;
+        if (event->y()-zoomPoint.y()<0)
+        {
+            h=h*-1;
+        }
+        //h= zoomPoint.y()-event->y();
+        //QRectF rect(zoomPoint,event->pos());
+        QRectF rect(zoomPoint.x(),zoomPoint.y(),w,h);
+        rect = rect.normalized();
+        //rect=rect.normalized();
+        //rect.setHeight(rect.width()/chartKoef);
+        qDebug()<<"w"<<w<<"h"<<h;
+        qDebug()<<"ZoomRect"<<rect;
+        zoomRect->setRect(rect);
+        /*QRectF rect=zoomRect->rect();
+        if (rect.bottom()<event->pos().y())
+        {
+            rect.setBottom(event->pos().y());
+        }
+        else
+        {
+            rect.setTopRight(event->pos());
+        }
+        zoomRect->setRect(rect.normalized());*/
+    }
 }
 
+void TestChartView::mouseReleaseEvent(QMouseEvent *event)
+{
+    if (zoomRect)
+    {
+        delete zoomRect;
+        zoomRect=Q_NULLPTR;
+    }
+    QChartView::mouseReleaseEvent(event);
+}
 void TestChartView::repositionLabels()
 {
     QList<LineLabelRect*>::iterator it = lineRects.begin();
